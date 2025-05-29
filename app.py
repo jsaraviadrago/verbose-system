@@ -56,7 +56,7 @@ st.divider()
 #        with col:
 #            st.image(team_logos[team], caption=team, width=100)
 
-csv_file_path1 = '/content/drive/MyDrive/Partidos_apertura_2025_CLC_1.csv'
+csv_file_path1 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Partidos_apertura_2025_CLC_1.csv'
 df1 = pd.read_csv(csv_file_path1)
 
 # Calculated values
