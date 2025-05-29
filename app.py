@@ -381,5 +381,59 @@ st.dataframe(
     }
 )
 
+###########################################################################
+###### Resultados por fecha #################################
+###########################################################################
 
+st.divider()
+
+st.subheader("Resultados por Fecha")
+
+# Create a match_id for each match by grouping by 'Fecha' and 'Grupo'
+# Then, divide the cumcount by 2 to create unique match numbers within each group
+df1['match_number'] = df1.groupby(['Fecha', 'Grupo']).cumcount() // 2
+
+# Create a team_number (1 or 2) within each match to distinguish between team 1 and team 2
+df1['team_number'] = df1.groupby(['Fecha', 'Grupo', 'match_number']).cumcount() + 1
+
+# Pivot the table to create separate columns for Equipo and Goles for each team
+pivoted_df = df1.pivot(index=['Fecha', 'Grupo', 'match_number'], columns='team_number', values=['Equipo', 'Goles'])
+
+# Flatten the multi-level columns
+pivoted_df.columns = [f'{col[0]}_{col[1]}' for col in pivoted_df.columns]
+
+# Reset the index to make 'Fecha', 'Grupo' and 'match_number' regular columns
+pivoted_df = pivoted_df.reset_index()
+
+# Drop the match_number column as it is no longer needed
+pivoted_df = pivoted_df.drop(columns='match_number')
+
+# Rename the columns to match the desired output
+pivoted_df = pivoted_df.rename(columns={
+    'Equipo_1': 'Equipo_A',
+    'Equipo_2': 'Equipo_B',
+    'Goles_1': 'Goles_A',
+    'Goles_2': 'Goles_B'
+})
+
+# Re order columns
+pivoted_df = pivoted_df[['Fecha', 'Grupo', 'Equipo_A', 'Goles_A', 'Equipo_B', 'Goles_B']]
+
+# Define the column configuration for pivoted_df
+column_config_pivoted = {
+    "Fecha": st.column_config.NumberColumn("Fecha", width=50, format="%d", help="Fecha del partido"),
+    "Grupo": st.column_config.NumberColumn("Grupo", width=50, format="%d", help="Grupo al que pertenecen los equipos"),
+    "Equipo_A": st.column_config.TextColumn("Equipo A", width=100, help="Nombre del primer equipo"),
+    "Goles_A": st.column_config.NumberColumn("Goles A", format="%d", help="Goles del primer equipo"),
+    "Equipo_B": st.column_config.TextColumn("Equipo B", width=100, help="Nombre del segundo equipo"),
+    "Goles_B": st.column_config.NumberColumn("Goles B", format="%d", help="Goles del segundo equipo"),
+}
+
+# Display the DataFrame as a Streamlit table with the new configuration
+st.dataframe(
+    pivoted_df,
+    use_container_width=True,
+    hide_index=True,
+    column_config=column_config_pivoted
+)
 
