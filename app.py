@@ -29,32 +29,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-
-
 st.divider()
-
-# Replace these with your actual image paths or URLs
-#team_logos = {
-#    "Equipo 1": "https://drive.google.com/file/d/1MWRnjhhLYqw-y2j-dqlMoGxuX0cG_Vfn/view?usp=sharing",
-#    "Equipo 2": "https://drive.google.com/file/d/1PhxRKfOE4DuSHdkM4PxXwxHQcqtmxsmR/view?usp=sharing",
-#    "Equipo 3": "path_or_url/logo3.png",
-#    "Equipo 4": "path_or_url/logo4.png",
-#    "Equipo 5": "path_or_url/logo5.png",
-#    "Equipo 6": "path_or_url/logo6.png",
-#    "Equipo 7": "path_or_url/logo7.png",
-#    "Equipo 8": "path_or_url/logo8.png",
-#    "Equipo 9": "path_or_url/logo9.png",
-#    "Equipo 10": "path_or_url/logo10.png",
-#}
-
-# Display logos in two rows
-#team_names = list(team_logos.keys())
-#for i in range(0, 10, 5):  # 2 rows of 5
-#    cols = st.columns(5)
-#    for j, col in enumerate(cols):
-#        team = team_names[i + j]
-#        with col:
-#            st.image(team_logos[team], caption=team, width=100)
 
 csv_file_path1 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Partidos_apertura_2025_CLC_1.csv'
 df1 = pd.read_csv(csv_file_path1)
@@ -124,7 +99,7 @@ st.line_chart(gf_data_sum1.set_index('Fecha')['Prom_Goles'])
 #Tabla de posiciones grupo 1
 #######################################################################
 
-# --- Start of your previous corrected code for initial grouping ---
+# --- initial grouping ---
 
 # Filter the DataFrame to include only rows where 'Grupo' is 1
 # Using the column name 'Grupo' as provided in your corrected code
@@ -145,7 +120,7 @@ else:
     gf_data1 = df_filtered1.groupby('Equipo')['Goles'].sum().reset_index()
     gf_data1.rename(columns={'Goles': 'GF'}, inplace=True)
 
-    # 2. Calculate GC (Goals Conceded): This requires matching opponents' goals within each match.
+    # 2. Calculate GC: This requires matching opponents' goals within each match.
     #    First, create a temporary DataFrame with goals for both Equipo_numero 1 and 2 per Partido.
     match_goals1 = df_filtered1.pivot_table(
         index='Partido',
@@ -160,7 +135,7 @@ else:
         index='Partido',
         columns='Equipo_numero',
         values='Equipo',
-        aggfunc='first' # 'first' or 'last' works here as there's only one Equipo name per Equipo_numero per Partido
+        aggfunc='first' 
     ).reset_index()
     match_teams1.columns = ['Partido', 'Equipo1', 'Equipo2']
 
@@ -407,11 +382,4 @@ st.dataframe(
 )
 
 
-#st.write('Hola todos! Esta es una simple aplicación para ver estadisticas del torneo Apertura de papás Cambridge Lima College 2025')
 
-#name = st.text_input("Cuál es tu nombre?")
-#if name:
-#    st.write(f"Hello, {name}!")
-
-#number = st.slider("Select a number", 0, 100, 50)
-#st.write(f"You selected: {number}")
