@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-st.markdown("<h1 style='text-align: center; color: white;'>Campeonato Apertura Cambridge Lima College 2025</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: black;'>Campeonato Apertura Cambridge Lima College 2025</h1>", unsafe_allow_html=True)
 st.divider()
 
 
