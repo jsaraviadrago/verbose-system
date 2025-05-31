@@ -437,3 +437,308 @@ st.dataframe(
     column_config=column_config_pivoted
 )
 
+########################################################################
+###### Tarjetas por equipo #########################################
+###################################################################
+
+st.divider()
+
+st.subheader("Tarjetas amarillas por Equipo")
+
+csv_file_path = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Tarjetas_apertura_2025_CLC.csv'
+df2 = pd.read_csv(csv_file_path)
+
+# --- Debugging and Data Standardization Start ---
+
+df2.columns = df2.columns.str.strip().str.upper()
+df2['EQUIPO'] = df2['EQUIPO'].astype(str).str.strip().str.title()
+df2['JUGADOR'] = df2['JUGADOR'].astype(str).str.strip().str.title()
+
+# Print unique values of 'Equipo' to identify potential inconsistencies (e.g., extra spaces)
+# st.write(df2['EQUIPO'].unique()) # Commented out as this is for debugging and not meant for final display
+
+# Standardize the 'Equipo' column: strip whitespace and convert to title case
+# This ensures that variations like "Real Madrid " or "real madrid" are treated as "Real Madrid"
+df2['EQUIPO'] = df2['EQUIPO'].astype(str).str.strip().str.title()
+
+# Print unique values of 'Equipo' after standardization
+# st.write(df2['EQUIPO'].unique()) # Commented out as this is for debugging and not meant for final display
+
+# Using .str.contains() with case=False to find 'Real Madrid' regardless of initial case
+# df2[df2['EQUIPO'].str.contains('Real Madrid', na=False, case=False)][['EQUIPO', '2F']] # Commented out
+
+# --- Debugging and Data Standardization End ---
+
+
+# Identify columns from '1F' to '8F'
+# This list comprehension dynamically finds columns that contain 'F' and are alphabetically between '1F' and '8F'.
+columns_to_check = [col for col in df2.columns if 'F' in col and '1F' <= col <= '8F']
+
+# Initialize dictionaries to store counts for '1A', '1R', and '2A'
+# Each dictionary will store team names as keys and another dictionary (column-wise counts) as values.
+counts_1A = {}
+counts_1R = {}
+counts_2A = {}
+
+# Iterate over each unique team name in the 'Equipo' column
+for team in df2['EQUIPO'].unique():
+    # Filter the DataFrame to get data only for the current team
+    team_df = df2[df2['EQUIPO'] == team]
+
+    # Initialize column-wise counts for the current team for each type ('1A', '1R', '2A')
+    # All columns in 'columns_to_check' are initialized with a count of 0.
+    team_counts_1A = {col: 0 for col in columns_to_check}
+    team_counts_1R = {col: 0 for col in columns_to_check}
+    team_counts_2A = {col: 0 for col in columns_to_check}
+
+    # Iterate over each column that needs to be checked (from '1F' to '8F')
+    for col in columns_to_check:
+        # Convert the column to string type to ensure accurate comparison with '1A', '1R', '2A'.
+        # .str.contains() works on string data.
+        # na=False ensures that NaN values are treated as empty strings and do not cause errors
+        # or match the search patterns.
+        team_counts_1A[col] = team_df[col].astype(str).str.contains('1A', na=False).sum()
+        team_counts_1R[col] = team_df[col].astype(str).str.contains('1R', na=False).sum()
+        team_counts_2A[col] = team_df[col].astype(str).str.contains('2A', na=False).sum()
+
+    # Store the calculated counts for the current team in the main dictionaries
+    counts_1A[team] = team_counts_1A
+    counts_1R[team] = team_counts_1R
+    counts_2A[team] = team_counts_2A
+
+# Convert the dictionaries of counts into pandas DataFrames for a structured and readable output.
+# orient='index' makes the dictionary keys (team names) the DataFrame index.
+df_counts_1A = pd.DataFrame.from_dict(counts_1A, orient='index')
+df_counts_1R = pd.DataFrame.from_dict(counts_1R, orient='index')
+df_counts_2A = pd.DataFrame.from_dict(counts_2A, orient='index')
+
+# Add a new column 'Total_F_Count' to each DataFrame, summing values from '1F' to '8F'
+df_counts_1A['Total_1A_Count'] = df_counts_1A[columns_to_check].sum(axis=1)
+df_counts_1R['Total_1R_Count'] = df_counts_1R[columns_to_check].sum(axis=1)
+df_counts_2A['Total_2A_Count'] = df_counts_2A[columns_to_check].sum(axis=1)
+
+# Multiply by two the 2A total count
+df_counts_2A['Total_2A_Count'] = df_counts_2A['Total_2A_Count'] * 2
+
+# Drop the individual '1F' to '8F' columns from each DataFrame
+df_counts_1A = df_counts_1A.drop(columns=columns_to_check)
+df_counts_1R = df_counts_1R.drop(columns=columns_to_check)
+df_counts_2A = df_counts_2A.drop(columns=columns_to_check)
+
+# Assign the index as a variable called Equipo and the index reset it
+df_counts_1R.index.name = 'Equipo'
+df_counts_1R = df_counts_1R.reset_index()
+
+# Join the DataFrames into a new DataFrame by their index (Equipo)
+# The 'join' method performs a left join by default on the index.
+# We are joining df_counts_1A with df_counts_2A
+final_counts_df = df_counts_1A.join(df_counts_2A)
+
+# Assign the index as a variable called Equipo and the index reset it
+final_counts_df.index.name = 'Equipo'
+final_counts_df = final_counts_df.reset_index()
+
+# adding up column Total_1A_Count with Total_2A_Count
+final_counts_df = final_counts_df.assign(Total_A_Count=final_counts_df['Total_1A_Count'] + final_counts_df['Total_2A_Count'])
+
+# Drop columns Total_1A_Count, Total_2A_Count
+final_counts_df = final_counts_df.drop(columns=['Total_1A_Count', 'Total_2A_Count'])
+
+
+# Sort the final_counts_df by 'Total_A_Count' in descending order for the bar chart
+final_counts_df = final_counts_df.sort_values(by='Total_A_Count', ascending=False)
+
+# Create the bar chart for yellow cards per team
+chart_yellow_cards = alt.Chart(final_counts_df).mark_bar().encode(
+    x=alt.X('Equipo:N', sort='-y', title='Equipo'), # Sort by y-axis (Total_A_Count) descending
+    y=alt.Y('Total_A_Count:Q', title='Tarjetas Amarillas 🟨'),
+    tooltip=['Equipo', 'Total_A_Count']
+).properties(
+    title='Total de Tarjetas Amarillas por Equipo'
+)
+
+# Display the chart in Streamlit
+st.altair_chart(chart_yellow_cards, use_container_width=True)
+
+###########################################################################
+###### Tabla de goleadores #################################
+###########################################################################
+
+st.divider()
+
+st.subheader("Tabla de goleadores")
+
+
+
+csv_file_path3 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Goleadores_apertura_2025_CLC.csv'
+df3 = pd.read_csv(csv_file_path3)
+
+
+df3.columns = df3.columns.str.strip().str.upper()
+df3['EQUIPO'] = df3['EQUIPO'].astype(str).str.strip().str.title()
+df3['NOMBRE Y APELLIDO'] = df3['NOMBRE Y APELLIDO'].astype(str).str.strip().str.title()
+df3['GOLES'] = df3['GOLES'].astype(int)
+df3 = df3.sort_values(by='GOLES', ascending=False)
+df_goleador = df3.head(5)
+
+
+# Define the column configuration for df_goleador
+    # Column names here must match the actual uppercase column names in df_goleador
+column_config_goleador = {
+        "NOMBRE Y APELLIDO": st.column_config.TextColumn("Nombre", width = 100, help="Name of the goal scorer"),
+        "EQUIPO": st.column_config.TextColumn("Equipo", width = 100,  help="Team of the player"),
+        "GOLES": st.column_config.NumberColumn("Goles", format="%d", help="Number of goals scored"),
+        # Add configurations for other columns in df_goleador as needed
+    }
+
+# Display the DataFrame as a Streamlit table with the new configuration
+st.dataframe(
+        df_goleador,
+        use_container_width=True,
+        hide_index=True,
+        column_config=column_config_goleador
+    )
+
+###########################################################################
+###### Tarjetas amarillas por jugadores #################################
+###########################################################################
+
+st.divider()
+
+csv_file_path2 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Tarjetas_apertura_2025_CLC.csv'
+df2 = pd.read_csv(csv_file_path2)
+
+df2.columns = df2.columns.str.strip().str.upper()
+df2['EQUIPO'] = df2['EQUIPO'].astype(str).str.strip().str.title()
+df2['JUGADOR'] = df2['JUGADOR'].astype(str).str.strip().str.title()
+
+# --- Debugging and Data Standardization Start ---
+
+#Identify columns from '1F' to '8F'
+columns_to_check_Jug = [col for col in df2.columns if 'F' in col and '1F' <= col <= '8F']
+
+# Initialize dictionaries to store counts for '1A', '1R', and '2A'
+counts_1A_Jug = {}
+counts_1R_Jug = {}
+counts_2A_Jug = {}
+
+# Iterate over each unique player in the 'JUGADOR' column
+for player in df2['JUGADOR'].unique():
+    # Filter the DataFrame to get data only for the current player
+    player_df = df2[df2['JUGADOR'] == player]
+
+    # Initialize column-wise counts for the current player for each type ('1A', '1R', '2A')
+    player_counts_1A = {col: 0 for col in columns_to_check_Jug}
+    player_counts_1R = {col: 0 for col in columns_to_check_Jug}
+    player_counts_2A = {col: 0 for col in columns_to_check_Jug}
+
+    # Iterate over each column that needs to be checked (from '1F' to '8F')
+    for col in columns_to_check_Jug:
+        player_counts_1A[col] = player_df[col].astype(str).str.contains('1A', na=False).sum()
+        player_counts_1R[col] = player_df[col].astype(str).str.contains('1R', na=False).sum()
+        player_counts_2A[col] = player_df[col].astype(str).str.contains('2A', na=False).sum()
+
+    # Store the calculated counts for the current player in the main dictionaries
+    counts_1A_Jug[player] = player_counts_1A
+    counts_1R_Jug[player] = player_counts_1R
+    counts_2A_Jug[player] = player_counts_2A
+
+# Convert the dictionaries of counts into pandas DataFrames
+df_counts_1A_Jug = pd.DataFrame.from_dict(counts_1A_Jug, orient='index')
+df_counts_1R_Jug = pd.DataFrame.from_dict(counts_1R_Jug, orient='index')
+df_counts_2A_Jug = pd.DataFrame.from_dict(counts_2A_Jug, orient='index')
+
+# Add a new column 'TOTAL_F_COUNT' to each DataFrame, summing values from '1F' to '8F'
+df_counts_1A_Jug['TOTAL_1A_COUNT'] = df_counts_1A_Jug[columns_to_check_Jug].sum(axis=1)
+df_counts_1R_Jug['TOTAL_1R_COUNT'] = df_counts_1R_Jug[columns_to_check_Jug].sum(axis=1)
+df_counts_2A_Jug['TOTAL_2A_COUNT'] = df_counts_2A_Jug[columns_to_check_Jug].sum(axis=1)
+
+# Multiply by two the 2A total count
+df_counts_2A_Jug['TOTAL_2A_COUNT'] = df_counts_2A_Jug['TOTAL_2A_COUNT'] * 2
+
+# Drop the individual '1F' to '8F' columns from each DataFrame
+df_counts_1A_Jug = df_counts_1A_Jug.drop(columns=columns_to_check_Jug)
+df_counts_1R_Jug = df_counts_1R_Jug.drop(columns=columns_to_check_Jug)
+df_counts_2A_Jug = df_counts_2A_Jug.drop(columns=columns_to_check_Jug)
+
+# Join the DataFrames into a new DataFrame by their index (JUGADOR)
+final_counts_df_Jug = df_counts_1A_Jug.join(df_counts_2A_Jug)
+
+# Assign the index as a variable called JUGADOR and reset it
+final_counts_df_Jug.index.name = 'JUGADOR'
+final_counts_df_Jug = final_counts_df_Jug.reset_index()
+
+# Assign the index as a variable called JUGADOR and reset it
+df_counts_1R_Jug.index.name = 'JUGADOR'
+df_counts_1R_Jug = df_counts_1R_Jug.reset_index()
+
+# Adding up column TOTAL_1A_COUNT with TOTAL_2A_COUNT
+final_counts_df_Jug = final_counts_df_Jug.assign(TOTAL_A_COUNT=final_counts_df_Jug['TOTAL_1A_COUNT'] + final_counts_df_Jug['TOTAL_2A_COUNT'])
+
+# Drop columns TOTAL_1A_COUNT, TOTAL_2A_COUNT
+final_counts_df_Jug = final_counts_df_Jug.drop(columns=['TOTAL_1A_COUNT', 'TOTAL_2A_COUNT'])
+
+# Merge df_counts_1R_Jug and final_counts_df_Jug with df2 to get the 'EQUIPO' column
+df_counts_1R_Jug = pd.merge(df_counts_1R_Jug, df2[['JUGADOR', 'EQUIPO']], on='JUGADOR', how='left').drop_duplicates(subset=['JUGADOR'])
+final_counts_df_Jug = pd.merge(final_counts_df_Jug, df2[['JUGADOR', 'EQUIPO']], on='JUGADOR', how='left').drop_duplicates(subset=['JUGADOR'])
+
+# Rename columns for df_counts_1R_Jug
+df_counts_1R_Jug = df_counts_1R_Jug.rename(columns={'JUGADOR': 'Nombre', 'EQUIPO': 'Equipo', 'TOTAL_1R_COUNT': 'Tarjetas'})
+
+# Rename columns for final_counts_df_Jug
+final_counts_df_Jug = final_counts_df_Jug.rename(columns={'JUGADOR': 'Nombre', 'EQUIPO': 'Equipo', 'TOTAL_A_COUNT': 'Tarjetas'})
+
+# Select and reorder columns for display
+df_counts_1R_Jug = df_counts_1R_Jug[['Nombre', 'Equipo', 'Tarjetas']]
+final_counts_df_Jug = final_counts_df_Jug[['Nombre', 'Equipo', 'Tarjetas']]
+
+# Sort the DataFrames by 'Tarjetas' in descending order
+df_counts_1R_Jug = df_counts_1R_Jug.sort_values(by='Tarjetas', ascending=False)
+final_counts_df_Jug = final_counts_df_Jug.sort_values(by='Tarjetas', ascending=False)
+
+# Reset the index for both DataFrames
+df_counts_1R_Jug = df_counts_1R_Jug.reset_index(drop=True)
+final_counts_df_Jug = final_counts_df_Jug.reset_index(drop=True)
+
+# Get only the first five
+final_counts_df_Jug = final_counts_df_Jug.head(5)
+df_counts_1R_Jug = df_counts_1R_Jug.head(5)
+
+
+# Define column configurations for df_counts_1R_Jug
+column_config_1R = {
+    "Nombre": st.column_config.TextColumn("Nombre", width=130, help="Name of the player"),
+    "Equipo": st.column_config.TextColumn("Equipo", width=120, help="Team of the player"),
+    "Tarjetas": st.column_config.NumberColumn("🟥", width=80, format="%d", help="Number of red cards"),
+}
+
+# Define column configurations for final_counts_df_Jug
+column_config_A = {
+    "Nombre": st.column_config.TextColumn("Nombre", width=130, help="Name of the player"),
+    "Equipo": st.column_config.TextColumn("Equipo", width=120, help="Team of the player"),
+    "Tarjetas": st.column_config.NumberColumn("🟨", width=80, format="%d", help="Number of yellow cards"),
+}
+
+# Streamlit code to display tables side by side
+col2, col1 = st.columns(2)
+
+with col2:
+    st.subheader("Tarjetas Amarillas")
+    st.dataframe(
+        final_counts_df_Jug,
+        use_container_width=True,
+        hide_index=True,
+        column_config=column_config_A
+    )
+
+with col1:
+    st.subheader("Tarjetas Rojas")
+    st.dataframe(
+        df_counts_1R_Jug,
+        use_container_width=True,
+        hide_index=True,
+        column_config=column_config_1R
+    )
+
+
+
