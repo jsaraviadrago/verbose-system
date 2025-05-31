@@ -551,7 +551,7 @@ final_counts_df = final_counts_df.sort_values(by='Total_A_Count', ascending=Fals
 
 # Create the bar chart for yellow cards per team
 chart_yellow_cards = alt.Chart(final_counts_df).mark_bar().encode(
-    x=alt.X('Equipo:N', sort='-y', title='Equipo'), # Sort by y-axis (Total_A_Count) descending
+    x=alt.X('Equipo:N', sort='-y', title=''), # Sort by y-axis (Total_A_Count) descending
     y=alt.Y('Total_A_Count:Q', title='Tarjetas Amarillas 🟨'),
     tooltip=['Equipo', 'Total_A_Count']
 ).properties(
