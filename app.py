@@ -555,7 +555,6 @@ chart_yellow_cards = alt.Chart(final_counts_df).mark_bar().encode(
     y=alt.Y('Total_A_Count:Q', title='Tarjetas Amarillas 🟨'),
     tooltip=['Equipo', 'Total_A_Count']
 ).properties(
-    title='Total de Tarjetas Amarillas por Equipo'
 )
 
 # Display the chart in Streamlit
