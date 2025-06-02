@@ -397,6 +397,10 @@ df1['match_number'] = df1.groupby(['Fecha', 'Grupo']).cumcount() // 2
 # Create a team_number (1 or 2) within each match to distinguish between team 1 and team 2
 df1['team_number'] = df1.groupby(['Fecha', 'Grupo', 'match_number']).cumcount() + 1
 
+# Before pivoting, extract the 'Hora' and 'Cancha' details for each unique match.
+# These columns are associated with 'Fecha', 'Grupo', and 'match_number'.
+match_details = df1[['Fecha', 'Grupo', 'match_number', 'Hora', 'Cancha']].drop_duplicates().copy()
+
 # Pivot the table to create separate columns for Equipo and Goles for each team
 pivoted_df = df1.pivot(index=['Fecha', 'Grupo', 'match_number'], columns='team_number', values=['Equipo', 'Goles'])
 
@@ -406,10 +410,16 @@ pivoted_df.columns = [f'{col[0]}_{col[1]}' for col in pivoted_df.columns]
 # Reset the index to make 'Fecha', 'Grupo' and 'match_number' regular columns
 pivoted_df = pivoted_df.reset_index()
 
-# Drop the match_number column as it is no longer needed
+# --- End of your original code ---
+
+# Merge the 'Hora' and 'Cancha' details back into the pivoted DataFrame.
+# We use 'Fecha', 'Grupo', and 'match_number' as the keys for merging.
+pivoted_df = pd.merge(pivoted_df, match_details, on=['Fecha', 'Grupo', 'match_number'], how='left')
+
+# Drop the 'match_number' column as it is no longer needed for the final output.
 pivoted_df = pivoted_df.drop(columns='match_number')
 
-# Rename the columns to match the desired output
+# Rename the columns to match the desired output format (Equipo_A, Goles_A, etc.).
 pivoted_df = pivoted_df.rename(columns={
     'Equipo_1': 'Equipo_A',
     'Equipo_2': 'Equipo_B',
@@ -417,17 +427,32 @@ pivoted_df = pivoted_df.rename(columns={
     'Goles_2': 'Goles_B'
 })
 
-# Re order columns
-pivoted_df = pivoted_df[['Fecha', 'Grupo', 'Equipo_A', 'Goles_A', 'Equipo_B', 'Goles_B']]
+# Sort the DataFrame by the 'Fecha' column to ensure chronological order based on integer values.
+# The previous date conversion steps have been removed as 'Fecha' is now an integer.
+pivoted_df = pivoted_df.sort_values(by='Fecha')
 
-# Define the column configuration for pivoted_df
+# Convert 'Fecha' back to string format after sorting,
+# ensuring the row order remains chronological based on the integer values.
+pivoted_df['Fecha'] = pivoted_df['Fecha'].astype(str)
+
+# Reorder the columns to place 'Hora' and 'Cancha' immediately after 'Fecha'.
+pivoted_df = pivoted_df[['Fecha', 'Hora', 'Cancha', 'Grupo', 'Equipo_A', 'Goles_A', 'Equipo_B', 'Goles_B']]
+
+# Display the first 5 rows of the modified DataFrame in Markdown format.
+print(pivoted_df.head().to_markdown(index=False, numalign="left", stralign="left"))
+
+
+# Define the column configuration for pivoted_df for Streamlit
 column_config_pivoted = {
     "Fecha": st.column_config.NumberColumn("Fecha", width=50, format="%d", help="Fecha del partido"),
     "Grupo": st.column_config.NumberColumn("Grupo", width=50, format="%d", help="Grupo al que pertenecen los equipos"),
+    "Hora": st.column_config.TextColumn("Hora", width=70, help="Hora del partido"), # Added Hora
+    "Cancha": st.column_config.TextColumn("Cancha", width=100, help="Cancha donde se juega el partido"), # Added Cancha
     "Equipo_A": st.column_config.TextColumn("Equipo A", width=100, help="Nombre del primer equipo"),
     "Goles_A": st.column_config.NumberColumn("Goles A", format="%d", help="Goles del primer equipo"),
     "Equipo_B": st.column_config.TextColumn("Equipo B", width=100, help="Nombre del segundo equipo"),
     "Goles_B": st.column_config.NumberColumn("Goles B", format="%d", help="Goles del segundo equipo"),
+    
 }
 
 # Display the DataFrame as a Streamlit table with the new configuration
@@ -437,6 +462,8 @@ st.dataframe(
     hide_index=True,
     column_config=column_config_pivoted
 )
+
+
 
 ########################################################################
 ###### Tarjetas por equipo #########################################
