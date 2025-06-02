@@ -437,21 +437,20 @@ pivoted_df['Fecha'] = pivoted_df['Fecha'].astype(str)
 # Reorder the columns to place 'Hora' and 'Cancha' immediately after 'Fecha'.
 pivoted_df = pivoted_df[['Fecha', 'Hora', 'Cancha', 'Grupo', 'Equipo_A', 'Goles_A', 'Equipo_B', 'Goles_B']]
 
-# Display the first 5 rows of the modified DataFrame in Markdown format.
-print(pivoted_df.head().to_markdown(index=False, numalign="left", stralign="left"))
-
+# Add Streamlit UI elements
+st.divider()
+st.subheader("Resultados por Fecha")
 
 # Define the column configuration for pivoted_df for Streamlit
 column_config_pivoted = {
     "Fecha": st.column_config.NumberColumn("Fecha", width=50, format="%d", help="Fecha del partido"),
     "Grupo": st.column_config.NumberColumn("Grupo", width=50, format="%d", help="Grupo al que pertenecen los equipos"),
-    "Hora": st.column_config.TextColumn("Hora", width=70, help="Hora del partido"), # Added Hora
-    "Cancha": st.column_config.TextColumn("Cancha", width=100, help="Cancha donde se juega el partido"), # Added Cancha
+    "Hora": st.column_config.TextColumn("Hora", width=70, help="Hora del partido"),
+    "Cancha": st.column_config.TextColumn("Cancha", width=100, help="Cancha donde se juega el partido"),
     "Equipo_A": st.column_config.TextColumn("Equipo A", width=100, help="Nombre del primer equipo"),
     "Goles_A": st.column_config.NumberColumn("Goles A", format="%d", help="Goles del primer equipo"),
     "Equipo_B": st.column_config.TextColumn("Equipo B", width=100, help="Nombre del segundo equipo"),
     "Goles_B": st.column_config.NumberColumn("Goles B", format="%d", help="Goles del segundo equipo"),
-    
 }
 
 # Display the DataFrame as a Streamlit table with the new configuration
@@ -461,8 +460,6 @@ st.dataframe(
     hide_index=True,
     column_config=column_config_pivoted
 )
-
-
 
 ########################################################################
 ###### Tarjetas por equipo #########################################
