@@ -487,7 +487,8 @@ st.dataframe(
 
 st.divider()
 
-st.subheader("Cuartos de final")
+#st.subheader("Cuartos de final")
+st.markdown("## <span style='color: #ADD8E6;'>Cuartos de final</span>", unsafe_allow_html=True) # Changed to light blue
 
 # Extract specific 'Equipo' values for the 'Equipo A' column
 equipo_a_values = [
@@ -632,7 +633,7 @@ column_config_winners_df = {
 }
 
 # Display the new DataFrame
-st.subheader("Semifinal")
+st.markdown("## <span style='color: #008000;'>Semifinal</span>", unsafe_allow_html=True) # Changed to green
 st.dataframe(
     winners_df,
     use_container_width=True,
@@ -682,7 +683,7 @@ column_config_winners_winners_df = {
 }
 
 # Display the Finalists DataFrame
-st.subheader("Final")
+st.markdown("## <span style='color: #FF0000;'>Final</span>", unsafe_allow_html=True) # Changed to green
 st.dataframe(
     winners_winners_df,
     use_container_width=True,
