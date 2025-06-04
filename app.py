@@ -624,7 +624,7 @@ st.dataframe(
     winners_df,
     use_container_width=True,
     hide_index=True,
-    column_config=column_config_winners_df
+    column_config=column_config_winners_df)
 
 ########################################################################
 ###### Tarjetas por equipo #########################################
