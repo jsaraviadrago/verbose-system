@@ -889,7 +889,7 @@ df_goleador = df3.head(5)
 column_config_goleador = {
         "NOMBRE Y APELLIDO": st.column_config.TextColumn("Nombre", width = 100, help="Name of the goal scorer"),
         "EQUIPO": st.column_config.TextColumn("Equipo", width = 100,  help="Team of the player"),
-        "GOLES": st.column_config.NumberColumn("Goles", format="%d", help="Number of goals scored"),
+        "GOLES": st.column_config.NumberColumn("Goles ⚽", format="%d", help="Number of goals scored"),
         # Add configurations for other columns in df_goleador as needed
     }
 
