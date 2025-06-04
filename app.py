@@ -220,6 +220,22 @@ st.divider()
 # Display dataframe nicely formatted
 st.subheader("Tabla de posiciones")
 
+
+st.markdown("""
+⚽ **Reglas de Desempate en Tablas de Liga de Fútbol**
+
+En caso de que dos o más equipos terminen una liga de fútbol con la misma cantidad de puntos, las reglas de desempate suelen aplicarse en el siguiente orden, aunque pueden variar ligeramente según la competición:
+
+1.  **Diferencia de Goles General:** El equipo con la mayor diferencia entre los goles marcados y los goles recibidos en todos los partidos de la liga.
+2.  **Goles a Favor General:** El equipo que haya marcado el mayor número de goles en todos los partidos de la liga.
+3.  **Puntos en Enfrentamientos Directos:** Si los equipos empatados han jugado entre sí, se considera el número de puntos obtenidos en los partidos disputados solo entre ellos.
+4.  **Diferencia de Goles en Enfrentamientos Directos:** Si sigue el empate, se toma la diferencia de goles en los partidos disputados solo entre los equipos empatados.
+5.  **Goles a Favor en Enfrentamientos Directos:** Si aún hay empate, se considera el número de goles marcados en los partidos disputados solo entre los equipos empatados.
+6.  **Goles de Visitante en Enfrentamientos Directos:** En algunas ligas, los goles marcados como visitante en los partidos entre los equipos empatados pueden ser un criterio adicional.
+7.  **Fair Play (Juego Limpio):** En algunas competiciones, el equipo con menos tarjetas (amarillas y rojas) puede tener ventaja.
+8.  **Sorteo:** Como último recurso, si todos los criterios anteriores no logran romper el empate, se puede realizar un sorteo.
+""")
+
 st.write("**Grupo 1**")
 
 # Display with custom formatting and column names
