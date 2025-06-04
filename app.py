@@ -474,6 +474,69 @@ st.dataframe(
     column_config=column_config_pivoted
 )
 
+####################################################################
+#### Cuartos de final##############
+###################################################################
+
+# Resultados de Cuartos de final
+
+# 1 Grupo 1 vs 4 Grupo 2
+# 1 Grupo 2 vs 4 Grupo 1
+# 2 Grupo 1 vs 3 Grupo 2
+# 2 Grupo 2 vs 3 Grupo 1
+
+st.divider()
+
+st.subheader("Cuartos de final")
+
+# Extract specific 'Equipo' values for the 'Equipo A' column
+equipo_a_values = [
+    final_stats_sorted1['Equipo'].iloc[0],  # First value from final_stats_sorted1
+    final_stats_sorted['Equipo'].iloc[0],   # First value from final_stats_sorted
+    final_stats_sorted1['Equipo'].iloc[1],  # Second value from final_stats_sorted1
+    final_stats_sorted['Equipo'].iloc[1]    # Second value from final_stats_sorted
+]
+
+# Extract specific 'Equipo' values for the 'Equipo B' column
+equipo_b_values = [
+    final_stats_sorted['Equipo'].iloc[3],   # Fourth value from final_stats_sorted
+    final_stats_sorted1['Equipo'].iloc[3],  # Fourth value from final_stats_sorted1
+    final_stats_sorted['Equipo'].iloc[2],   # Third value from final_stats_sorted
+    final_stats_sorted1['Equipo'].iloc[2]   # Third value from final_stats_sorted1
+]
+
+# Define values for the new 'Hora' and 'Cancha' columns
+hora_values = ['8:50', '9:50', '8:50', '9:50']
+cancha_values = [1, 1, 2, 2]
+
+# Create the new DataFrame with the added columns and specified order
+new_df = pd.DataFrame({
+    'Hora': hora_values,    # New 'Hora' column
+    'Cancha': cancha_values, # New 'Cancha' column
+    'Equipo A': equipo_a_values,
+    'Goles A': [''] * 4,  # Blank column 'Goles A'
+    'Equipo B': equipo_b_values,
+    'Goles B': [''] * 4   # Blank column 'Goles B'
+})
+
+# Define the column configuration for new_df for Streamlit
+column_config_new_df = {
+    "Hora": st.column_config.TextColumn("Hora", width=70, help="Hora del partido"),
+    "Cancha": st.column_config.NumberColumn("Cancha", width=100, format="%d", help="Cancha donde se juega el partido"),
+    "Equipo A": st.column_config.TextColumn("Equipo A", width=100, help="Nombre del primer equipo"),
+    "Goles A": st.column_config.TextColumn("Goles A", help="Goles del primer equipo"), # Changed to TextColumn as it's blank
+    "Equipo B": st.column_config.TextColumn("Equipo B", width=100, help="Nombre del segundo equipo"),
+    "Goles B": st.column_config.TextColumn("Goles B", help="Goles del segundo equipo"), # Changed to TextColumn as it's blank
+}
+
+# Display the DataFrame as a Streamlit table with the new configuration
+st.dataframe(
+    new_df,
+    use_container_width=True,
+    hide_index=True,
+    column_config=column_config_new_df
+)
+
 ########################################################################
 ###### Tarjetas por equipo #########################################
 ###################################################################
