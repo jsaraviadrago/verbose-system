@@ -507,15 +507,17 @@ equipo_b_values = [
 # Define values for the new 'Hora' and 'Cancha' columns
 hora_values = ['8:50', '9:50', '8:50', '9:50']
 cancha_values = [1, 1, 2, 2]
+goles_a = [0, 0, 0, 0]
+goles_b = [0, 0, 0, 0]
 
 # Create the new DataFrame with the added columns and specified order
 new_df = pd.DataFrame({
     'Hora': hora_values,    # New 'Hora' column
     'Cancha': cancha_values, # New 'Cancha' column
     'Equipo A': equipo_a_values,
-    'Goles A': [''] * 4,  # Blank column 'Goles A'
+    'Goles A': goles_a,  # Blank column 'Goles A'
     'Equipo B': equipo_b_values,
-    'Goles B': [''] * 4   # Blank column 'Goles B'
+    'Goles B': goles_b   # Blank column 'Goles B'
 })
 
 # Define the column configuration for new_df for Streamlit
@@ -592,15 +594,17 @@ winner_row2_equipo_b = get_winner(
     new_df['Equipo B'].iloc[2]
 )
 winners_equipo_b_new_df.append(winner_row2_equipo_b)
+goles_a_semi = [0,0]
+goles_b_semi = [0,0]
 
 # Create the new 'winners_df'
 winners_df = pd.DataFrame({
     'Hora': ['8:50', '9:50'], # Filled with specified values
     'Cancha': [1, 2], # Filled with specified values
     'Equipo A': winners_equipo_a_new_df,
-    'Goles A': [''] * 2, # Blank as per previous requests for 'Goles' columns
+    'Goles A': goles_a_semi, # Blank as per previous requests for 'Goles' columns
     'Equipo B': winners_equipo_b_new_df,
-    'Goles B': [''] * 2  # Blank as per previous requests for 'Goles' columns
+    'Goles B': goles_b_semi  # Blank as per previous requests for 'Goles' columns
 })
 
 #Define column configuration for the new winners_df
