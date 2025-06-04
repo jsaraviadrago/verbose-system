@@ -531,7 +531,7 @@ column_config_new_df = {
 }
 
 # Display the DataFrame as a Streamlit table with the new configuration
-st.subheader("Original DataFrame (new_df)")
+
 st.dataframe(
     new_df,
     use_container_width=True,
