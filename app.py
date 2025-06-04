@@ -438,10 +438,6 @@ pivoted_df['Fecha'] = pivoted_df['Fecha'].astype(str)
 # Reorder the columns to place 'Hora' and 'Cancha' immediately after 'Fecha'.
 pivoted_df = pivoted_df[['Fecha', 'Hora', 'Cancha', 'Grupo', 'Equipo_A', 'Goles_A', 'Equipo_B', 'Goles_B']]
 
-# Add Streamlit UI elements
-st.divider()
-st.subheader("Resultados por Fecha")
-
 # Define the column configuration for pivoted_df for Streamlit
 column_config_pivoted = {
     "Fecha": st.column_config.NumberColumn("Fecha", width=50, format="%d", help="Fecha del partido"),
