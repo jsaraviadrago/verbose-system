@@ -543,7 +543,8 @@ st.dataframe(
 #### Semifinal##############
 ###################################################################
 
-# --- Create the new DataFrame based on "winners" ---
+# Ganador CF1 vs Ganador CF4
+# Gnador CF2 vs Ganador CF3
 
 # Helper function to determine the winner based on scores
 def get_winner(goles_a, goles_b, equipo_a_name, equipo_b_name):
@@ -554,11 +555,20 @@ def get_winner(goles_a, goles_b, equipo_a_name, equipo_b_name):
     else:
         return " " # Or you can choose one team in case of a tie
 
+# Helper function to determine the loser based on scores
+def get_loser(goles_a, goles_b, equipo_a_name, equipo_b_name):
+    if goles_a < goles_b:
+        return equipo_a_name
+    elif goles_b < goles_a:
+        return equipo_b_name
+    else:
+        return " " # Or you can choose one team in case of a tie
+
 # Initialize lists for the new DataFrame's 'Equipo A' and 'Equipo B' columns
 winners_equipo_a_new_df = []
 winners_equipo_b_new_df = []
 
-# Row 1 of the new DataFrame
+# Row 1 of the new DataFrame (Semifinal 1)
 # Equipo A: winner of the first row of new_df
 winner_row0_equipo_a = get_winner(
     new_df['Goles A'].iloc[0],
@@ -577,7 +587,7 @@ winner_row3_equipo_b = get_winner(
 )
 winners_equipo_b_new_df.append(winner_row3_equipo_b)
 
-# Row 2 of the new DataFrame
+# Row 2 of the new DataFrame (Semifinal 2)
 # Equipo A: winner of the second row of new_df
 winner_row1_equipo_a = get_winner(
     new_df['Goles A'].iloc[1],
@@ -595,20 +605,22 @@ winner_row2_equipo_b = get_winner(
     new_df['Equipo B'].iloc[2]
 )
 winners_equipo_b_new_df.append(winner_row2_equipo_b)
-goles_a_semi = [0,0]
-goles_b_semi = [0,0]
 
-# Create the new 'winners_df'
+# Dummy scores for Semifinal matches to allow winner/loser determination
+goles_a_semi = [2, 1] # Example scores for Semifinal Team A
+goles_b_semi = [1, 3] # Example scores for Semifinal Team B
+
+# Create the 'winners_df' (Semifinal matches)
 winners_df = pd.DataFrame({
     'Hora': ['8:50', '9:50'], # Filled with specified values
     'Cancha': [1, 2], # Filled with specified values
     'Equipo A': winners_equipo_a_new_df,
-    'Goles A': goles_a_semi, # Blank as per previous requests for 'Goles' columns
+    'Goles A': goles_a_semi, # Now contains dummy numerical values for semi-finals
     'Equipo B': winners_equipo_b_new_df,
-    'Goles B': goles_b_semi  # Blank as per previous requests for 'Goles' columns
+    'Goles B': goles_b_semi  # Now contains dummy numerical values for semi-finals
 })
 
-# Define column configuration for the new winners_df
+#Define column configuration for the new winners_df
 column_config_winners_df = {
     "Hora": st.column_config.TextColumn("Hora", width=70, help="Hora del partido"),
     "Cancha": st.column_config.TextColumn("Cancha", width=100, help="Cancha donde se juega el partido"),
@@ -624,7 +636,107 @@ st.dataframe(
     winners_df,
     use_container_width=True,
     hide_index=True,
-    column_config=column_config_winners_df)
+    column_config=column_config_winners_df
+)
+
+
+
+
+####################################################################
+#### Final##############
+###################################################################
+
+# --- Create winners_winners_df (Finalists) ---
+finalists_equipo_a = get_winner(
+    winners_df['Goles A'].iloc[0],
+    winners_df['Goles B'].iloc[0],
+    winners_df['Equipo A'].iloc[0],
+    winners_df['Equipo B'].iloc[0]
+)
+
+finalists_equipo_b = get_winner(
+    winners_df['Goles A'].iloc[1],
+    winners_df['Goles B'].iloc[1],
+    winners_df['Equipo A'].iloc[1],
+    winners_df['Equipo B'].iloc[1]
+)
+
+winners_winners_df = pd.DataFrame({
+    'Hora': ['9:50'],
+    'Cancha': [1],
+    'Equipo A': [finalists_equipo_a],
+    'Goles A': [0],
+    'Equipo B': [finalists_equipo_b],
+    'Goles B': [0]
+})
+
+# Define column configuration for winners_winners_df (Final)
+column_config_winners_winners_df = {
+    "Hora": st.column_config.TextColumn("Hora", width=70, help="Hora del partido"),
+    "Cancha": st.column_config.NumberColumn("Cancha", width=100, format="%d", help="Cancha donde se juega el partido"),
+    "Equipo A": st.column_config.TextColumn("Equipo A", width=100, help="Nombre del primer equipo finalista"),
+    "Goles A": st.column_config.NumberColumn("Goles A", format="%d", help="Goles del primer equipo finalista"),
+    "Equipo B": st.column_config.TextColumn("Equipo B", width=100, help="Nombre del segundo equipo finalista"),
+    "Goles B": st.column_config.NumberColumn("Goles B", format="%d", help="Goles del segundo equipo finalista"),
+}
+
+# Display the Finalists DataFrame
+st.subheader("Final")
+st.dataframe(
+    winners_winners_df,
+    use_container_width=True,
+    hide_index=True,
+    column_config=column_config_winners_winners_df)
+
+
+####################################################################
+#### 3rd Place Playoff##############
+###################################################################
+
+
+
+# --- Create losers_losers_df (3rd Place Playoff) ---
+losers_equipo_a = get_loser(
+    winners_df['Goles A'].iloc[0],
+    winners_df['Goles B'].iloc[0],
+    winners_df['Equipo A'].iloc[0],
+    winners_df['Equipo B'].iloc[0]
+)
+
+losers_equipo_b = get_loser(
+    winners_df['Goles A'].iloc[1],
+    winners_df['Goles B'].iloc[1],
+    winners_df['Equipo A'].iloc[1],
+    winners_df['Equipo B'].iloc[1]
+)
+
+losers_losers_df = pd.DataFrame({
+    'Hora': ['8:50'],
+    'Cancha': [2],
+    'Equipo A': [losers_equipo_a],
+    'Goles A': [0],
+    'Equipo B': [losers_equipo_b],
+    'Goles B': [0]
+})
+
+# Define column configuration for losers_losers_df (3rd Place Playoff)
+column_config_losers_losers_df = {
+    "Hora": st.column_config.TextColumn("Hora", width=70, help="Hora del partido"),
+    "Cancha": st.column_config.NumberColumn("Cancha", width=100, format="%d", help="Cancha donde se juega el partido"),
+    "Equipo A": st.column_config.TextColumn("Equipo A", width=100, help="Nombre del primer equipo perdedor"),
+    "Goles A": st.column_config.NumberColumn("Goles A", format="%d", help="Goles del primer equipo perdedor"),
+    "Equipo B": st.column_config.TextColumn("Equipo B", width=100, help="Nombre del segundo equipo perdedor"),
+    "Goles B": st.column_config.NumberColumn("Goles B", format="%d", help="Goles del segundo equipo perdedor"),
+}
+
+# Display the 3rd Place Playoff DataFrame
+st.subheader("Tercer y cuarto puesto")
+st.dataframe(
+    losers_losers_df,
+    use_container_width=True,
+    hide_index=True,
+    column_config=column_config_losers_losers_df
+)
 
 ########################################################################
 ###### Tarjetas por equipo #########################################
