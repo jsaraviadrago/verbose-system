@@ -517,7 +517,7 @@ new_df = pd.DataFrame({
     'Equipo A': equipo_a_values,
     'Goles A': goles_a,  # Blank column 'Goles A'
     'Equipo B': equipo_b_values,
-    'Goles B': goles_b   # Blank column 'Goles B'
+    'Goles B': goles_b    # Blank column 'Goles B'
 })
 
 # Define the column configuration for new_df for Streamlit
@@ -525,12 +525,13 @@ column_config_new_df = {
     "Hora": st.column_config.TextColumn("Hora", width=70, help="Hora del partido"),
     "Cancha": st.column_config.NumberColumn("Cancha", width=100, format="%d", help="Cancha donde se juega el partido"),
     "Equipo A": st.column_config.TextColumn("Equipo A", width=100, help="Nombre del primer equipo"),
-    "Goles A": st.column_config.TextColumn("Goles A", help="Goles del primer equipo"), # Changed to TextColumn as it's blank
+    "Goles A": st.column_config.NumberColumn("Goles A", format="%d", help="Goles del primer equipo"), # Changed to NumberColumn
     "Equipo B": st.column_config.TextColumn("Equipo B", width=100, help="Nombre del segundo equipo"),
-    "Goles B": st.column_config.TextColumn("Goles B", help="Goles del segundo equipo"), # Changed to TextColumn as it's blank
+    "Goles B": st.column_config.NumberColumn("Goles B", format="%d", help="Goles del segundo equipo"), # Changed to NumberColumn
 }
 
 # Display the DataFrame as a Streamlit table with the new configuration
+st.subheader("Original DataFrame (new_df)")
 st.dataframe(
     new_df,
     use_container_width=True,
@@ -607,7 +608,7 @@ winners_df = pd.DataFrame({
     'Goles B': goles_b_semi  # Blank as per previous requests for 'Goles' columns
 })
 
-#Define column configuration for the new winners_df
+# Define column configuration for the new winners_df
 column_config_winners_df = {
     "Hora": st.column_config.TextColumn("Hora", width=70, help="Hora del partido"),
     "Cancha": st.column_config.TextColumn("Cancha", width=100, help="Cancha donde se juega el partido"),
@@ -624,8 +625,6 @@ st.dataframe(
     use_container_width=True,
     hide_index=True,
     column_config=column_config_winners_df
-)
-
 
 ########################################################################
 ###### Tarjetas por equipo #########################################
