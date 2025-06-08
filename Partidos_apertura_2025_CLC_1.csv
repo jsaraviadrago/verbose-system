@@ -25,12 +25,12 @@ Fecha,Partido,Cancha,Hora,Equipo_numero,Grupo,Equipo,Goles,Resultado
 3,12,2,9:50,2,2,Borussia Dortmund,0,P
 4,13,2,8:50,1,1,Barcelona,0,E
 4,13,2,8:50,2,1,Milan,0,E
-4,14,2,9:50,1,1,Liverpool,,
-4,14,2,9:50,2,1,Chelsea,,
+4,14,2,9:50,1,1,Liverpool,4,E
+4,14,2,9:50,2,1,Chelsea,4,E
 4,15,1,8:50,1,2,Fiorentina,3,G
 4,15,1,8:50,2,2,Bayern Munich,0,P
-4,16,1,9:50,1,2,Juventus,,
-4,16,1,9:50,2,2,Borussia Dortmund,,
+4,16,1,9:50,1,2,Juventus,2,P
+4,16,1,9:50,2,2,Borussia Dortmund,3,G
 5,17,1,8:50,1,1,Real Madrid,,
 5,17,1,8:50,2,1,Chelsea,,
 5,18,1,9:50,1,1,Barcelona,,
