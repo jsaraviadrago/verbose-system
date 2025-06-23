@@ -883,6 +883,7 @@ df3['GOLES'] = df3['GOLES'].astype(int)
 df3 = df3.sort_values(by='GOLES', ascending=False)
 df_goleador = df3.head(8)
 
+
 # Define the column configuration for df_goleador
     # Column names here must match the actual uppercase column names in df_goleador
 column_config_goleador = {
