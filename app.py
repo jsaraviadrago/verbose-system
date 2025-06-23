@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 
-
 st.markdown("<h1 style='text-align: center; '>Campeonato Apertura Cambridge Lima College 2025</h1>", unsafe_allow_html=True)
 st.divider()
 
@@ -882,7 +881,6 @@ df3['NOMBRE Y APELLIDO'] = df3['NOMBRE Y APELLIDO'].astype(str).str.strip().str.
 df3['GOLES'] = df3['GOLES'].astype(int)
 df3 = df3.sort_values(by='GOLES', ascending=False)
 df_goleador = df3.head(10)
-
 
 # Define the column configuration for df_goleador
     # Column names here must match the actual uppercase column names in df_goleador
