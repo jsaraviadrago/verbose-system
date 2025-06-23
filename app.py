@@ -880,7 +880,7 @@ df3['EQUIPO'] = df3['EQUIPO'].astype(str).str.strip().str.title()
 df3['NOMBRE Y APELLIDO'] = df3['NOMBRE Y APELLIDO'].astype(str).str.strip().str.title()
 df3['GOLES'] = df3['GOLES'].astype(int)
 df3 = df3.sort_values(by='GOLES', ascending=False)
-df_goleador = df3.head(10)
+df_goleador = df3.head(8)
 
 # Define the column configuration for df_goleador
     # Column names here must match the actual uppercase column names in df_goleador
