@@ -39,11 +39,11 @@ Fecha,Partido,Cancha,Hora,Equipo_numero,Grupo,Equipo,Goles,Resultado
 5,19,2,8:50,2,2,Juventus,0,P
 5,20,2,9:50,1,2,Borussia Dortmund,1,P
 5,20,2,9:50,2,2,Manchester City,2,G
-6,21,1,8:50,1,0,Real Madrid,0,
-6,21,1,8:50,2,0,Juventus,0,
-6,22,1,9:50,1,0,Fiorentina,0,
-6,22,1,9:50,2,0,Liverpool,0,
-6,23,2,8:50,1,0,Barcelona,0,
-6,23,2,8:50,2,0,Borussia Dortmund,0,
-6,24,2,9:50,1,0,Manchester City,0,
-6,24,2,9:50,2,0,Chelsea,0,
+6,21,1,8:50,1,0,Real Madrid,
+6,21,1,8:50,2,0,Juventus,
+6,22,1,9:50,1,0,Fiorentina,
+6,22,1,9:50,2,0,Liverpool,
+6,23,2,8:50,1,0,Barcelona,
+6,23,2,8:50,2,0,Borussia Dortmund,
+6,24,2,9:50,1,0,Manchester City,
+6,24,2,9:50,2,0,Chelsea,
