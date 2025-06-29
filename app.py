@@ -509,6 +509,7 @@ cancha_values = [1, 1, 2, 2]
 goles_a = [5,0, 4, 0]
 goles_b = [2, 0, 1, 0]
 
+
 # Create the new DataFrame with the added columns and specified order
 new_df = pd.DataFrame({
     'Hora': hora_values,    # New 'Hora' column
