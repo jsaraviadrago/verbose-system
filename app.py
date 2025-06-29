@@ -3,6 +3,7 @@ import pandas as pd
 import altair as alt
 
 
+
 st.markdown("<h1 style='text-align: center; '>Campeonato Apertura Cambridge Lima College 2025</h1>", unsafe_allow_html=True)
 st.divider()
 
