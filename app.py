@@ -200,8 +200,6 @@ final_stats1['PythEXP'] = gf_power1 / (gf_power1 + gc_power1)
 final_stats1['PythEXP'] = final_stats1['PythEXP'].fillna(0)
 final_stats1['PythEXP'] = final_stats1['PythEXP'].round(2)
 
-
-
   # Sort the DataFrame by 'Puntos' in descending order, then by 'GF' in descending order for ties
 final_stats_sorted1 = final_stats1.sort_values(by=['Puntos', 'GD'], ascending=[False, False])
 
