@@ -672,7 +672,7 @@ winners_winners_df = pd.DataFrame({
     'Hora': ['9:50'],
     'Cancha': [1],
     'Equipo A': [finalists_equipo_a],
-    'Goles A': [0],
+    'Goles A': [1],
     'Equipo B': [finalists_equipo_b],
     'Goles B': [0]
 })
@@ -723,7 +723,7 @@ losers_losers_df = pd.DataFrame({
     'Equipo A': [losers_equipo_a],
     'Goles A': [0],
     'Equipo B': [losers_equipo_b],
-    'Goles B': [0]
+    'Goles B': [3]
 })
 
 # Define column configuration for losers_losers_df (3rd Place Playoff)
