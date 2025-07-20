@@ -47,8 +47,12 @@ Fecha,Partido,Cancha,Hora,Equipo_numero,Grupo,Equipo,Goles,Resultado
 6,23,2,8:50,2,0,Borussia Dortmund,1,P
 6,24,2,9:50,1,0,Manchester City,2,G
 6,24,2,9:50,2,0,Chelsea,0,P
-7,25,1,8:50,1,0,Real Madrid,,
-7,25,1,8:50,2,0,Manchester City,,
-7,26,2,9:50,1,0,Fiorentina,,
-7,26,2,9:50,2,0,Barcelona,,
+7,25,1,8:50,1,0,Real Madrid,0,P
+7,25,1,8:50,2,0,Manchester City,3,G
+7,26,2,9:50,1,0,Fiorentina,3,G
+7,26,2,9:50,2,0,Barcelona,0,P
+8,27,2,8:50,1,0,Barcelona,3,G
+8,27,2,8:50,2,0,Real Madrid,0,P
+9,28,2,9:50,1,0,Fiorentina,0,P
+9,28,2,9:50,2,0,Manchester City,1,G
 
