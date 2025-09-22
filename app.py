@@ -513,17 +513,17 @@ equipo_b_values = [
 hora_values = ['8:50', '9:50', '8:50', '9:50']
 cancha_values = [1, 1, 2, 2]
 
-goles_a = [5,3,4, 2]
-goles_b = [2, 1, 1, 0]
+goles_a = [,,,]
+goles_b = [, , , ]
 
 
 # Create the new DataFrame with the added columns and specified order
 new_df = pd.DataFrame({
     'Hora': hora_values,    # New 'Hora' column
     'Cancha': cancha_values, # New 'Cancha' column
-    'Equipo A': equipo_a_values,
+    'Equipo A': , #equipo_a_values
     'Goles A': goles_a,  # Blank column 'Goles A'
-    'Equipo B': equipo_b_values,
+    'Equipo B': , #equipo_b_values
     'Goles B': goles_b    # Blank column 'Goles B'
 })
 
@@ -614,16 +614,16 @@ winner_row2_equipo_b = get_winner(
 winners_equipo_b_new_df.append(winner_row2_equipo_b)
 
 # Dummy scores for Semifinal matches to allow winner/loser determination
-goles_a_semi = [0, 3]# Example scores for Semifinal Team A
-goles_b_semi = [3, 0] # Example scores for Semifinal Team B
+goles_a_semi = [, ]# Example scores for Semifinal Team A
+goles_b_semi = [, ] # Example scores for Semifinal Team B
 
 # Create the 'winners_df' (Semifinal matches)
 winners_df = pd.DataFrame({
     'Hora': ['8:50', '9:50'], # Filled with specified values
     'Cancha': [1, 2], # Filled with specified values
-    'Equipo A': winners_equipo_a_new_df,
+    'Equipo A': , #winners_equipo_a_new_df
     'Goles A': goles_a_semi, # Now contains dummy numerical values for semi-finals
-    'Equipo B': winners_equipo_b_new_df,
+    'Equipo B': , #winners_equipo_b_new_df
     'Goles B': goles_b_semi  # Now contains dummy numerical values for semi-finals
 })
 
@@ -671,10 +671,10 @@ finalists_equipo_b = get_winner(
 winners_winners_df = pd.DataFrame({
     'Hora': ['9:50'],
     'Cancha': [1],
-    'Equipo A': [finalists_equipo_a],
-    'Goles A': [1],
-    'Equipo B': [finalists_equipo_b],
-    'Goles B': [0]
+    'Equipo A': [], #finalists_equipo_a
+    'Goles A': [],
+    'Equipo B': [], #finalists_equipo_b
+    'Goles B': []
 })
 
 # Define column configuration for winners_winners_df (Final)
@@ -720,10 +720,10 @@ losers_equipo_b = get_loser(
 losers_losers_df = pd.DataFrame({
     'Hora': ['8:50'],
     'Cancha': [2],
-    'Equipo A': [losers_equipo_a],
-    'Goles A': [0],
-    'Equipo B': [losers_equipo_b],
-    'Goles B': [3]
+    'Equipo A': [], #losers_equipo_a
+    'Goles A': [],
+    'Equipo B': [], #losers_equipo_b
+    'Goles B': []
 })
 
 # Define column configuration for losers_losers_df (3rd Place Playoff)
