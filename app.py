@@ -754,7 +754,7 @@ st.divider()
 st.subheader("Tarjetas amarillas por Equipo")
 
 csv_file_path = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Tarjetas_clausura_2025_CLC.csv'
-df2 = pd.read_csv(csv_file_path)
+df2 = pd.read_csv(csv_file_path, sep = ";")
 
 # --- Debugging and Data Standardization Start ---
 
@@ -878,7 +878,7 @@ st.subheader("Tabla de goleadores")
 
 
 csv_file_path3 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Goleadores_clausura_2025_CLC.csv'
-df3 = pd.read_csv(csv_file_path3)
+df3 = pd.read_csv(csv_file_path3, sep = ";")
 
 
 df3.columns = df3.columns.str.strip().str.upper()
