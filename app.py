@@ -3,7 +3,7 @@ import pandas as pd
 import altair as alt
 
 
-st.markdown("<h1 style='text-align: center; '>Campeonato Apertura Cambridge Lima College 2025</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; '>Campeonato Clausura Cambridge Lima College 2025</h1>", unsafe_allow_html=True)
 st.divider()
 
 # --- Logos section ---
@@ -32,7 +32,7 @@ st.markdown("""
 
 st.divider()
 
-csv_file_path1 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Partidos_apertura_2025_CLC_1.csv'
+csv_file_path1 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Partidos_clausura_2025_CLC_1.csv'
 df1 = pd.read_csv(csv_file_path1)
 
 # Calculated values
@@ -490,8 +490,8 @@ st.divider()
 #st.subheader("Cuartos de final")
 st.markdown("## <span style='color: #ADD8E6;'>Cuartos de final</span>", unsafe_allow_html=True) # Changed to light blue
 
-st.markdown("**Nota**: El partido de Fiorentina contra Liverpool terminó 1-1. El marcador final es el resultado de la tanda de penales")
-
+#st.markdown("**Nota**: El partido de Fiorentina contra Liverpool terminó 1-1. El marcador final es el resultado de la tanda de penales")
+#Esto fue en el apertura 2025
 
 # Extract specific 'Equipo' values for the 'Equipo A' column
 equipo_a_values = [
@@ -753,7 +753,7 @@ st.divider()
 
 st.subheader("Tarjetas amarillas por Equipo")
 
-csv_file_path = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Tarjetas_apertura_2025_CLC.csv'
+csv_file_path = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Tarjetas_clausura_2025_CLC.csv'
 df2 = pd.read_csv(csv_file_path)
 
 # --- Debugging and Data Standardization Start ---
@@ -877,7 +877,7 @@ st.subheader("Tabla de goleadores")
 
 
 
-csv_file_path3 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Goleadores_apertura_2025_CLC.csv'
+csv_file_path3 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Goleadores_clausura_2025_CLC.csv'
 df3 = pd.read_csv(csv_file_path3)
 
 
