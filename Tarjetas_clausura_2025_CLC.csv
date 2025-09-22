@@ -1,5 +1,5 @@
 JUGADOR ,Equipo,1F,2F,3F,4F,5F,6F,7F,8F
-Gustavo Dulanto,Liverpool,1A,,,,,,,
+Gustavo Dulanto,Liverpool,1A,1A,,,,,,
 Juan Diego Angus,Chelsea,1A,,,,,,,
 Juan Carlos Torres,Milan,,1A,,,,,,
 Luis Milla,Milan,,1A,,,,,,
@@ -9,5 +9,6 @@ Tony Diaz,Manchester City,,1A,,,,,,
 Roy Escalante,Real Cambridge,,1A,,,,,,
 Joaquin Aramburu,Bayern Munich,,1A,,,,,,
 Galo Yepez,Liverpool,,1A,,,,,,
-Gustavo Dulanto,Liverpool,,1A,,,,,,
+
+
 
