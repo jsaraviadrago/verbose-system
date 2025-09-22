@@ -621,9 +621,9 @@ goles_b_semi = [ ] # Example scores for Semifinal Team B seperated by a comma ,
 winners_df = pd.DataFrame({
     'Hora': ['8:50', '9:50'], # Filled with specified values
     'Cancha': [1, 2], # Filled with specified values
-    'Equipo A': , #winners_equipo_a_new_df
+    'Equipo A': "TBD", #winners_equipo_a_new_df
     'Goles A': goles_a_semi, # Now contains dummy numerical values for semi-finals
-    'Equipo B': , #winners_equipo_b_new_df
+    'Equipo B': "TBD", #winners_equipo_b_new_df
     'Goles B': goles_b_semi  # Now contains dummy numerical values for semi-finals
 })
 
