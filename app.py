@@ -907,7 +907,6 @@ st.dataframe(
 ###########################################################################
 ###### Tarjetas amarillas por jugadores #################################
 ###########################################################################
-
 st.divider()
 
 csv_file_path2 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Tarjetas_clausura_2025_CLC.csv'
