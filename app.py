@@ -513,8 +513,8 @@ equipo_b_values = [
 hora_values = ['8:50', '9:50', '8:50', '9:50']
 cancha_values = [1, 1, 2, 2]
 
-goles_a = [,,,]
-goles_b = [, , , ]
+goles_a = [] #,,,
+goles_b = [] #, , ,
 
 
 # Create the new DataFrame with the added columns and specified order
@@ -614,8 +614,8 @@ winner_row2_equipo_b = get_winner(
 winners_equipo_b_new_df.append(winner_row2_equipo_b)
 
 # Dummy scores for Semifinal matches to allow winner/loser determination
-goles_a_semi = [, ]# Example scores for Semifinal Team A
-goles_b_semi = [, ] # Example scores for Semifinal Team B
+goles_a_semi = [ ]# Example scores for Semifinal Team A seperated by a comma ,
+goles_b_semi = [ ] # Example scores for Semifinal Team B seperated by a comma ,
 
 # Create the 'winners_df' (Semifinal matches)
 winners_df = pd.DataFrame({
