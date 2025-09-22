@@ -915,6 +915,7 @@ st.divider()
 csv_file_path2 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Tarjetas_clausura_2025_CLC.csv'
 df2 = pd.read_csv(csv_file_path2)
 
+
 df2.columns = df2.columns.str.strip().str.upper()
 df2['EQUIPO'] = df2['EQUIPO'].astype(str).str.strip().str.title()
 df2['JUGADOR'] = df2['JUGADOR'].astype(str).str.strip().str.title()
