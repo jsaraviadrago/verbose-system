@@ -33,7 +33,7 @@ st.markdown("""
 st.divider()
 
 csv_file_path1 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Partidos_clausura_2025_CLC_1.csv'
-df1 = pd.read_csv(csv_file_path1)
+df1 = pd.read_csv(csv_file_path1, sep = ";")
 
 # Calculated values
 Promedio_total = df1['Goles'].mean() * 2
