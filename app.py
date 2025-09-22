@@ -9,7 +9,6 @@ st.divider()
 # --- Logos section ---
 st.markdown("### Equipos Participantes")
 
-
 st.markdown("""
 <!-- Row 1 -->
 <div style="display: flex; justify-content: center; gap: 40px; margin-bottom: 30px;">
