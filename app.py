@@ -912,7 +912,7 @@ st.dataframe(
 
 st.divider()
 
-csv_file_path2 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Tarjetas_apertura_2025_CLC.csv'
+csv_file_path2 = 'https://raw.githubusercontent.com/jsaraviadrago/verbose-system/refs/heads/main/Tarjetas_clausura_2025_CLC.csv'
 df2 = pd.read_csv(csv_file_path2)
 
 df2.columns = df2.columns.str.strip().str.upper()
