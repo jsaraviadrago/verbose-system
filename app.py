@@ -539,12 +539,12 @@ column_config_new_df = {
 
 # Display the DataFrame as a Streamlit table with the new configuration
 
-st.dataframe(
-    new_df,
-    use_container_width=True,
-    hide_index=True,
-    column_config=column_config_new_df
-)
+#st.dataframe(
+#    new_df,
+#    use_container_width=True,
+#    hide_index=True,
+#    column_config=column_config_new_df
+#)
 
 ####################################################################
 #### Semifinal##############
