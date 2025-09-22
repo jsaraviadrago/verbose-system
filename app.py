@@ -518,14 +518,14 @@ goles_b = [] #, , ,
 
 
 # Create the new DataFrame with the added columns and specified order
-new_df = pd.DataFrame({
-    'Hora': "TBD",    # New 'Hora' column #hora_values
-    'Cancha': "TBD", # New 'Cancha' column #cancha_values
-    'Equipo A': "TBD" , #equipo_a_values
-    'Goles A': "TBD",  # Blank column 'Goles A' #goles_a
-    'Equipo B': "TBD", #equipo_b_values
-    'Goles B': "TBD"    # Blank column 'Goles B' #goles_b
-})
+#new_df = pd.DataFrame({
+#    'Hora': hora_values,    # New 'Hora' column #hora_values
+#    'Cancha': cancha_values, # New 'Cancha' column #cancha_values
+#    'Equipo A': equipo_a_values , #equipo_a_values
+#    'Goles A': goles_a,  # Blank column 'Goles A' #goles_a
+#    'Equipo B': equipo_b_values, #equipo_b_values
+#    'Goles B': goles_b    # Blank column 'Goles B' #goles_b
+#})
 
 # Define the column configuration for new_df for Streamlit
 column_config_new_df = {
