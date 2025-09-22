@@ -521,9 +521,9 @@ goles_b = [] #, , ,
 new_df = pd.DataFrame({
     'Hora': hora_values,    # New 'Hora' column
     'Cancha': cancha_values, # New 'Cancha' column
-    'Equipo A':  , #equipo_a_values
+    'Equipo A': "TBD" , #equipo_a_values
     'Goles A': goles_a,  # Blank column 'Goles A'
-    'Equipo B':  , #equipo_b_values
+    'Equipo B': "TBD", #equipo_b_values
     'Goles B': goles_b    # Blank column 'Goles B'
 })
 
