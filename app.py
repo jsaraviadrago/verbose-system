@@ -1028,6 +1028,7 @@ column_config_A = {
 }
 
 # Streamlit code to display tables side by side
+
 col2, col1 = st.columns(2)
 
 with col2:
