@@ -483,7 +483,7 @@ st.dataframe(
 # 2 Grupo 1 vs 3 Grupo 2
 # 2 Grupo 2 vs 3 Grupo 1
 
-st.divider()
+#st.divider()
 
 
 
@@ -688,7 +688,7 @@ column_config_winners_winners_df = {
 }
 
 # Display the Finalists DataFrame
-st.markdown("## <span style='color: #FF0000;'>Final</span>", unsafe_allow_html=True) # Changed to green
+#st.markdown("## <span style='color: #FF0000;'>Final</span>", unsafe_allow_html=True) # Changed to green
 #st.dataframe(
 #    winners_winners_df,
 #    use_container_width=True,
