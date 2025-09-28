@@ -403,6 +403,13 @@ st.divider()
 
 st.subheader("Resultados por Fecha")
 
+st.markdown("""
+⚽ **Nota**
+1. El Barcelona ganó por WO contra el Borussia Dortmund y se le adjudicaron 3 goles a favor.
+2. La Juventus ganó por WO contra el Milan y se le adjudicaron 3 goles a favor.
+
+""")
+
 # Create a match_id for each match by grouping by 'Fecha' and 'Grupo'
 # Then, divide the cumcount by 2 to create unique match numbers within each group
 df1['match_number'] = df1.groupby(['Fecha', 'Grupo']).cumcount() // 2
