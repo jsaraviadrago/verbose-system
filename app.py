@@ -583,55 +583,55 @@ winners_equipo_b_new_df = []
 
 # Row 1 of the new DataFrame (Semifinal 1)
 # Equipo A: winner of the first row of new_df
-#winner_row0_equipo_a = get_winner(
-#    new_df['Goles A'].iloc[0],
-#    new_df['Goles B'].iloc[0],
-#    new_df['Equipo A'].iloc[0],
-#    new_df['Equipo B'].iloc[0]
-#)
-#winners_equipo_a_new_df.append(winner_row0_equipo_a)
+winner_row0_equipo_a = get_winner(
+    new_df['Goles A'].iloc[0],
+    new_df['Goles B'].iloc[0],
+    new_df['Equipo A'].iloc[0],
+    new_df['Equipo B'].iloc[0]
+)
+winners_equipo_a_new_df.append(winner_row0_equipo_a)
 
 # Equipo B: winner of the fourth row of new_df
-#winner_row3_equipo_b = get_winner(
-#    new_df['Goles A'].iloc[3],
-#    new_df['Goles B'].iloc[3],
-#    new_df['Equipo A'].iloc[3],
-#    new_df['Equipo B'].iloc[3]
-#)
-#winners_equipo_b_new_df.append(winner_row3_equipo_b)
+winner_row3_equipo_b = get_winner(
+    new_df['Goles A'].iloc[3],
+    new_df['Goles B'].iloc[3],
+    new_df['Equipo A'].iloc[3],
+    new_df['Equipo B'].iloc[3]
+)
+winners_equipo_b_new_df.append(winner_row3_equipo_b)
 
 # Row 2 of the new DataFrame (Semifinal 2)
 # Equipo A: winner of the second row of new_df
-#winner_row1_equipo_a = get_winner(
-#    new_df['Goles A'].iloc[1],
-#    new_df['Goles B'].iloc[1],
-#    new_df['Equipo A'].iloc[1],
-#    new_df['Equipo B'].iloc[1]
-#)
-#winners_equipo_a_new_df.append(winner_row1_equipo_a)
+winner_row1_equipo_a = get_winner(
+    new_df['Goles A'].iloc[1],
+    new_df['Goles B'].iloc[1],
+    new_df['Equipo A'].iloc[1],
+    new_df['Equipo B'].iloc[1]
+)
+winners_equipo_a_new_df.append(winner_row1_equipo_a)
 
 # Equipo B: winner of the third row of new_df
-#winner_row2_equipo_b = get_winner(
-#    new_df['Goles A'].iloc[2],
-#    new_df['Goles B'].iloc[2],
-#    new_df['Equipo A'].iloc[2],
-#    new_df['Equipo B'].iloc[2]
-#)
-#winners_equipo_b_new_df.append(winner_row2_equipo_b)
+winner_row2_equipo_b = get_winner(
+    new_df['Goles A'].iloc[2],
+    new_df['Goles B'].iloc[2],
+    new_df['Equipo A'].iloc[2],
+    new_df['Equipo B'].iloc[2]
+)
+winners_equipo_b_new_df.append(winner_row2_equipo_b)
 
 # Dummy scores for Semifinal matches to allow winner/loser determination
-goles_a_semi = [ ]# Example scores for Semifinal Team A seperated by a comma ,
-goles_b_semi = [ ] # Example scores for Semifinal Team B seperated by a comma ,
+goles_a_semi = [0,0]# Example scores for Semifinal Team A seperated by a comma ,
+goles_b_semi = [0,0] # Example scores for Semifinal Team B seperated by a comma ,
 
 # Create the 'winners_df' (Semifinal matches)
-#winners_df = pd.DataFrame({
-#    'Hora': ['8:50', '9:50'], # Filled with specified values
-#    'Cancha': [1, 2], # Filled with specified values
-#    'Equipo A': winners_equipo_a_new_df, #winners_equipo_a_new_df
-#    'Goles A': goles_a_semi, # Now contains dummy numerical values for semi-finals
-#    'Equipo B': winners_equipo_b_new_df, #winners_equipo_b_new_df
-#    'Goles B': goles_b_semi  # Now contains dummy numerical values for semi-finals
-#})
+winners_df = pd.DataFrame({
+    'Hora': ['8:50', '9:50'], # Filled with specified values
+    'Cancha': [1, 2], # Filled with specified values
+    'Equipo A': winners_equipo_a_new_df, #winners_equipo_a_new_df
+    'Goles A': goles_a_semi, # Now contains dummy numerical values for semi-finals
+    'Equipo B': winners_equipo_b_new_df, #winners_equipo_b_new_df
+    'Goles B': goles_b_semi  # Now contains dummy numerical values for semi-finals
+})
 
 #Define column configuration for the new winners_df
 column_config_winners_df = {
@@ -644,13 +644,13 @@ column_config_winners_df = {
 }
 
 # Display the new DataFrame
-#st.markdown("## <span style='color: #008000;'>Semifinal</span>", unsafe_allow_html=True) # Changed to green
-#st.dataframe(
-#    winners_df,
-#    use_container_width=True,
-#    hide_index=True,
-#    column_config=column_config_winners_df
-#)
+st.markdown("## <span style='color: #008000;'>Semifinal</span>", unsafe_allow_html=True) # Changed to green
+st.dataframe(
+    winners_df,
+    use_container_width=True,
+    hide_index=True,
+    column_config=column_config_winners_df
+)
 
 
 
