@@ -243,10 +243,10 @@ st.dataframe(
     column_config={
         "Equipo": st.column_config.TextColumn("Equipo", width=130),
         "PJ": st.column_config.NumberColumn("PJ", format="%d", help="Partidos Jugados"),
+        "Puntos": st.column_config.NumberColumn("Puntos", format="%d"),
         "G": st.column_config.NumberColumn("G", format="%d", help="Ganados"),
         "E": st.column_config.NumberColumn("E", format="%d", help="Empatados"),
         "P": st.column_config.NumberColumn("P", format="%d", help="Perdidos"),
-        "Puntos": st.column_config.NumberColumn("Puntos", format="%d"),
         "GF": st.column_config.NumberColumn("GF", format="%d", help="Goles a Favor"),
         "GC": st.column_config.NumberColumn("GC", format="%d", help="Goles en Contra"),
         "GD": st.column_config.NumberColumn("GD", format="%+d", help="Diferencia de Goles"),
@@ -383,10 +383,10 @@ st.dataframe(
     column_config={
         "Equipo": st.column_config.TextColumn("Equipo", width=130),
         "PJ": st.column_config.NumberColumn("PJ", format="%d", help="Partidos Jugados"),
+        "Puntos": st.column_config.NumberColumn("Puntos", format="%d"),
         "G": st.column_config.NumberColumn("G", format="%d", help="Ganados"),
         "E": st.column_config.NumberColumn("E", format="%d", help="Empatados"),
         "P": st.column_config.NumberColumn("P", format="%d", help="Perdidos"),
-        "Puntos": st.column_config.NumberColumn("Puntos", format="%d"),
         "GF": st.column_config.NumberColumn("GF", format="%d", help="Goles a Favor"),
         "GC": st.column_config.NumberColumn("GC", format="%d", help="Goles en Contra"),
         "GD": st.column_config.NumberColumn("GD", format="%+d", help="Diferencia de Goles"),
