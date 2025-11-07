@@ -660,28 +660,28 @@ st.dataframe(
 ###################################################################
 
 # --- Create winners_winners_df (Finalists) ---
-#finalists_equipo_a = get_winner(
-#    winners_df['Goles A'].iloc[0],
-#    winners_df['Goles B'].iloc[0],
-#    winners_df['Equipo A'].iloc[0],
-#    winners_df['Equipo B'].iloc[0]
-#)
+finalists_equipo_a = get_winner(
+    winners_df['Goles A'].iloc[0],
+    winners_df['Goles B'].iloc[0],
+    winners_df['Equipo A'].iloc[0],
+    winners_df['Equipo B'].iloc[0]
+)
 
-#finalists_equipo_b = get_winner(
-#    winners_df['Goles A'].iloc[1],
-#    winners_df['Goles B'].iloc[1],
-#    winners_df['Equipo A'].iloc[1],
-#    winners_df['Equipo B'].iloc[1]
-#)
+finalists_equipo_b = get_winner(
+    winners_df['Goles A'].iloc[1],
+    winners_df['Goles B'].iloc[1],
+    winners_df['Equipo A'].iloc[1],
+    winners_df['Equipo B'].iloc[1]
+)
 
-#winners_winners_df = pd.DataFrame({
-#    'Hora': ['9:50'],
-#    'Cancha': [1],
-#    'Equipo A': [], #finalists_equipo_a
-#    'Goles A': [],
-#    'Equipo B': [], #finalists_equipo_b
-#    'Goles B': []
-#})
+winners_winners_df = pd.DataFrame({
+    'Hora': ['9:50'],
+    'Cancha': [1],
+    'Equipo A': [finalists_equipo_a], #finalists_equipo_a
+    'Goles A': [0],
+    'Equipo B': [finalists_equipo_b], #finalists_equipo_b
+    'Goles B': [0]
+})
 
 # Define column configuration for winners_winners_df (Final)
 column_config_winners_winners_df = {
@@ -694,12 +694,12 @@ column_config_winners_winners_df = {
 }
 
 # Display the Finalists DataFrame
-#st.markdown("## <span style='color: #FF0000;'>Final</span>", unsafe_allow_html=True) # Changed to green
-#st.dataframe(
-#    winners_winners_df,
-#    use_container_width=True,
-#    hide_index=True,
-#    column_config=column_config_winners_winners_df)
+st.markdown("## <span style='color: #FF0000;'>Final</span>", unsafe_allow_html=True) # Changed to green
+st.dataframe(
+    winners_winners_df,
+    use_container_width=True,
+    hide_index=True,
+    column_config=column_config_winners_winners_df)
 
 
 ####################################################################
