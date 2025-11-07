@@ -709,28 +709,28 @@ st.dataframe(
 
 
 # --- Create losers_losers_df (3rd Place Playoff) ---
-#losers_equipo_a = get_loser(
-#    winners_df['Goles A'].iloc[0],
-#    winners_df['Goles B'].iloc[0],
-#    winners_df['Equipo A'].iloc[0],
-#    winners_df['Equipo B'].iloc[0]
-#)
+losers_equipo_a = get_loser(
+    winners_df['Goles A'].iloc[0],
+    winners_df['Goles B'].iloc[0],
+    winners_df['Equipo A'].iloc[0],
+    winners_df['Equipo B'].iloc[0]
+)
 
-#losers_equipo_b = get_loser(
-#    winners_df['Goles A'].iloc[1],
-#    winners_df['Goles B'].iloc[1],
-#    winners_df['Equipo A'].iloc[1],
-#    winners_df['Equipo B'].iloc[1]
-#)
+losers_equipo_b = get_loser(
+    winners_df['Goles A'].iloc[1],
+    winners_df['Goles B'].iloc[1],
+    winners_df['Equipo A'].iloc[1],
+    winners_df['Equipo B'].iloc[1]
+)
 
-#losers_losers_df = pd.DataFrame({
-#    'Hora': ['8:50'],
-#    'Cancha': [2],
-#    'Equipo A': [], #losers_equipo_a
-#    'Goles A': [],
-#    'Equipo B': [], #losers_equipo_b
-#    'Goles B': []
-#})
+losers_losers_df = pd.DataFrame({
+    'Hora': ['8:50'],
+    'Cancha': [2],
+    'Equipo A': [losers_equipo_a], #losers_equipo_a
+    'Goles A': [0],
+    'Equipo B': [losers_equipo_b], #losers_equipo_b
+    'Goles B': [0]
+})
 
 # Define column configuration for losers_losers_df (3rd Place Playoff)
 column_config_losers_losers_df = {
@@ -743,13 +743,13 @@ column_config_losers_losers_df = {
 }
 
 # Display the 3rd Place Playoff DataFrame
-#st.subheader("Tercer y cuarto puesto")
-#st.dataframe(
-#    losers_losers_df,
-#    use_container_width=True,
-#    hide_index=True,
-#    column_config=column_config_losers_losers_df
-#)
+st.subheader("Tercer y cuarto puesto")
+st.dataframe(
+    losers_losers_df,
+    use_container_width=True,
+    hide_index=True,
+    column_config=column_config_losers_losers_df
+)
 
 ########################################################################
 ###### Tarjetas por equipo #########################################
