@@ -519,15 +519,15 @@ equipo_b_values = [
 hora_values = ['8:50', '9:50', '8:50', '9:50']
 cancha_values = [1, 1, 2, 2]
 
-goles_a = [] #,,,
-goles_b = [] #, , ,
+goles_a = [0,0,0] #,,,
+goles_b = [0,0,0] #, , ,
 
 
 # Create the new DataFrame with the added columns and specified order
 new_df = pd.DataFrame({
     'Hora': hora_values,    # New 'Hora' column #hora_values
     'Cancha': cancha_values, # New 'Cancha' column #cancha_values
-    'Equipo A': equipo_a_values , #equipo_a_values
+    'Equipo A': equipo_a_values, #equipo_a_values
     'Goles A': goles_a,  # Blank column 'Goles A' #goles_a
     'Equipo B': equipo_b_values, #equipo_b_values
     'Goles B': goles_b    # Blank column 'Goles B' #goles_b
