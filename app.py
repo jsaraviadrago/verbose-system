@@ -489,12 +489,12 @@ st.dataframe(
 # 2 Grupo 1 vs 3 Grupo 2
 # 2 Grupo 2 vs 3 Grupo 1
 
-#st.divider()
+st.divider()
 
 
 
-#st.subheader("Cuartos de final")
-#st.markdown("## <span style='color: #ADD8E6;'>Cuartos de final</span>", unsafe_allow_html=True) # Changed to light blue
+st.subheader("Cuartos de final")
+st.markdown("## <span style='color: #ADD8E6;'>Cuartos de final</span>", unsafe_allow_html=True) # Changed to light blue
 
 #st.markdown("**Nota**: El partido de Fiorentina contra Liverpool terminó 1-1. El marcador final es el resultado de la tanda de penales")
 #Esto fue en el apertura 2025
@@ -524,14 +524,14 @@ goles_b = [] #, , ,
 
 
 # Create the new DataFrame with the added columns and specified order
-#new_df = pd.DataFrame({
-#    'Hora': hora_values,    # New 'Hora' column #hora_values
-#    'Cancha': cancha_values, # New 'Cancha' column #cancha_values
-#    'Equipo A': equipo_a_values , #equipo_a_values
-#    'Goles A': goles_a,  # Blank column 'Goles A' #goles_a
-#    'Equipo B': equipo_b_values, #equipo_b_values
-#    'Goles B': goles_b    # Blank column 'Goles B' #goles_b
-#})
+new_df = pd.DataFrame({
+    'Hora': hora_values,    # New 'Hora' column #hora_values
+    'Cancha': cancha_values, # New 'Cancha' column #cancha_values
+    'Equipo A': equipo_a_values , #equipo_a_values
+    'Goles A': goles_a,  # Blank column 'Goles A' #goles_a
+    'Equipo B': equipo_b_values, #equipo_b_values
+    'Goles B': goles_b    # Blank column 'Goles B' #goles_b
+})
 
 # Define the column configuration for new_df for Streamlit
 column_config_new_df = {
@@ -545,12 +545,12 @@ column_config_new_df = {
 
 # Display the DataFrame as a Streamlit table with the new configuration
 
-#st.dataframe(
-#    new_df,
-#    use_container_width=True,
-#    hide_index=True,
-#    column_config=column_config_new_df
-#)
+st.dataframe(
+    new_df,
+    use_container_width=True,
+    hide_index=True,
+    column_config=column_config_new_df
+)
 
 ####################################################################
 #### Semifinal##############
