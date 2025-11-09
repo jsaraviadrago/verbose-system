@@ -493,7 +493,7 @@ st.divider()
 
 
 
-st.subheader("Cuartos de final")
+
 st.markdown("## <span style='color: #ADD8E6;'>Cuartos de final</span>", unsafe_allow_html=True) # Changed to light blue
 
 #st.markdown("**Nota**: El partido de Fiorentina contra Liverpool terminó 1-1. El marcador final es el resultado de la tanda de penales")
