@@ -495,10 +495,11 @@ st.divider()
 
 st.markdown("## <span style='color: #ADD8E6;'>Cuartos de final</span>", unsafe_allow_html=True) # Changed to light blue
 
-st.markdown(""
-
-**Nota**: El partido de Fiorentina contra Chelsea terminó 0-0. El marcador final es el resultado de la tanda de penales
- **Nota**: El partido Liverpool contra Milan terminó 1-1. El marcador final es el resultado de la tanda de penales."")
+st.markdown("""
+Nota⚽️
+El partido de Fiorentina contra Chelsea terminó 0-0. El marcador final es el resultado de la tanda de penales
+El partido Liverpool contra Milan terminó 1-1. El marcador final es el resultado de la tanda de penales.
+""")
 
 
 #Esto fue en el apertura 2025
