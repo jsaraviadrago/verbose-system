@@ -625,8 +625,8 @@ winner_row2_equipo_b = get_winner(
 winners_equipo_b_new_df.append(winner_row2_equipo_b)
 
 # Dummy scores for Semifinal matches to allow winner/loser determination
-goles_a_semi = [0,0]# Example scores for Semifinal Team A seperated by a comma ,
-goles_b_semi = [0,0] # Example scores for Semifinal Team B seperated by a comma ,
+goles_a_semi = [2,3]# Example scores for Semifinal Team A seperated by a comma ,
+goles_b_semi = [1,2] # Example scores for Semifinal Team B seperated by a comma ,
 
 # Create the 'winners_df' (Semifinal matches)
 winners_df = pd.DataFrame({
