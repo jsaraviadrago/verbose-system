@@ -47,10 +47,10 @@ Fecha,Partido,Cancha,Hora,Equipo_numero,Grupo,Equipo,Goles,Resultado,,
 6,23,2,08:50,2,0,Chelsea,0,G,,
 6,24,2,09:50,1,0,Juventus,2,G,,
 6,24,2,09:50,2,0,Manchester City,1,P
-7,25,1,08:50,1,0,Milan,2,G
-7,25,1,08:50,2,0,Manchester City,1,P
+7,25,1,08:50,1,0,Milan,0,G
+7,25,1,08:50,2,0,Manchester City,0,P
 7,26,2,09:50,1,0,Barcelona,3,G
-7,26,2,09:50,2,0,Chelsea,2,P
+7,26,2,09:50,2,0,Chelsea,3,P
 8,27,2,08:50,1,0,Chelsea,,
 8,27,2,08:50,2,0,Manchester City,,
 8,28,1,09:50,1,0,Barcelona,,
