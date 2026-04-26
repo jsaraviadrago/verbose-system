@@ -5,6 +5,15 @@ from firestore_client import get_partidos_clausura_2025, get_tarjetas_clausura_2
 from assistant import show_assistant
 
 st.markdown("<h1 style='text-align: center; '>Campeonato Cambridge College Lima </h1>", unsafe_allow_html=True)
+
+# Botón del asistente arriba
+if st.button("🤖 Asistente CLC"):
+    st.session_state.show_assistant = not st.session_state.get("show_assistant", False)
+
+if st.session_state.get("show_assistant", False):
+    show_assistant()
+    st.stop()  # ← esto hace que cuando abres el asistente no muestre el resto de la app
+
 st.divider()
 
 # --- Logos section ---
@@ -29,15 +38,6 @@ st.markdown("""
     <div><img src="https://static.cdnlogo.com/logos/c/24/chelsea-fc.svg" width="100" height="100"></div>
 </div>
 """, unsafe_allow_html=True)
-
-# Botón del asistente arriba
-if st.button("🤖 Asistente CLC"):
-    st.session_state.show_assistant = not st.session_state.get("show_assistant", False)
-
-if st.session_state.get("show_assistant", False):
-    show_assistant()
-    st.stop()  # ← esto hace que cuando abres el asistente no muestre el resto de la app
-
 
 st.divider()
 
