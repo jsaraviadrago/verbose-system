@@ -888,6 +888,7 @@ st.subheader("Tabla de goleadores")
 
 
 df3 = get_goleadores_clausura_2025()
+df3 = df3.drop_duplicates(subset=['NOMBRE Y APELLIDO'])
 
 
 df3.columns = df3.columns.str.strip().str.upper()
