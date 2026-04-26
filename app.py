@@ -888,13 +888,16 @@ st.subheader("Tabla de goleadores")
 
 
 df3 = get_goleadores_clausura_2025()
-df3 = df3.drop_duplicates(subset=['NOMBRE Y APELLIDO'])
 
-
+# Primero limpia las columnas
 df3.columns = df3.columns.str.strip().str.upper()
 df3['EQUIPO'] = df3['EQUIPO'].astype(str).str.strip().str.title()
 df3['NOMBRE Y APELLIDO'] = df3['NOMBRE Y APELLIDO'].astype(str).str.strip().str.title()
 df3['GOLES'] = df3['GOLES'].astype(int)
+
+# Luego elimina duplicados
+df3 = df3.drop_duplicates(subset=['NOMBRE Y APELLIDO'])
+
 df3 = df3.sort_values(by='GOLES', ascending=False)
 df_goleador = df3.head(8)
 
