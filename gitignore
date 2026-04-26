@@ -1,6 +1,7 @@
 # Firebase credentials - NEVER upload this to GitHub!
 firebase_key.json
 
+
 # Python
 __pycache__/
 *.pyc
