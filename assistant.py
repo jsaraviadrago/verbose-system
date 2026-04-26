@@ -9,7 +9,7 @@ from firestore_client import (
 
 # ── Configure Gemini ───────────────────────────────────────────────────────────
 def configure_gemini():
-    api_key = st.secrets.get("GEMINI_API_KEY", "")
+    api_key = st.secrets["gemini"]["api_key"]
     if not api_key:
         st.error("⚠️ No se encontró GEMINI_API_KEY en los secrets.")
         st.stop()
