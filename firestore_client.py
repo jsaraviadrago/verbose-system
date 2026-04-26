@@ -7,25 +7,19 @@ import streamlit as st
 # ── Firebase connection ────────────────────────────────────────────────────────
 @st.cache_resource
 def get_db():
-    """Initialize Firebase only once across Streamlit reruns.
-    - Locally: reads firebase_key.json
-    - Streamlit Cloud: reads from st.secrets
-    """
     if not firebase_admin._apps:
-        try:
-            # Streamlit Cloud — reads from secrets
-            import json
+        import json, os
+        if "firebase_key" in st.secrets:
+            # Streamlit Cloud — usa secrets
             key_dict = json.loads(st.secrets["firebase_key"])
             cred = credentials.Certificate(key_dict)
-        except Exception:
-            # Local — reads from firebase_key.json
-            import os
+        else:
+            # Local — usa firebase_key.json
             base_dir = os.path.dirname(os.path.abspath(__file__))
             key_path = os.path.join(base_dir, "firebase_key.json")
             cred = credentials.Certificate(key_path)
         firebase_admin.initialize_app(cred)
     return firestore.client()
-
 
 # ── Generic loader ─────────────────────────────────────────────────────────────
 @st.cache_data(ttl=300)  # Cache for 5 minutes
