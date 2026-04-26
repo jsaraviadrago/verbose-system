@@ -3,17 +3,32 @@ from firebase_admin import credentials, firestore
 import pandas as pd
 import streamlit as st
 
+
 # ── Firebase connection ────────────────────────────────────────────────────────
 @st.cache_resource
 def get_db():
-    """Initialize Firebase only once across Streamlit reruns."""
+    """Initialize Firebase only once across Streamlit reruns.
+    - Locally: reads firebase_key.json
+    - Streamlit Cloud: reads from st.secrets
+    """
     if not firebase_admin._apps:
-        cred = credentials.Certificate("firebase_key.json")
+        try:
+            # Streamlit Cloud — reads from secrets
+            import json
+            key_dict = json.loads(st.secrets["firebase_key"])
+            cred = credentials.Certificate(key_dict)
+        except Exception:
+            # Local — reads from firebase_key.json
+            import os
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            key_path = os.path.join(base_dir, "firebase_key.json")
+            cred = credentials.Certificate(key_path)
         firebase_admin.initialize_app(cred)
     return firestore.client()
 
+
 # ── Generic loader ─────────────────────────────────────────────────────────────
-@st.cache_data(ttl=300)  # Cache for 5 minutes — adjust as needed
+@st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_collection(collection_name: str) -> pd.DataFrame:
     """Load an entire Firestore collection into a DataFrame."""
     db = get_db()
@@ -31,6 +46,9 @@ def get_goleadores_apertura_2024() -> pd.DataFrame:
 def get_goleadores_apertura_2025() -> pd.DataFrame:
     return load_collection("goleadores_apertura_2025")
 
+def get_goleadores_clausura_2024() -> pd.DataFrame:
+    return load_collection("goleadores_clausura_2024")
+
 def get_goleadores_clausura_2025() -> pd.DataFrame:
     return load_collection("goleadores_clausura_2025")
 
@@ -40,8 +58,14 @@ def get_tarjetas_apertura_2025() -> pd.DataFrame:
 def get_tarjetas_clausura_2025() -> pd.DataFrame:
     return load_collection("tarjetas_clausura_2025")
 
+def get_partidos_apertura_2024() -> pd.DataFrame:
+    return load_collection("partidos_apertura_2024")
+
 def get_partidos_apertura_2025() -> pd.DataFrame:
     return load_collection("partidos_apertura_2025")
+
+def get_partidos_clausura_2024() -> pd.DataFrame:
+    return load_collection("partidos_clausura_2024")
 
 def get_partidos_clausura_2025() -> pd.DataFrame:
     return load_collection("partidos_clausura_2025")
