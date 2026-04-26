@@ -3,6 +3,7 @@ from firebase_admin import credentials, firestore
 import pandas as pd
 import streamlit as st
 
+
 # ── Firebase connection ────────────────────────────────────────────────────────
 @st.cache_resource
 def get_db():
