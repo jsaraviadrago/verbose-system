@@ -2,5 +2,5 @@ streamlit
 pandas
 altair
 firebase-admin
-google-generativeai
+groq
 

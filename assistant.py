@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 from firestore_client import (
     get_partidos_clausura_2025, get_partidos_apertura_2025,
     get_goleadores_clausura_2025, get_goleadores_apertura_2025,
@@ -7,20 +7,15 @@ from firestore_client import (
 )
 
 
-# ── Configure Gemini ───────────────────────────────────────────────────────────
-def configure_gemini():
-    api_key = st.secrets["gemini"]["api_key"]
-    if not api_key:
-        st.error("⚠️ No se encontró GEMINI_API_KEY en los secrets.")
-        st.stop()
-    genai.configure(api_key=api_key)
-    return genai.GenerativeModel("gemini-1.5-flash-latest")
+# ── Configure Groq ─────────────────────────────────────────────────────────────
+def configure_client():
+    api_key = st.secrets["groq"]["api_key"]
+    return Groq(api_key=api_key)
 
 
 # ── Load all data as context ───────────────────────────────────────────────────
 @st.cache_data(ttl=300)
 def get_context() -> str:
-    """Load all Firestore data and format it as text context for Gemini."""
     sections = []
 
     try:
@@ -80,7 +75,7 @@ def show_assistant():
     st.subheader("🤖 Asistente CLC")
     st.caption("Consulta resultados, goleadores y tarjetas de la liga")
 
-    model = configure_gemini()
+    client = configure_client()
     context = get_context()
     system = SYSTEM_PROMPT.format(context=context)
 
@@ -94,27 +89,28 @@ def show_assistant():
             st.markdown(msg["content"])
 
     # Input box
-    if prompt := st.chat_input("¿Quién va primero en goles? ¿Cuál fue el resultado del último partido?"):
+    if prompt := st.chat_input("¿Quién lidera los goles? ¿Cuál fue el resultado del último partido?"):
 
         # Show user message
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Build conversation history for Gemini
-        history = []
-        for msg in st.session_state.messages[:-1]:
-            role = "user" if msg["role"] == "user" else "model"
-            history.append({"role": role, "parts": [msg["content"]]})
+        # Build conversation history for Groq
+        history = [{"role": "system", "content": system}]
+        for msg in st.session_state.messages:
+            history.append({"role": msg["role"], "content": msg["content"]})
 
-        # Get Gemini response
+        # Get Groq response
         with st.chat_message("assistant"):
             with st.spinner("Consultando datos..."):
                 try:
-                    chat = model.start_chat(history=history)
-                    full_prompt = f"{system}\n\nPregunta: {prompt}"
-                    response = chat.send_message(full_prompt)
-                    answer = response.text
+                    response = client.chat.completions.create(
+                        model="llama-3.1-8b-instant",
+                        max_tokens=1000,
+                        messages=history,
+                    )
+                    answer = response.choices[0].message.content
                 except Exception as e:
                     answer = f"❌ Error al consultar el asistente: {e}"
 
