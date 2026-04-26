@@ -14,7 +14,7 @@ def configure_gemini():
         st.error("⚠️ No se encontró GEMINI_API_KEY en los secrets.")
         st.stop()
     genai.configure(api_key=api_key)
-    return genai.GenerativeModel("gemini-1.5-flash")
+    return genai.GenerativeModel("gemini-2.0-flash")
 
 
 # ── Load all data as context ───────────────────────────────────────────────────
