@@ -900,6 +900,8 @@ df3 = df3.drop_duplicates(subset=['NOMBRE Y APELLIDO'])
 
 df3 = df3.sort_values(by='GOLES', ascending=False)
 df_goleador = df3.head(8)
+df_goleador = df_goleador[['NOMBRE Y APELLIDO', 'EQUIPO', 'GOLES']]  # ← orden correcto
+
 
 
 # Define the column configuration for df_goleador
