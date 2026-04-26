@@ -10,8 +10,7 @@ def get_db():
     if not firebase_admin._apps:
         import json, os
         if "firebase_key" in st.secrets:
-            # Streamlit Cloud — usa secrets
-            key_dict = json.loads(st.secrets["firebase_key"])
+            key_dict = dict(st.secrets["firebase_key"])
             cred = credentials.Certificate(key_dict)
         else:
             # Local — usa firebase_key.json
