@@ -6,6 +6,8 @@ from assistant import show_assistant
 
 st.markdown("<h1 style='text-align: center; '>Campeonato Cambridge College Lima </h1>", unsafe_allow_html=True)
 
+st.write(list(st.secrets.keys()))
+
 # Botón del asistente arriba
 if st.button("🤖 Asistente CLC"):
     st.session_state.show_assistant = not st.session_state.get("show_assistant", False)
