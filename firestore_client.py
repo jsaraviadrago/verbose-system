@@ -12,7 +12,6 @@ def get_db():
         firebase_admin.initialize_app(cred)
     return firestore.client()
 
-
 # ── Generic loader ─────────────────────────────────────────────────────────────
 @st.cache_data(ttl=300)  # Cache for 5 minutes — adjust as needed
 def load_collection(collection_name: str) -> pd.DataFrame:
