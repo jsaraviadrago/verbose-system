@@ -33,6 +33,18 @@ TEMPORADAS DISPONIBLES:
 - Clausura 2024
 - Apertura 2025
 - Clausura 2025
+
+MEJORES JUGADORES POR TORNEO
+- Apertura 2024: Daniel Tello - Real Madrid
+- Clausura 2024: Juan Diego Rivera - Manchester City
+- Apertura 2025: Alonso Palacios - Fiorentina
+- Clausura 2025: Walter Hein - Barcelona
+
+MEJOR ARQUERO POR TORNEO
+- Apertura 2024: Jose Rios - Manchester City
+- Clausura 2024: Pablo Tabini - Milan
+- Apertura 2025: Tatayo - Fiorentina
+- Clausura 2025: Pablo Tabini - Milan
 """
 
 def get_wiki() -> str:
