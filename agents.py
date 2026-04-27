@@ -50,6 +50,12 @@ def agent_goleadores(client: Groq, question: str, temporada: str, messages: list
 Responde SIEMPRE en español, claro y conciso.
 CRÍTICO: Reporta los datos exactamente como aparecen. NO hagas cálculos propios.
 
+REGLAS ESTRICTAS:
+- NUNCA sumes goles entre equipos distintos
+- NUNCA inventes equipos o datos que no estén abajo
+- Reporta EXACTAMENTE lo que ves, línea por línea
+- Si el jugador tiene dos equipos, muéstralos POR SEPARADO
+
 Datos de goleadores — {temporada}:
 {data}
 """
