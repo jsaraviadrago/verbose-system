@@ -14,6 +14,11 @@ def show_assistant():
     st.subheader("🤖 Asistente CLC")
     st.caption("Consulta resultados, goleadores, tarjetas e info del torneo")
 
+    st.caption(
+        "💡 Para consultas de una temporada usa el selector. "
+        "Para historial completo pregunta 'en total' o 'por torneo'."
+    )
+
     # Season selector
     temporada = st.selectbox(
         "📅 Selecciona la temporada:",
@@ -21,7 +26,7 @@ def show_assistant():
         index=0,
     )
 
-    client = configure_client()
+        client = configure_client()
 
     # Chat history per season
     session_key = f"messages_{temporada}"

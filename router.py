@@ -5,12 +5,13 @@ from skills import goles_jugador_todas_temporadas, top_goleadores_todas_temporad
 MODEL = "llama-3.1-8b-instant"
 
 def _is_multi_season(question: str) -> bool:
-    """Detecta si la pregunta es sobre todas las temporadas."""
     q = question.lower()
     return any(w in q for w in [
         "todas", "total", "histórico", "historico",
         "todas las temporadas", "en total", "acumulado",
-        "siempre", "carrera", "historia"
+        "siempre", "carrera", "historia",
+        "por torneo", "cada torneo", "en cada",    # ← agrega estos
+        "desglosado", "todos los torneos",
     ])
 
 def detect_intent(question: str) -> str:
