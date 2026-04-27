@@ -80,35 +80,40 @@ def goles_equipo(equipo: str, temporada: str) -> str:
 
 # ── Skills de Goleadores — Todas las temporadas ────────────────────────────────
 def goles_jugador_todas_temporadas(nombre: str) -> str:
-    """
-    Busca a un jugador en TODAS las temporadas.
-    Muestra por separado cada temporada y equipo — NO suma,
-    porque un jugador puede haber estado en equipos distintos.
-    """
-    resultados = []
+    registros = []
 
     for temporada in LOADERS.keys():
         df = _load(temporada, "goleadores")
         if df.empty:
             continue
         mask = df["NOMBRE Y APELLIDO"].astype(str).str.lower().str.contains(nombre.lower())
-        result = df[mask]
+        result = df[mask].drop_duplicates(subset=["NOMBRE Y APELLIDO", "EQUIPO"])
         if result.empty:
             continue
         for _, row in result.iterrows():
-            equipo = row.get("EQUIPO", "—")
+            equipo = str(row.get("EQUIPO", "—")).strip()
             goles = int(row.get("GOLES", 0))
-            resultados.append(f"  {temporada} — {equipo}: {goles} goles")
+            registros.append((temporada, equipo, goles))
 
-    if not resultados:
+    if not registros:
         return f"No se encontró a '{nombre}' en ninguna temporada."
 
-    resumen = "\n".join(resultados)
-    return (
-        f"Historial de {nombre.title()} en la CLC:\n{resumen}\n"
-        f"(Nota: no se suman totales porque puede haber jugado en distintos equipos)"
-    )
+    por_equipo = {}
+    for temporada, equipo, goles in registros:
+        if equipo not in por_equipo:
+            por_equipo[equipo] = []
+        por_equipo[equipo].append((temporada, goles))
 
+    lineas = [f"Historial de {nombre.title()} en la CLC:\n"]
+    for equipo, temporadas in por_equipo.items():
+        lineas.append(f"🏟️ {equipo}:")
+        for temporada, goles in temporadas:
+            lineas.append(f"   {temporada}: {goles} goles")
+        total_equipo = sum(g for _, g in temporadas)
+        lineas.append(f"   ── Total en {equipo}: {total_equipo} goles\n")
+
+    lineas.append("IMPORTANTE: Estos son los datos exactos. No hagas cálculos adicionales.")
+    return "\n".join(lineas)
 
 def top_goleadores_todas_temporadas(n: int = 10) -> str:
     """
