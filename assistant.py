@@ -14,10 +14,6 @@ def show_assistant():
     st.subheader("🤖 Asistente CLC")
     st.caption("Consulta resultados, goleadores, tarjetas e info del torneo")
 
-    st.caption(
-        "💡 Para consultas de una temporada usa el selector. "
-        "Para historial completo pregunta 'en total' o 'por torneo'."
-    )
 
     # Season selector
     temporada = st.selectbox(
