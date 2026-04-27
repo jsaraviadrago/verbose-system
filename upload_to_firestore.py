@@ -77,6 +77,11 @@ def sync_collection(filename: str, collection_name: str, id_col: str = None):
 
         if id_col and id_col in doc_data:
             doc_id = str(doc_data[id_col]).strip().replace(" ", "_")
+            # Si tiene equipo, incluirlo en el ID para no sobreescribir
+            # jugadores que jugaron en dos equipos en el mismo torneo
+            if "EQUIPO" in doc_data:
+                equipo = str(doc_data["EQUIPO"]).strip().replace(" ", "_")
+                doc_id = f"{doc_id}__{equipo}"
         else:
             doc_id = str(i)
 
