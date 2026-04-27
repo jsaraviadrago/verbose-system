@@ -111,13 +111,15 @@ def goles_jugador_todas_temporadas(nombre: str) -> str:
     if not registros:
         return f"No se encontró a '{nombre}' en ninguna temporada."
 
-    # Deduplicar por (temporada, equipo) — nos quedamos con el mayor valor de goles
-    seen = {}
+    # Deduplicar solo filas exactamente iguales (temporada + equipo + goles)
+    seen = set()
+    registros_limpios = []
     for temporada, equipo, goles in registros:
-        key = (temporada, equipo)
-        if key not in seen or goles > seen[key]:
-            seen[key] = goles
-    registros = [(t, e, g) for (t, e), g in seen.items()]
+        key = (temporada, equipo, goles)
+        if key not in seen:
+            seen.add(key)
+            registros_limpios.append((temporada, equipo, goles))
+    registros = registros_limpios
 
     # Agrupar por equipo
     por_equipo = {}

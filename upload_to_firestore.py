@@ -53,12 +53,17 @@ def sync_collection(filename: str, collection_name: str, id_col: str = None):
     df = df.dropna(how="all")
 
     # ── Deduplicar antes de subir ──────────────────────────────────────────────
-    if id_col and id_col in df.columns:
-        before = len(df)
+    before = len(df)
+    if id_col and id_col in df.columns and "EQUIPO" in df.columns and "GOLES" in df.columns:
+        # Jugadores pueden estar en 2 equipos — deduplicar por nombre+equipo+goles
+        df = df.drop_duplicates(subset=[id_col, "EQUIPO", "GOLES"])
+    elif id_col and id_col in df.columns:
         df = df.drop_duplicates(subset=[id_col])
-        after = len(df)
-        if before != after:
-            print(f"  ⚠️  Eliminados {before - after} duplicados en '{id_col}'")
+    else:
+        df = df.drop_duplicates()
+    after = len(df)
+    if before != after:
+        print(f"  ⚠️  Eliminados {before - after} duplicados")
 
     # Borrar colección existente para evitar residuos
     delete_collection(collection_name)
