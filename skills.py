@@ -89,9 +89,8 @@ def goles_equipo(equipo: str, temporada: str) -> str:
 def goles_jugador_todas_temporadas(nombre: str) -> str:
     """
     Busca a un jugador en TODAS las temporadas.
-    - Muestra desglose por temporada
-    - Suma goles POR EQUIPO (no entre equipos distintos)
-    - Los datos ya vienen calculados — el LLM NO debe recalcular
+    - Python calcula todo: desglose por temporada y total por equipo
+    - El LLM solo presenta el resultado formateado — no calcula nada
     """
     registros = []
 
@@ -111,7 +110,7 @@ def goles_jugador_todas_temporadas(nombre: str) -> str:
     if not registros:
         return f"No se encontró a '{nombre}' en ninguna temporada."
 
-    # Deduplicar solo filas exactamente iguales (temporada + equipo + goles)
+    # Deduplicar filas exactamente iguales
     seen = set()
     registros_limpios = []
     for temporada, equipo, goles in registros:
@@ -121,22 +120,29 @@ def goles_jugador_todas_temporadas(nombre: str) -> str:
             registros_limpios.append((temporada, equipo, goles))
     registros = registros_limpios
 
-    # Agrupar por equipo
+    # ── Python calcula totalidad ────────────────────────────────────────────────────
     por_equipo = {}
     for temporada, equipo, goles in registros:
         if equipo not in por_equipo:
             por_equipo[equipo] = []
         por_equipo[equipo].append((temporada, goles))
 
-    lineas = [f"Historial de {nombre.title()} en la CLC:\n"]
-    for equipo, temporadas in por_equipo.items():
-        lineas.append(f"🏟️ {equipo}:")
-        for temporada, goles in temporadas:
-            lineas.append(f"   {temporada}: {goles} goles")
-        total_equipo = sum(g for _, g in temporadas)
-        lineas.append(f"   ── Total en {equipo}: {total_equipo} goles\n")
+    # Construir respuesta ya calculada
+    nombre_jugador = nombre.title()
+    lineas = [f"RESULTADO CALCULADO — presenta esto exactamente:"]
+    lineas.append(f"")
+    lineas.append(f"Historial de {nombre_jugador} en la CLC:")
 
-    lineas.append("DATOS EXACTOS — no hagas cálculos adicionales, reporta estos números tal cual.")
+    for equipo, temporadas in por_equipo.items():
+        lineas.append(f"")
+        lineas.append(f"  {equipo}:")
+        for temp, goles in temporadas:
+            lineas.append(f"    - {temp}: {goles} goles")
+        total = sum(g for _, g in temporadas)
+        lineas.append(f"    TOTAL EN {equipo.upper()}: {total} goles")
+
+    lineas.append(f"")
+    lineas.append(f"INSTRUCCIÓN: Presenta estos números exactamente. NO sumes entre equipos. NO inventes datos.")
     return "\n".join(lineas)
 
 
