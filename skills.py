@@ -44,9 +44,16 @@ def _load(temporada: str, tipo: str) -> pd.DataFrame:
         return pd.DataFrame()
 
 
-# ── Skills de Goleadores ───────────────────────────────────────────────────────
+def _clean_goleadores(df: pd.DataFrame) -> pd.DataFrame:
+    """Elimina duplicados por nombre y equipo."""
+    if df.empty:
+        return df
+    return df.drop_duplicates(subset=["NOMBRE Y APELLIDO", "EQUIPO"])
+
+
+# ── Skills de Goleadores — temporada específica ────────────────────────────────
 def top_goleadores(temporada: str, n: int = 10) -> str:
-    df = _load(temporada, "goleadores")
+    df = _clean_goleadores(_load(temporada, "goleadores"))
     if df.empty:
         return f"No hay datos de goleadores para {temporada}."
     cols = [c for c in ["NOMBRE Y APELLIDO", "EQUIPO", "GOLES"] if c in df.columns]
@@ -55,7 +62,7 @@ def top_goleadores(temporada: str, n: int = 10) -> str:
 
 
 def goles_jugador(nombre: str, temporada: str) -> str:
-    df = _load(temporada, "goleadores")
+    df = _clean_goleadores(_load(temporada, "goleadores"))
     if df.empty:
         return f"No hay datos para {temporada}."
     mask = df["NOMBRE Y APELLIDO"].astype(str).str.lower().str.contains(nombre.lower())
@@ -67,7 +74,7 @@ def goles_jugador(nombre: str, temporada: str) -> str:
 
 
 def goles_equipo(equipo: str, temporada: str) -> str:
-    df = _load(temporada, "goleadores")
+    df = _clean_goleadores(_load(temporada, "goleadores"))
     if df.empty:
         return f"No hay datos para {temporada}."
     mask = df["EQUIPO"].astype(str).str.lower().str.contains(equipo.lower())
@@ -78,16 +85,22 @@ def goles_equipo(equipo: str, temporada: str) -> str:
     return result[cols].sort_values("GOLES", ascending=False).to_string(index=False)
 
 
-# ── Skills de Goleadores — Todas las temporadas ────────────────────────────────
+# ── Skills de Goleadores — todas las temporadas ────────────────────────────────
 def goles_jugador_todas_temporadas(nombre: str) -> str:
+    """
+    Busca a un jugador en TODAS las temporadas.
+    - Muestra desglose por temporada
+    - Suma goles POR EQUIPO (no entre equipos distintos)
+    - Los datos ya vienen calculados — el LLM NO debe recalcular
+    """
     registros = []
 
     for temporada in LOADERS.keys():
-        df = _load(temporada, "goleadores")
+        df = _clean_goleadores(_load(temporada, "goleadores"))
         if df.empty:
             continue
         mask = df["NOMBRE Y APELLIDO"].astype(str).str.lower().str.contains(nombre.lower())
-        result = df[mask].drop_duplicates(subset=["NOMBRE Y APELLIDO", "EQUIPO"])
+        result = df[mask]
         if result.empty:
             continue
         for _, row in result.iterrows():
@@ -98,6 +111,7 @@ def goles_jugador_todas_temporadas(nombre: str) -> str:
     if not registros:
         return f"No se encontró a '{nombre}' en ninguna temporada."
 
+    # Agrupar por equipo
     por_equipo = {}
     for temporada, equipo, goles in registros:
         if equipo not in por_equipo:
@@ -112,18 +126,15 @@ def goles_jugador_todas_temporadas(nombre: str) -> str:
         total_equipo = sum(g for _, g in temporadas)
         lineas.append(f"   ── Total en {equipo}: {total_equipo} goles\n")
 
-    lineas.append("IMPORTANTE: Estos son los datos exactos. No hagas cálculos adicionales.")
+    lineas.append("DATOS EXACTOS — no hagas cálculos adicionales, reporta estos números tal cual.")
     return "\n".join(lineas)
 
-def top_goleadores_todas_temporadas(n: int = 10) -> str:
-    """
-    Ranking de goleadores mostrando su mejor temporada.
-    NO suma entre temporadas para no mezclar equipos distintos.
-    """
-    filas = []
 
+def top_goleadores_todas_temporadas(n: int = 10) -> str:
+    """Ranking por mejor temporada individual — no suma entre equipos distintos."""
+    filas = []
     for temporada in LOADERS.keys():
-        df = _load(temporada, "goleadores")
+        df = _clean_goleadores(_load(temporada, "goleadores"))
         if df.empty:
             continue
         cols = [c for c in ["NOMBRE Y APELLIDO", "EQUIPO", "GOLES"] if c in df.columns]
@@ -135,7 +146,6 @@ def top_goleadores_todas_temporadas(n: int = 10) -> str:
         return "No hay datos disponibles."
 
     combined = pd.concat(filas)
-    # Mejor temporada por jugador
     ranking = (
         combined.sort_values("GOLES", ascending=False)
         .drop_duplicates(subset=["NOMBRE Y APELLIDO"])
@@ -143,7 +153,8 @@ def top_goleadores_todas_temporadas(n: int = 10) -> str:
     )
     return (
         f"Top {n} goleadores CLC (mejor temporada individual):\n"
-        f"{ranking.to_string(index=False)}"
+        f"{ranking.to_string(index=False)}\n"
+        f"DATOS EXACTOS — no hagas cálculos adicionales."
     )
 
 

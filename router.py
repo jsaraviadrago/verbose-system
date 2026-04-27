@@ -4,36 +4,33 @@ from skills import goles_jugador_todas_temporadas, top_goleadores_todas_temporad
 
 MODEL = "llama-3.1-8b-instant"
 
+
 def _is_multi_season(question: str) -> bool:
     q = question.lower()
     return any(w in q for w in [
         "todas", "total", "histórico", "historico",
         "todas las temporadas", "en total", "acumulado",
         "siempre", "carrera", "historia",
-        "por torneo", "cada torneo", "en cada",    # ← agrega estos
+        "por torneo", "cada torneo", "en cada",
         "desglosado", "todos los torneos",
     ])
 
+
 def detect_intent(question: str) -> str:
     q = question.lower()
-
     if any(w in q for w in ["gol", "goles", "goleador", "anotó", "anoto",
                               "score", "botín", "máximo anotador"]):
         return "goleadores"
-
     if any(w in q for w in ["tarjeta", "amarilla", "roja", "amonestado",
                               "expulsado", "disciplina", "sanción"]):
         return "tarjetas"
-
     if any(w in q for w in ["partido", "resultado", "jugó", "jugo", "marcador",
                               "ganó", "gano", "perdió", "perdio", "empate",
                               "cancha", "fecha", "jornada"]):
         return "partidos"
-
     if any(w in q for w in ["regla", "formato", "historia", "torneo",
                               "cuántos equipos", "campeón", "cómo funciona"]):
         return "wiki"
-
     return "goleadores"
 
 
@@ -50,38 +47,42 @@ def _call_groq(client: Groq, system: str, messages: list) -> str:
         return f"❌ Error: {e}"
 
 
+def _extract_player_name(question: str) -> str | None:
+    """Intenta extraer el nombre del jugador de la pregunta."""
+    stopwords = {
+        "goles", "tiene", "total", "todas", "temporadas", "torneo",
+        "cuántos", "cuantos", "metido", "marcado", "anotado", "por",
+        "en", "de", "ha", "que", "histórico", "historico", "cada",
+        "todos", "los", "las"
+    }
+    palabras = [w for w in question.split() if len(w) > 3 and w.lower() not in stopwords]
+    return " ".join(palabras) if palabras else None
+
+
 def route(client: Groq, question: str, temporada: str, messages: list) -> tuple[str, str]:
-    """Enruta la pregunta al agente correcto."""
     intent = detect_intent(question)
     multi = _is_multi_season(question)
 
-    # Multi-temporada — maneja directo el router
+    # ── Multi-temporada ────────────────────────────────────────────────────────
     if intent == "goleadores" and multi:
-        q = question.lower()
-        # Detectar si pregunta por jugador específico o ranking general
-        palabras = [w for w in question.split() if len(w) > 3]
-        data = None
-        for palabra in palabras:
-            if palabra.lower() not in ["goles", "todas", "total", "temporadas",
-                                        "histórico", "cuántos", "tiene", "hizo"]:
-                result = goles_jugador_todas_temporadas(palabra)
-                if "No se encontró" not in result:
-                    data = result
-                    break
+        nombre = _extract_player_name(question)
 
-        if not data:
+        if nombre:
+            data = goles_jugador_todas_temporadas(nombre)
+        else:
             data = top_goleadores_todas_temporadas()
 
         system = f"""Eres el agente experto en goleadores históricos de la Copa Lima de Clubes.
-        Responde SIEMPRE en español, claro y conciso.
-        IMPORTANTE: Los datos ya están calculados. 
-        Repórtelos exactamente como aparecen — NO hagas sumas ni cálculos propios.
+Responde SIEMPRE en español, claro y conciso.
+CRÍTICO: Los datos ya están calculados y son exactos.
+Repórtalos exactamente como aparecen — NO hagas sumas, restas ni cálculos propios.
+NO repitas ni dupliques ningún número.
 
-        {data}
-        """
+{data}
+"""
         return _call_groq(client, system, messages), "⚽ Agente Goleadores — Todas las temporadas"
 
-    # Temporada específica
+    # ── Temporada específica ───────────────────────────────────────────────────
     if intent == "goleadores":
         return agent_goleadores(client, question, temporada, messages), "⚽ Agente Goleadores"
     elif intent == "tarjetas":

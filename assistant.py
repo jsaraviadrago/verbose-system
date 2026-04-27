@@ -3,34 +3,36 @@ from groq import Groq
 from router import route
 from skills import LOADERS
 
-# ── Configure Groq ─────────────────────────────────────────────────────────────
+
 def configure_client() -> Groq:
     api_key = st.secrets["groq"]["api_key"]
     return Groq(api_key=api_key)
 
 
-# ── Assistant UI ───────────────────────────────────────────────────────────────
 def show_assistant():
     st.subheader("🤖 Asistente CLC")
-    st.caption("Consulta resultados, goleadores, tarjetas e info del torneo")
 
-
-    # Season selector
+    # Selector de temporada
     temporada = st.selectbox(
-        "📅 Selecciona la temporada:",
+        "📅 Temporada (para preguntas específicas):",
         options=list(LOADERS.keys()),
         index=0,
     )
 
-        client = configure_client()
+    st.caption(
+        "💡 Para una temporada usa el selector. "
+        "Para historial completo pregunta **'en total'**, **'por torneo'** o **'en todas las temporadas'**."
+    )
 
-    # Chat history per season
+    client = configure_client()
+
+    # Historial por temporada
     session_key = f"messages_{temporada}"
     if session_key not in st.session_state:
         st.session_state[session_key] = []
     messages = st.session_state[session_key]
 
-    # Display chat history
+    # Mostrar historial
     for msg in messages:
         with st.chat_message(msg["role"]):
             if msg["role"] == "assistant" and "agent" in msg:
@@ -38,16 +40,14 @@ def show_assistant():
             st.markdown(msg["content"])
 
     # Input
-    if prompt := st.chat_input(f"Pregunta sobre {temporada}..."):
+    if prompt := st.chat_input(f"Pregunta sobre {temporada} o el historial completo..."):
 
         messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Route to correct agent
         with st.chat_message("assistant"):
             with st.spinner("Consultando agente..."):
-                # Pass only user/assistant messages to LLM
                 history = [
                     {"role": m["role"], "content": m["content"]}
                     for m in messages
@@ -62,7 +62,7 @@ def show_assistant():
                 "agent": agent_used,
             })
 
-    # Clear chat
+    # Limpiar chat
     if messages:
         if st.button("🗑️ Limpiar conversación"):
             st.session_state[session_key] = []
