@@ -2,12 +2,12 @@
 # Edita este archivo con la info real de tu torneo
 
 WIKI_CLC = """
-COPA LIMA DE CLUBES (CLC) — INFORMACIÓN DEL TORNEO
+COPA CAMBRIDGE LEAGUE (CCL) — INFORMACIÓN DEL TORNEO
 
 FORMATO:
 - El torneo se divide en dos temporadas: Apertura y Clausura
 - Cada temporada tiene una fase de grupos y una fase eliminatoria (knockout)
-- Los equipos juegan en canchas oficiales de Lima
+- Los equipos juegan en canchas en el Colegio Cambridge de Lima
 
 EQUIPOS PARTICIPANTES:
 - Barcelona
@@ -16,7 +16,11 @@ EQUIPOS PARTICIPANTES:
 - Juventus
 - Manchester City
 - Real Madrid
-- (agrega aquí todos los equipos de tu liga)
+- Celtic
+- Atletico de Madrid
+- Holanda que luego se convirtió en Liverpool
+- Real Cambridge que antes era Real Madrid
+- Borussia Dortmund
 
 REGLAS GENERALES:
 - Tarjeta amarilla: amonestación
