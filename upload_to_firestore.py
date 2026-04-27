@@ -1,17 +1,17 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 import pandas as pd
+import os
 
 # ── Firebase initialization ────────────────────────────────────────────────────
-cred = credentials.Certificate("firebase_key.json")  # ← Keep this file locally, never upload to GitHub
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+cred = credentials.Certificate(os.path.join(BASE_DIR, "firebase_key.json"))
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-# ── GitHub raw base URL ────────────────────────────────────────────────────────
 BASE_URL = "https://raw.githubusercontent.com/jsaraviadrago/verbose-system/main/Data/"
 
-# ── CSV files → Firestore collection mapping ───────────────────────────────────
-# Format: (csv_filename, collection_name, id_column or None)
 FILES = [
     ("Goleadores_apertura_2024_CLC.csv",  "goleadores_apertura_2024",  "NOMBRE Y APELLIDO"),
     ("Goleadores_apertura_2025_CLC.csv",  "goleadores_apertura_2025",  "NOMBRE Y APELLIDO"),
@@ -25,31 +25,45 @@ FILES = [
     ("Partidos_clausura_2025_CLC_1.csv",  "partidos_clausura_2025",    None),
 ]
 
-# ── Upload helper ──────────────────────────────────────────────────────────────
+
+def delete_collection(collection_name: str):
+    """Borra todos los documentos de una colección antes de re-subir."""
+    docs = db.collection(collection_name).stream()
+    count = 0
+    for doc in docs:
+        doc.reference.delete()
+        count += 1
+    if count > 0:
+        print(f"  🗑️  Borrados {count} documentos anteriores de '{collection_name}'")
+
+
 def sync_collection(filename: str, collection_name: str, id_col: str = None):
-    """
-    Reads a CSV from GitHub and syncs it to Firestore.
-    - Overwrites existing documents (so edits in GitHub reflect in Firestore)
-    - Drops fully empty rows and unnamed columns
-    """
     url = BASE_URL + filename
-    print(f"📥 Reading: {url}")
+    print(f"📥 Leyendo: {filename}")
 
     try:
         df = pd.read_csv(url)
     except Exception as e:
-        print(f"  ❌ Error reading file: {e}")
+        print(f"  ❌ Error leyendo archivo: {e}")
         return
 
-    # Clean column names (strip spaces)
+    # Limpiar columnas
     df.columns = df.columns.str.strip()
-
-    # Drop unnamed/empty columns (e.g. Unnamed: 9, Unnamed: 10)
     df = df.loc[:, ~df.columns.str.startswith("Unnamed")]
-
-    # Drop fully empty rows
     df = df.dropna(how="all")
 
+    # ── Deduplicar antes de subir ──────────────────────────────────────────────
+    if id_col and id_col in df.columns:
+        before = len(df)
+        df = df.drop_duplicates(subset=[id_col])
+        after = len(df)
+        if before != after:
+            print(f"  ⚠️  Eliminados {before - after} duplicados en '{id_col}'")
+
+    # Borrar colección existente para evitar residuos
+    delete_collection(collection_name)
+
+    # Subir documentos limpios
     collection_ref = db.collection(collection_name)
     count = 0
 
@@ -57,19 +71,17 @@ def sync_collection(filename: str, collection_name: str, id_col: str = None):
         doc_data = row.dropna().to_dict()
 
         if id_col and id_col in doc_data:
-            # Use the ID column as document ID so updates overwrite correctly
             doc_id = str(doc_data[id_col]).strip().replace(" ", "_")
         else:
-            # For Partidos: use row index as stable ID
             doc_id = str(i)
 
-        collection_ref.document(doc_id).set(doc_data)  # .set() overwrites on re-run
+        collection_ref.document(doc_id).set(doc_data)
         count += 1
 
     print(f"  ✅ '{collection_name}': {count} documentos sincronizados\n")
 
 
-# ── Run sync for all files ─────────────────────────────────────────────────────
+# ── Run ────────────────────────────────────────────────────────────────────────
 print("🚀 Iniciando sincronización GitHub → Firestore...\n")
 
 for filename, collection_name, id_col in FILES:
