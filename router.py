@@ -53,9 +53,12 @@ def _extract_player_name(question: str) -> str | None:
         "goles", "tiene", "total", "todas", "temporadas", "torneo",
         "cuántos", "cuantos", "metido", "marcado", "anotado", "por",
         "en", "de", "ha", "que", "histórico", "historico", "cada",
-        "todos", "los", "las"
+        "todos", "los", "las", "dime", "sus", "equipo", "equipos",
+        "torneos", "campeonato", "copa", "lima", "clubes", "clc",
+        "cuanto", "cuanta", "también", "tambien", "quiero", "saber",
+        "dame", "puedes", "decir", "favor", "porfa", "mismo",
     }
-    palabras = [w for w in question.split() if len(w) > 3 and w.lower() not in stopwords]
+    palabras = [w for w in question.split() if w.lower() not in stopwords and len(w) > 2]
     return " ".join(palabras) if palabras else None
 
 
@@ -69,14 +72,18 @@ def route(client: Groq, question: str, temporada: str, messages: list) -> tuple[
 
         if nombre:
             data = goles_jugador_todas_temporadas(nombre)
+            # Si no se encontró al jugador, retornar directo sin pasar al LLM
+            if "No se encontró" in data:
+                return f"No encontré datos de '{nombre}' en ninguna temporada de la CLC.", "⚽ Agente Goleadores"
         else:
             data = top_goleadores_todas_temporadas()
 
         system = f"""Eres el agente experto en goleadores de la Copa Lima de Clubes.
 Responde SIEMPRE en español.
-Los cálculos ya están hechos por Python — tu único trabajo es presentar el resultado.
+Tu ÚNICO trabajo es presentar el siguiente resultado calculado por Python.
 NO sumes, NO restes, NO cambies ningún número.
-NO menciones equipos o datos que no aparezcan abajo.
+NO menciones equipos, jugadores ni datos que no aparezcan exactamente abajo.
+Si no hay datos de algo, di "no hay datos" — no inventes.
 
 {data}
 """
