@@ -120,7 +120,7 @@ def goles_jugador_todas_temporadas(nombre: str) -> str:
             registros_limpios.append((temporada, equipo, goles))
     registros = registros_limpios
 
-    # ── Python calcula totalidad ────────────────────────────────────────────────────
+    # ── Python calcula todo ────────────────────────────────────────────────────
     por_equipo = {}
     for temporada, equipo, goles in registros:
         if equipo not in por_equipo:
@@ -128,8 +128,8 @@ def goles_jugador_todas_temporadas(nombre: str) -> str:
         por_equipo[equipo].append((temporada, goles))
 
     # Construir respuesta ya calculada
-    nombre_jugador = nombre.title()
-    lineas = [f"RESULTADO CALCULADO — presenta esto exactamente:"]
+    nombre_jugador = nombre.title().replace("?", "").strip()
+    lineas = [f"RESULTADO CALCULADO — presenta esto exactamente, sin sumar entre equipos:"]
     lineas.append(f"")
     lineas.append(f"Historial de {nombre_jugador} en la CLC:")
 
@@ -139,10 +139,10 @@ def goles_jugador_todas_temporadas(nombre: str) -> str:
         for temp, goles in temporadas:
             lineas.append(f"    - {temp}: {goles} goles")
         total = sum(g for _, g in temporadas)
-        lineas.append(f"    TOTAL EN {equipo.upper()}: {total} goles")
+        lineas.append(f"    Total en {equipo}: {total} goles")
 
     lineas.append(f"")
-    lineas.append(f"INSTRUCCIÓN: Presenta estos números exactamente. NO sumes entre equipos. NO inventes datos.")
+    lineas.append(f"REGLA: Muestra cada equipo por separado. NO sumes totales entre equipos distintos.")
     return "\n".join(lineas)
 
 
