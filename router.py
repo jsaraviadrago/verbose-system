@@ -72,11 +72,12 @@ def route(client: Groq, question: str, temporada: str, messages: list) -> tuple[
             data = top_goleadores_todas_temporadas()
 
         system = f"""Eres el agente experto en goleadores históricos de la Copa Lima de Clubes.
-Responde SIEMPRE en español, claro y conciso.
-Solo usa los datos proporcionados.
+        Responde SIEMPRE en español, claro y conciso.
+        IMPORTANTE: Los datos ya están calculados. 
+        Repórtelos exactamente como aparecen — NO hagas sumas ni cálculos propios.
 
-{data}
-"""
+        {data}
+        """
         return _call_groq(client, system, messages), "⚽ Agente Goleadores — Todas las temporadas"
 
     # Temporada específica
