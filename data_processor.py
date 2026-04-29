@@ -95,12 +95,13 @@ class DataProcessor:
         return pivoted[column_order]
 
     def process_cards_and_scorers(self, cards_df, scorers_df):
-        """Lógica de goleadores y disciplina corregida."""
+        """Lógica de goleadores y disciplina corregida para detectar Rojas."""
         # --- Goleadores ---
         scorers = scorers_df.copy()
         scorers.columns = scorers.columns.str.strip().str.upper()
-        scorers['GOLES'] = pd.to_numeric(scorers['GOLES'], errors='coerce').fillna(0)
+        scorers['GOLES'] = pd.to_numeric(scorers['GOLES'], errors='coerce').fillna(0).astype(int)
         scorers['NOMBRE Y APELLIDO'] = scorers['NOMBRE Y APELLIDO'].str.title()
+        # Ordenar de mayor a menor explícitamente
         goleadores_sorted = scorers.sort_values(by='GOLES', ascending=False).head(10)
         
         # --- Tarjetas ---
@@ -109,16 +110,22 @@ class DataProcessor:
         cols_f = [c for c in cards.columns if 'F' in c and len(c) <= 3]
         
         for col in cols_f:
-            cards[col] = cards[col].astype(str)
+            cards[col] = cards[col].astype(str).str.upper().str.strip()
 
-        cards['Total_A'] = cards[cols_f].apply(lambda x: x.str.contains('1A').sum() + (x.str.contains('2A').sum() * 2), axis=1)
-        cards['Amarillas'] = cards[cols_f].apply(lambda x: x.str.contains('1A|2A').sum(), axis=1)
-        cards['Rojas'] = cards[cols_f].apply(lambda x: x.str.contains('1R').sum(), axis=1)
+        # Detección flexible: Cualquier celda que contenga 'A' o 'R'
+        cards['Amarillas'] = cards[cols_f].apply(lambda x: x.str.contains('A').sum(), axis=1)
+        cards['Rojas'] = cards[cols_f].apply(lambda x: x.str.contains('R').sum(), axis=1)
         
-        team_cards = cards.groupby('EQUIPO')['Total_A'].sum().reset_index().sort_values(by='Total_A', ascending=False)
-        team_cards.columns = ['Equipo', 'Total_A_Count']
+        # Puntos Fair Play: 1A=1pto, 2A=2ptos, 1R=3ptos (ajustable)
+        cards['Puntos_Sancion'] = cards[cols_f].apply(
+            lambda x: x.str.contains('1A').sum() + (x.str.contains('2A').sum() * 2) + (x.str.contains('1R').sum() * 3), 
+            axis=1
+        )
         
-        top_y = cards[cards['Amarillas'] > 0][['JUGADOR', 'EQUIPO', 'Amarillas']].sort_values(by='Amarillas', ascending=False).head(5)
-        top_r = cards[cards['Rojas'] > 0][['JUGADOR', 'EQUIPO', 'Rojas']].sort_values(by='Rojas', ascending=False).head(5)
+        team_cards = cards.groupby('EQUIPO')['Puntos_Sancion'].sum().reset_index().sort_values(by='Puntos_Sancion', ascending=False)
+        team_cards.columns = ['Equipo', 'Total_Sancion']
+        
+        top_y = cards[cards['Amarillas'] > 0][['JUGADOR', 'EQUIPO', 'Amarillas']].sort_values(by='Amarillas', ascending=False).head(8)
+        top_r = cards[cards['Rojas'] > 0][['JUGADOR', 'EQUIPO', 'Rojas']].sort_values(by='Rojas', ascending=False).head(8)
         
         return goleadores_sorted[['NOMBRE Y APELLIDO', 'EQUIPO', 'GOLES']], team_cards, top_y, top_r
