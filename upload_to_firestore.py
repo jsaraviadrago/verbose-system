@@ -3,8 +3,7 @@ from firebase_admin import credentials, firestore
 import pandas as pd
 import os
 
-# ── Firebase initialization ────────────────────────────────────────────────────
-import os
+# Firebase initialization
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 cred = credentials.Certificate(os.path.join(BASE_DIR, "firebase_key.json"))
 firebase_admin.initialize_app(cred)
@@ -25,76 +24,61 @@ FILES = [
     ("Partidos_clausura_2025_CLC_1.csv",  "partidos_clausura_2025",    None),
 ]
 
-
 def delete_collection(collection_name: str):
-    """Borra todos los documentos de una colección antes de re-subir."""
     docs = db.collection(collection_name).stream()
-    count = 0
     for doc in docs:
         doc.reference.delete()
-        count += 1
-    if count > 0:
-        print(f"  🗑️  Borrados {count} documentos anteriores de '{collection_name}'")
 
-
-def sync_collection(filename: str, collection_name: str, id_col: str = None):
+ddef sync_collection(filename: str, collection_name: str, id_col: str = None):
     url = BASE_URL + filename
     print(f"📥 Leyendo: {filename}")
-
     try:
         df = pd.read_csv(url)
     except Exception as e:
-        print(f"  ❌ Error leyendo archivo: {e}")
+        print(f"  ❌ Error: {e}")
         return
 
-    # Limpiar columnas
-    df.columns = df.columns.str.strip()
-    df = df.loc[:, ~df.columns.str.startswith("Unnamed")]
+    # 1. Limpieza de columnas (Normalizamos a Mayúsculas para evitar errores de espacios)
+    df.columns = df.columns.str.strip().str.upper()
+    df = df.loc[:, ~df.columns.str.startswith("UNNAMED")]
     df = df.dropna(how="all")
 
-    # ── Deduplicar antes de subir ──────────────────────────────────────────────
-    before = len(df)
-    if id_col and id_col in df.columns and "EQUIPO" in df.columns and "GOLES" in df.columns:
-        # Jugadores pueden estar en 2 equipos — deduplicar por nombre+equipo+goles
-        df = df.drop_duplicates(subset=[id_col, "EQUIPO", "GOLES"])
+    # 2. LÓGICA ESPECIAL PARA TARJETAS: Combinar filas del mismo jugador
+    # Esto asegura que si Alvaro Galarreta tiene '2A' en una fila y '1R' en otra, se unan.
+    if "JUGADOR" in df.columns:
+        df = df.fillna("")
+        # Agrupamos por Jugador y Equipo, uniendo los textos de las sanciones
+        df = df.groupby(["JUGADOR", "EQUIPO"]).agg(lambda x: " ".join(filter(None, x.astype(str)))).reset_index()
+        print(f"  🔄 Filas combinadas para procesar múltiples tarjetas/rojas.")
+
+    # 3. Deduplicar para el resto de archivos (Goleadores, etc.)
     elif id_col and id_col in df.columns:
-        df = df.drop_duplicates(subset=[id_col])
-    else:
-        df = df.drop_duplicates()
-    after = len(df)
-    if before != after:
-        print(f"  ⚠️  Eliminados {before - after} duplicados")
+        subset = [id_col, "EQUIPO", "GOLES"] if "GOLES" in df.columns else [id_col]
+        df = df.drop_duplicates(subset=subset)
 
-    # Borrar colección existente para evitar residuos
+    # Borrar colección existente
     delete_collection(collection_name)
-
-    # Subir documentos limpios
     collection_ref = db.collection(collection_name)
     count = 0
 
+    # 4. Subida a Firestore
     for i, row in df.iterrows():
-        doc_data = row.dropna().to_dict()
+        doc_data = row.to_dict()
 
-        if id_col and id_col in doc_data:
-            doc_id = str(doc_data[id_col]).strip().replace(" ", "_")
-            # Si tiene equipo, incluirlo en el ID para no sobreescribir
-            # jugadores que jugaron en dos equipos en el mismo torneo
-            if "EQUIPO" in doc_data:
-                equipo = str(doc_data["EQUIPO"]).strip().replace(" ", "_")
-                doc_id = f"{doc_id}__{equipo}"
+        # Generar ID único usando el nombre del jugador y el equipo
+        doc_id = str(doc_data["JUGADOR" if "JUGADOR" in doc_data else id_col]).strip().replace(" ", "_")
+        if "EQUIPO" in doc_data:
+            equipo = str(doc_data["EQUIPO"]).strip().replace(" ", "_")
+            doc_id = f"{doc_id}__{equipo}"
         else:
             doc_id = str(i)
 
         collection_ref.document(doc_id).set(doc_data)
         count += 1
 
-    print(f"  ✅ '{collection_name}': {count} documentos sincronizados\n")
+    print(f"  ✅ '{collection_name}': {count} sincronizados\n")
 
-
-# ── Run ────────────────────────────────────────────────────────────────────────
-print("🚀 Iniciando sincronización GitHub → Firestore...\n")
-
+print("🚀 Sincronizando GitHub → Firestore...\n")
 for filename, collection_name, id_col in FILES:
     sync_collection(filename, collection_name, id_col)
-
-print("🎉 ¡Sincronización completa! Revisa tu Firestore en Firebase Console.")
+print("🎉 ¡Sincronización completa!")
