@@ -102,7 +102,8 @@ class DataProcessor:
         scorers['GOLES'] = pd.to_numeric(scorers['GOLES'], errors='coerce').fillna(0).astype(int)
         scorers['NOMBRE Y APELLIDO'] = scorers['NOMBRE Y APELLIDO'].str.title()
         # Ordenar de mayor a menor explícitamente
-        goleadores_sorted = scorers.sort_values(by='GOLES', ascending=False).head(10)
+        # Asegura el orden descendente numérico
+        goleadores_sorted = scorers.sort_values(by='GOLES', ascending=False).head(10)     
         
         # --- Tarjetas ---
         cards = cards_df.copy()
@@ -112,13 +113,15 @@ class DataProcessor:
         for col in cols_f:
             cards[col] = cards[col].astype(str).str.upper().str.strip()
 
-        # Detección flexible: Cualquier celda que contenga 'A' o 'R'
-        cards['Amarillas'] = cards[cols_f].apply(lambda x: x.str.contains('A').sum(), axis=1)
-        cards['Rojas'] = cards[cols_f].apply(lambda x: x.str.contains('R').sum(), axis=1)
+        # 2. Conteo de Amarillas y Rojas (Detección precisa)
+        cards['Amarillas'] = cards[cols_f].apply(lambda x: x.str.contains('A', na=False).sum(), axis=1)
+        cards['Rojas'] = cards[cols_f].apply(lambda x: x.str.contains('1R', na=False).sum(), axis=1)
         
-        # Puntos Fair Play: 1A=1pto, 2A=2ptos, 1R=3ptos (ajustable)
+        # 3. Puntos Fair Play
         cards['Puntos_Sancion'] = cards[cols_f].apply(
-            lambda x: x.str.contains('1A').sum() + (x.str.contains('2A').sum() * 2) + (x.str.contains('1R').sum() * 3), 
+            lambda x: x.str.contains('1A', na=False).sum() + 
+                      (x.str.contains('2A', na=False).sum() * 2) + 
+                      (x.str.contains('1R', na=False).sum() * 3), 
             axis=1
         )
         
