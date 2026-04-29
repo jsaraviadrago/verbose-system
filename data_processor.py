@@ -6,8 +6,9 @@ class DataProcessor:
         pass
 
     def get_general_stats(self, df):
+        """Calcula métricas generales y estadísticas por fecha."""
         promedio = df['Goles'].mean() * 2
-        total_goles = df['Goles'].sum()
+        total_goles = df['Goles'].sum() / 2
         
         gf_data_sum = df.groupby('Fecha').agg(
             Total_Goles=('Goles', 'sum'),
@@ -17,7 +18,8 @@ class DataProcessor:
         return promedio, total_goles, gf_data_sum
 
     def process_standings(self, df, grupo):
-        df_filtered = df[df['Grupo'] == grupo].copy()
+        """Genera la tabla de posiciones para la fase de grupos (Fechas 1-5)."""
+        df_filtered = df[(df['Grupo'] == grupo) & (df['Fecha'] <= 5)].copy()
         if df_filtered.empty: return pd.DataFrame()
 
         df_filtered['g_count'] = (df_filtered['Resultado'] == 'G').astype(int)
@@ -26,6 +28,7 @@ class DataProcessor:
 
         gf_data = df_filtered.groupby('Equipo')['Goles'].sum().reset_index().rename(columns={'Goles': 'GF'})
         
+        # Cálculo de Goles en Contra (GC) cruzando datos de partidos
         match_goals = df_filtered.pivot_table(index='Partido', columns='Equipo_numero', values='Goles', aggfunc='sum').reset_index()
         match_goals.columns = ['Partido', 'Goals_Equipo1', 'Goals_Equipo2']
         match_teams = df_filtered.pivot_table(index='Partido', columns='Equipo_numero', values='Equipo', aggfunc='first').reset_index()
@@ -41,63 +44,77 @@ class DataProcessor:
         stats = stats.merge(gf_data, on='Equipo', how='left').merge(gc_data, on='Equipo', how='left').fillna(0)
         stats['GD'] = stats['GF'] - stats['GC']
         stats['Puntos'] = (stats['G'] * 3) + (stats['E'] * 1)
-        stats['Prom_gol'] = (stats['GF'] / stats['PJ'])
         
+        # Expectativa Pitagórica
         gf_p, gc_p = stats['GF']**1.2, stats['GC']**1.2
         stats['PythEXP'] = (gf_p / (gf_p + gc_p)).fillna(0).round(2)
 
-        return stats.sort_values(by=['Puntos', 'GD'], ascending=[False, False]).reset_index(drop=True)
+        return stats.sort_values(by=['Puntos', 'GD', 'GF'], ascending=[False, False, False]).reset_index(drop=True)
 
     def process_match_results(self, df):
-        # Filtramos solo las fechas de fase de grupos (1 a 5)
+        """Resultados de la fase de grupos con orden de columnas específico."""
         df_temp = df[df['Fecha'] <= 5].copy()
         if df_temp.empty: return pd.DataFrame()
         
-        df_temp['match_number'] = df_temp.groupby(['Fecha', 'Grupo']).cumcount() // 2
-        df_temp['team_number'] = df_temp.groupby(['Fecha', 'Grupo', 'match_number']).cumcount() + 1
+        df_temp['match_idx'] = df_temp.groupby(['Fecha', 'Grupo']).cumcount() // 2
+        df_temp['team_idx'] = df_temp.groupby(['Fecha', 'Grupo', 'match_idx']).cumcount() + 1
         
-        match_details = df_temp[['Fecha', 'Grupo', 'match_number', 'Hora', 'Cancha']].drop_duplicates()
-        pivoted = df_temp.pivot(index=['Fecha', 'Grupo', 'match_number'], columns='team_number', values=['Equipo', 'Goles'])
+        match_details = df_temp[['Fecha', 'Grupo', 'match_idx', 'Hora', 'Cancha']].drop_duplicates()
+        pivoted = df_temp.pivot(index=['Fecha', 'Grupo', 'match_idx'], columns='team_idx', values=['Equipo', 'Goles'])
         pivoted.columns = [f'{col[0]}_{col[1]}' for col in pivoted.columns]
-        pivoted = pivoted.reset_index().merge(match_details, on=['Fecha', 'Grupo', 'match_number'])
+        pivoted = pivoted.reset_index().merge(match_details, on=['Fecha', 'Grupo', 'match_idx'])
         
-        return pivoted.rename(columns={'Equipo_1': 'Equipo_A', 'Equipo_2': 'Equipo_B', 'Goles_1': 'Goles_A', 'Goles_2': 'Goles_B'}).sort_values(by='Fecha')
+        pivoted = pivoted.rename(columns={
+            'Equipo_1': 'Equipo A', 'Equipo_2': 'Equipo B', 
+            'Goles_1': 'Goles A', 'Goles_2': 'Goles B'
+        })
+        
+        cols = ['Fecha', 'Grupo', 'Cancha', 'Hora', 'Equipo A', 'Goles A', 'Equipo B', 'Goles B']
+        return pivoted[cols].sort_values(by=['Fecha', 'Grupo'])
 
     def process_knockout_stage(self, df):
-        # Usamos el DataFrame cargado para evitar el error de archivo no encontrado
+        """Procesa Fechas 6, 7 y 8 como Cuartos, Semis y Final."""
         knockout_df = df[df['Fecha'] >= 6].copy()
         if knockout_df.empty: return pd.DataFrame()
         
-        # Misma lógica de pivoteado
-        knockout_df['match_number'] = knockout_df.groupby(['Fecha']).cumcount() // 2
-        knockout_df['team_number'] = knockout_df.groupby(['Fecha', 'match_number']).cumcount() + 1
+        knockout_df['match_idx'] = knockout_df.groupby('Fecha').cumcount() // 2
+        knockout_df['team_idx'] = knockout_df.groupby(['Fecha', 'match_idx']).cumcount() + 1
         
-        match_details = knockout_df[['Fecha', 'match_number', 'Hora', 'Cancha']].drop_duplicates()
-        pivoted = knockout_df.pivot(index=['Fecha', 'match_number'], columns='team_number', values=['Equipo', 'Goles'])
+        match_info = knockout_df[['Fecha', 'match_idx', 'Hora', 'Cancha']].drop_duplicates()
+        pivoted = knockout_df.pivot(index=['Fecha', 'match_idx'], columns='team_idx', values=['Equipo', 'Goles'])
         pivoted.columns = [f'{col[0]}_{col[1]}' for col in pivoted.columns]
-        pivoted = pivoted.reset_index().merge(match_details, on=['Fecha', 'match_number'])
+        pivoted = pivoted.reset_index().merge(match_info, on=['Fecha', 'match_idx'])
         
-        return pivoted.rename(columns={'Equipo_1': 'Equipo_A', 'Equipo_2': 'Equipo_B', 'Goles_1': 'Goles_A', 'Goles_2': 'Goles_B'})
+        pivoted = pivoted.rename(columns={
+            'Equipo_1': 'Equipo A', 'Equipo_2': 'Equipo B', 
+            'Goles_1': 'Goles A', 'Goles_2': 'Goles B', 'Fecha': 'Fecha_Num'
+        })
+
+        fase_map = {6: "Cuartos de Final", 7: "Semifinal", 8: "Gran Final"}
+        pivoted['Fase'] = pivoted['Fecha_Num'].map(fase_map)
+
+        column_order = ['Fase', 'Cancha', 'Hora', 'Equipo A', 'Goles A', 'Equipo B', 'Goles B']
+        return pivoted[column_order]
 
     def process_cards_and_scorers(self, cards_df, scorers_df):
+        """Lógica de goleadores y disciplina (Fair Play)."""
         scorers = scorers_df.copy()
         scorers.columns = scorers.columns.str.strip().str.upper()
-        scorers['EQUIPO'] = scorers['EQUIPO'].astype(str).str.strip().str.title()
-        scorers['NOMBRE Y APELLIDO'] = scorers['NOMBRE Y APELLIDO'].astype(str).str.strip().str.title()
-        scorers = scorers.drop_duplicates(subset=['NOMBRE Y APELLIDO']).sort_values(by='GOLES', ascending=False).head(8)
+        scorers['NOMBRE Y APELLIDO'] = scorers['NOMBRE Y APELLIDO'].str.title()
         
         cards = cards_df.copy()
         cards.columns = cards.columns.str.strip().str.upper()
-        cols_f = [col for col in cards.columns if 'F' in col and '1F' <= col <= '8F']
+        cols_f = [c for c in cards.columns if 'F' in c and len(c) <= 3]
         
+        # 1A = 1 punto, 2A = 2 puntos
         cards['Total_A'] = cards[cols_f].apply(lambda x: x.astype(str).str.contains('1A').sum() + (x.astype(str).str.contains('2A').sum() * 2), axis=1)
-        team_cards = cards.groupby('EQUIPO')['Total_A'].sum().reset_index().sort_values(by='Total_A', ascending=False)
-        team_cards.columns = ['Equipo', 'Total_A_Count']
-        
         cards['Amarillas'] = cards[cols_f].apply(lambda x: x.astype(str).str.contains('1A|2A').sum(), axis=1)
         cards['Rojas'] = cards[cols_f].apply(lambda x: x.astype(str).str.contains('1R').sum(), axis=1)
         
-        top_y = cards[['JUGADOR', 'EQUIPO', 'Amarillas']].sort_values(by='Amarillas', ascending=False).head(5)
-        top_r = cards[['JUGADOR', 'EQUIPO', 'Rojas']].sort_values(by='Rojas', ascending=False).head(5)
+        team_cards = cards.groupby('EQUIPO')['Total_A'].sum().reset_index().sort_values(by='Total_A', ascending=False)
+        team_cards.columns = ['Equipo', 'Total_A_Count']
         
-        return scorers[['NOMBRE Y APELLIDO', 'EQUIPO', 'GOLES']], team_cards, top_y, top_r
+        top_y = cards[cards['Amarillas'] > 0][['JUGADOR', 'EQUIPO', 'Amarillas']].sort_values(by='Amarillas', ascending=False).head(5)
+        top_r = cards[cards['Rojas'] > 0][['JUGADOR', 'EQUIPO', 'Rojas']].sort_values(by='Rojas', ascending=False).head(5)
+        
+        return scorers[['NOMBRE Y APELLIDO', 'EQUIPO', 'GOLES']].head(10), team_cards, top_y, top_r
