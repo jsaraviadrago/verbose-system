@@ -36,16 +36,18 @@ st.markdown("""
 
 st.divider()
 
-# --- Métricas y Gráficas ---
+# --- Carga de Datos ---
 df_partidos = get_partidos_clausura_2025()
 promedio, total_goles, stats_fecha = dp.get_general_stats(df_partidos)
 
+# Métricas
 col_m1, col_m2 = st.columns(2)
 with col_m1:
     st.markdown(f"<div style='padding:1.5rem; background-color:#e0f7fa; border-radius:12px; text-align:center; color:black;'><b>⚽ Promedio Goles:</b><br>{promedio:.2f}</div>", unsafe_allow_html=True)
 with col_m2:
     st.markdown(f"<div style='padding:1.5rem; background-color:#ffffff; border-radius:12px; text-align:center; color:black; border:1px solid #ddd;'><b>🔢 Total Goles:</b><br>{total_goles}</div>", unsafe_allow_html=True)
 
+# Gráficas
 st.subheader("Estadísticas por Fecha")
 c1, c2 = st.columns(2)
 with c1:
@@ -55,13 +57,14 @@ with c2:
     st.write("**Promedio de Goles**")
     st.line_chart(stats_fecha.set_index('Fecha')['Prom_Goles'])
 
-# --- Tablas ---
+# --- Tablas de Posiciones ---
 st.divider()
 st.subheader("Tabla de Posiciones")
 t1, t2 = st.tabs(["Grupo 1", "Grupo 2"])
 with t1: st.dataframe(dp.process_standings(df_partidos, 1), use_container_width=True, hide_index=True)
 with t2: st.dataframe(dp.process_standings(df_partidos, 2), use_container_width=True, hide_index=True)
 
+# --- Playoffs ---
 st.divider()
 st.subheader("🏆 Fase Final")
 playoffs = dp.process_knockout_stage(df_partidos)
@@ -80,21 +83,31 @@ st.dataframe(dp.process_match_results(df_partidos), use_container_width=True, hi
 
 # --- Disciplina ---
 st.divider()
-goleadores, team_cards, top_y, top_r = dp.process_cards_and_scorers(get_tarjetas_clausura_2025(), get_goleadores_clausura_2025())
+goleadores, team_cards, top_y, top_r = dp.process_cards_and_scorers(
+    get_tarjetas_clausura_2025(), get_goleadores_clausura_2025()
+)
 
 st.subheader("Máximos Goleadores")
 st.dataframe(goleadores, use_container_width=True, hide_index=True)
 
 st.subheader("Puntos de Sanción por Equipo")
 chart = alt.Chart(team_cards).mark_bar().encode(
-    x=alt.X('Equipo:N', sort='-y'), y='Total_A_Count:Q', tooltip=['Equipo', 'Total_A_Count']
+    x=alt.X('Equipo:N', sort='-y'), 
+    y=alt.Y('Total_Sancion:Q', title="Puntos Acumulados"), 
+    tooltip=['Equipo', 'Total_Sancion']
 )
 st.altair_chart(chart, use_container_width=True)
 
 cy, cr = st.columns(2)
 with cy:
     st.subheader("Top Amarillas 🟨")
-    st.dataframe(top_y, use_container_width=True, hide_index=True) if not top_y.empty else st.write("Sin amarillas")
+    if not top_y.empty:
+        st.dataframe(top_y, use_container_width=True, hide_index=True)
+    else:
+        st.write("Sin amarillas registradas.")
 with cr:
     st.subheader("Top Rojas 🟥")
-    st.dataframe(top_r, use_container_width=True, hide_index=True) if not top_r.empty else st.write("Cero rojas ✅")
+    if not top_r.empty:
+        st.dataframe(top_r, use_container_width=True, hide_index=True)
+    else:
+        st.write("Cero rojas hasta el momento. ✅")
