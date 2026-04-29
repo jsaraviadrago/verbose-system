@@ -47,15 +47,15 @@ with col_m1:
 with col_m2:
     st.markdown(f"<div style='padding:1.5rem; background-color:#ffffff; border-radius:12px; text-align:center; color:black; border:1px solid #ddd;'><b>🔢 Total Goles:</b><br>{total_goles}</div>", unsafe_allow_html=True)
 
-# Gráficas
+# Gráficas (Corregido para usar FECHA en mayúsculas)
 st.subheader("Estadísticas por Fecha")
 c1, c2 = st.columns(2)
 with c1:
     st.write("**Goles Totales**")
-    st.line_chart(stats_fecha.set_index('Fecha')['Total_Goles'])
+    st.line_chart(stats_fecha.set_index('FECHA')['Total_Goles'])
 with c2:
     st.write("**Promedio de Goles**")
-    st.line_chart(stats_fecha.set_index('Fecha')['Prom_Goles'])
+    st.line_chart(stats_fecha.set_index('FECHA')['Prom_Goles'])
 
 # --- Tablas de Posiciones ---
 st.divider()
@@ -64,12 +64,13 @@ t1, t2 = st.tabs(["Grupo 1", "Grupo 2"])
 with t1: st.dataframe(dp.process_standings(df_partidos, 1), use_container_width=True, hide_index=True)
 with t2: st.dataframe(dp.process_standings(df_partidos, 2), use_container_width=True, hide_index=True)
 
-# --- Playoffs ---
+# --- Playoffs (Corregido para manejar las columnas de Fase Final)
 st.divider()
 st.subheader("🏆 Fase Final")
 playoffs = dp.process_knockout_stage(df_partidos)
 if not playoffs.empty:
     for fase in ["Cuartos de Final", "Semifinal", "Gran Final"]:
+        # Se asegura de filtrar por la columna 'Fase' que genera el DataProcessor
         f_df = playoffs[playoffs['Fase'] == fase]
         if not f_df.empty:
             st.write(f"#### {fase}")
@@ -83,6 +84,7 @@ st.dataframe(dp.process_match_results(df_partidos), use_container_width=True, hi
 
 # --- Disciplina ---
 st.divider()
+# Llamada a procesamiento de disciplina
 goleadores, team_cards, top_y, top_r = dp.process_cards_and_scorers(
     get_tarjetas_clausura_2025(), get_goleadores_clausura_2025()
 )
@@ -91,9 +93,10 @@ st.subheader("Máximos Goleadores")
 st.dataframe(goleadores, use_container_width=True, hide_index=True)
 
 st.subheader("Puntos de Sanción por Equipo")
+# Altair es sensible a mayúsculas: usamos 'Equipo' y 'Total_Sancion' como lo devuelve el DP
 chart = alt.Chart(team_cards).mark_bar().encode(
-    x=alt.X('Equipo:N', sort='-y'), 
-    y=alt.Y('Total_Sancion:Q', title="Puntos Acumulados"), 
+    x=alt.X('Equipo:N', sort='-y'),
+    y=alt.Y('Total_Sancion:Q', title="Puntos Acumulados"),
     tooltip=['Equipo', 'Total_Sancion']
 )
 st.altair_chart(chart, use_container_width=True)
@@ -108,6 +111,7 @@ with cy:
 with cr:
     st.subheader("Top Rojas 🟥")
     if not top_r.empty:
+        # Aquí es donde aparecerá la roja de Alvaro Galarreta una vez sincronizada
         st.dataframe(top_r, use_container_width=True, hide_index=True)
     else:
         st.write("Cero rojas hasta el momento. ✅")
