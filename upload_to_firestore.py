@@ -29,6 +29,7 @@ def delete_collection(collection_name: str):
     for doc in docs:
         doc.reference.delete()
 
+
 def sync_collection(filename: str, collection_name: str, id_col: str = None):
     url = BASE_URL + filename
     print(f"📥 Leyendo: {filename}")
@@ -38,22 +39,21 @@ def sync_collection(filename: str, collection_name: str, id_col: str = None):
         print(f"  ❌ Error: {e}")
         return
 
-    # 1. Limpieza de columnas (Normalizamos a Mayúsculas para evitar errores de espacios)
+    # 1. Limpieza de columnas
     df.columns = df.columns.str.strip().str.upper()
     df = df.loc[:, ~df.columns.str.startswith("UNNAMED")]
     df = df.dropna(how="all")
 
     # 2. LÓGICA ESPECIAL PARA TARJETAS: Combinar filas del mismo jugador
-    # Esto asegura que si Alvaro Galarreta tiene '2A' en una fila y '1R' en otra, se unan.
     if "JUGADOR" in df.columns:
         df = df.fillna("")
-        # Agrupamos por Jugador y Equipo, uniendo los textos de las sanciones
         df = df.groupby(["JUGADOR", "EQUIPO"]).agg(lambda x: " ".join(filter(None, x.astype(str)))).reset_index()
         print(f"  🔄 Filas combinadas para procesar múltiples tarjetas/rojas.")
 
-    # 3. Deduplicar para el resto de archivos (Goleadores, etc.)
-    elif id_col and id_col in df.columns:
-        subset = [id_col, "EQUIPO", "GOLES"] if "GOLES" in df.columns else [id_col]
+    # 3. Deduplicar para el resto (Goleadores, etc.)
+    elif id_col and id_col.upper() in df.columns:
+        id_col_upper = id_col.upper()
+        subset = [id_col_upper, "EQUIPO", "GOLES"] if "GOLES" in df.columns else [id_col_upper]
         df = df.drop_duplicates(subset=subset)
 
     # Borrar colección existente
@@ -61,17 +61,25 @@ def sync_collection(filename: str, collection_name: str, id_col: str = None):
     collection_ref = db.collection(collection_name)
     count = 0
 
-    # 4. Subida a Firestore
+    # 4. Subida a Firestore con validación de ID
     for i, row in df.iterrows():
         doc_data = row.to_dict()
 
-        # Generar ID único usando el nombre del jugador y el equipo
-        doc_id = str(doc_data["JUGADOR" if "JUGADOR" in doc_data else id_col]).strip().replace(" ", "_")
-        if "EQUIPO" in doc_data:
-            equipo = str(doc_data["EQUIPO"]).strip().replace(" ", "_")
-            doc_id = f"{doc_id}__{equipo}"
+        # --- SOLUCIÓN AL KEYERROR ---
+        if "JUGADOR" in doc_data and doc_data["JUGADOR"] != "":
+            # Caso para Tarjetas
+            doc_id = str(doc_data["JUGADOR"]).strip().replace(" ", "_")
+        elif id_col and id_col.upper() in doc_data and doc_data[id_col.upper()] != "":
+            # Caso para Goleadores (usando el nombre de la columna definida en FILES)
+            doc_id = str(doc_data[id_col.upper()]).strip().replace(" ", "_")
         else:
+            # Caso para Partidos (donde id_col es None)
             doc_id = str(i)
+
+        # Añadir el equipo al ID si existe para evitar colisiones
+        if "EQUIPO" in doc_data and doc_data["EQUIPO"] != "" and "JUGADOR" in doc_data:
+            equipo_id = str(doc_data["EQUIPO"]).strip().replace(" ", "_")
+            doc_id = f"{doc_id}__{equipo_id}"
 
         collection_ref.document(doc_id).set(doc_data)
         count += 1
