@@ -41,7 +41,7 @@ Fecha,Partido,Cancha,Hora,Equipo_numero,Grupo,Equipo,Goles,Resultado
 5,20,2,09:50,2,2,Borussia Dortmund,1,P
 6,21,1,08:50,1,0,Liverpool,1,P
 6,21,1,08:50,2,0,Milan,1,G
-6,22,1,09:50,1,0,Barcelonq,5,G
+6,22,1,09:50,1,0,Barcelona,5,G
 6,22,1,09:50,2,0,Real Cambridge,2,P
 6,23,2,08:50,1,0,Fiorentina,0,P
 6,23,2,08:50,2,0,Chelsea,0,G
@@ -53,10 +53,10 @@ Fecha,Partido,Cancha,Hora,Equipo_numero,Grupo,Equipo,Goles,Resultado
 7,26,2,09:50,2,0,Chelsea,3,P
 8,27,2,08:50,1,0,Chelsea,,P
 8,27,2,08:50,2,0,Manchester City,,G
-8,28,1,09:50,1,0,Barcelona,0,G
-8,28,1,09:50,2,0,Milan,0,P
-9,29,2,08:50,1,0,Manchester City,3,G
-9,29,2,08:50,2,0,Milan,2,P
+8,28,1,09:50,1,0,Barcelona,0,P
+8,28,1,09:50,2,0,Milan,0,G
+9,29,2,08:50,1,0,Manchester City,2,P
+9,29,2,08:50,2,0,Milan,3,G
 
 
 
