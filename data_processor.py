@@ -28,7 +28,6 @@ class DataProcessor:
 
         gf_data = df_filtered.groupby('Equipo')['Goles'].sum().reset_index().rename(columns={'Goles': 'GF'})
         
-        # Cálculo de Goles en Contra (GC) cruzando datos de partidos
         match_goals = df_filtered.pivot_table(index='Partido', columns='Equipo_numero', values='Goles', aggfunc='sum').reset_index()
         match_goals.columns = ['Partido', 'Goals_Equipo1', 'Goals_Equipo2']
         match_teams = df_filtered.pivot_table(index='Partido', columns='Equipo_numero', values='Equipo', aggfunc='first').reset_index()
@@ -45,7 +44,6 @@ class DataProcessor:
         stats['GD'] = stats['GF'] - stats['GC']
         stats['Puntos'] = (stats['G'] * 3) + (stats['E'] * 1)
         
-        # Expectativa Pitagórica
         gf_p, gc_p = stats['GF']**1.2, stats['GC']**1.2
         stats['PythEXP'] = (gf_p / (gf_p + gc_p)).fillna(0).round(2)
 
@@ -97,19 +95,25 @@ class DataProcessor:
         return pivoted[column_order]
 
     def process_cards_and_scorers(self, cards_df, scorers_df):
-        """Lógica de goleadores y disciplina (Fair Play)."""
+        """Lógica de goleadores y disciplina corregida."""
+        # --- Goleadores ---
         scorers = scorers_df.copy()
         scorers.columns = scorers.columns.str.strip().str.upper()
+        scorers['GOLES'] = pd.to_numeric(scorers['GOLES'], errors='coerce').fillna(0)
         scorers['NOMBRE Y APELLIDO'] = scorers['NOMBRE Y APELLIDO'].str.title()
+        goleadores_sorted = scorers.sort_values(by='GOLES', ascending=False).head(10)
         
+        # --- Tarjetas ---
         cards = cards_df.copy()
         cards.columns = cards.columns.str.strip().str.upper()
         cols_f = [c for c in cards.columns if 'F' in c and len(c) <= 3]
         
-        # 1A = 1 punto, 2A = 2 puntos
-        cards['Total_A'] = cards[cols_f].apply(lambda x: x.astype(str).str.contains('1A').sum() + (x.astype(str).str.contains('2A').sum() * 2), axis=1)
-        cards['Amarillas'] = cards[cols_f].apply(lambda x: x.astype(str).str.contains('1A|2A').sum(), axis=1)
-        cards['Rojas'] = cards[cols_f].apply(lambda x: x.astype(str).str.contains('1R').sum(), axis=1)
+        for col in cols_f:
+            cards[col] = cards[col].astype(str)
+
+        cards['Total_A'] = cards[cols_f].apply(lambda x: x.str.contains('1A').sum() + (x.str.contains('2A').sum() * 2), axis=1)
+        cards['Amarillas'] = cards[cols_f].apply(lambda x: x.str.contains('1A|2A').sum(), axis=1)
+        cards['Rojas'] = cards[cols_f].apply(lambda x: x.str.contains('1R').sum(), axis=1)
         
         team_cards = cards.groupby('EQUIPO')['Total_A'].sum().reset_index().sort_values(by='Total_A', ascending=False)
         team_cards.columns = ['Equipo', 'Total_A_Count']
@@ -117,4 +121,4 @@ class DataProcessor:
         top_y = cards[cards['Amarillas'] > 0][['JUGADOR', 'EQUIPO', 'Amarillas']].sort_values(by='Amarillas', ascending=False).head(5)
         top_r = cards[cards['Rojas'] > 0][['JUGADOR', 'EQUIPO', 'Rojas']].sort_values(by='Rojas', ascending=False).head(5)
         
-        return scorers[['NOMBRE Y APELLIDO', 'EQUIPO', 'GOLES']].head(10), team_cards, top_y, top_r
+        return goleadores_sorted[['NOMBRE Y APELLIDO', 'EQUIPO', 'GOLES']], team_cards, top_y, top_r
