@@ -29,7 +29,7 @@ def delete_collection(collection_name: str):
     for doc in docs:
         doc.reference.delete()
 
-ddef sync_collection(filename: str, collection_name: str, id_col: str = None):
+def sync_collection(filename: str, collection_name: str, id_col: str = None):
     url = BASE_URL + filename
     print(f"📥 Leyendo: {filename}")
     try:
