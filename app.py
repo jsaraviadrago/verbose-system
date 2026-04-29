@@ -4,11 +4,9 @@ from firestore_client import get_partidos_clausura_2025, get_tarjetas_clausura_2
 from data_processor import DataProcessor
 from assistant import show_assistant
 
-# Inicialización
 dp = DataProcessor()
 st.set_page_config(page_title="Cambridge College Lima", layout="wide")
 
-# --- Encabezado ---
 st.markdown("<h1 style='text-align: center;'>Campeonato Cambridge College Lima</h1>", unsafe_allow_html=True)
 
 if st.button("🤖 Asistente CLC"):
@@ -20,8 +18,7 @@ if st.session_state.get("show_assistant", False):
 
 st.divider()
 
-# --- Logos de Equipos ---
-st.markdown("### Equipos Participantes")
+# --- Logos ---
 st.markdown("""
 <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
     <img src="https://static.cdnlogo.com/logos/l/92/liverpool-fc.svg" width="60">
@@ -39,76 +36,65 @@ st.markdown("""
 
 st.divider()
 
-# --- Carga de Datos y Métricas ---
+# --- Métricas y Gráficas ---
 df_partidos = get_partidos_clausura_2025()
 promedio, total_goles, stats_fecha = dp.get_general_stats(df_partidos)
 
 col_m1, col_m2 = st.columns(2)
-box_style = "<div style='padding:1.5rem; background-color:{bg}; border-radius:12px; text-align:center; font-weight:bold; color:black;'>{content}</div>"
-
 with col_m1:
-    st.markdown(box_style.format(bg="#e0f7fa", content=f"⚽ Promedio de Goles:<br>{promedio:.2f}"), unsafe_allow_html=True)
+    st.markdown(f"<div style='padding:1.5rem; background-color:#e0f7fa; border-radius:12px; text-align:center; color:black;'><b>⚽ Promedio Goles:</b><br>{promedio:.2f}</div>", unsafe_allow_html=True)
 with col_m2:
-    st.markdown(box_style.format(bg="#ffffff", content=f"🔢 Total de Goles:<br>{total_goles}"), unsafe_allow_html=True)
+    st.markdown(f"<div style='padding:1.5rem; background-color:#ffffff; border-radius:12px; text-align:center; color:black; border:1px solid #ddd;'><b>🔢 Total Goles:</b><br>{total_goles}</div>", unsafe_allow_html=True)
 
-st.subheader("Estadísticas del Campeonato")
-col_g1, col_g2 = st.columns(2)
-with col_g1:
-    st.write("**Total de Goles por Fecha**")
+st.subheader("Estadísticas por Fecha")
+c1, c2 = st.columns(2)
+with c1:
+    st.write("**Goles Totales**")
     st.line_chart(stats_fecha.set_index('Fecha')['Total_Goles'])
-with col_g2:
-    st.write("**Promedio de Goles por Fecha**")
+with c2:
+    st.write("**Promedio de Goles**")
     st.line_chart(stats_fecha.set_index('Fecha')['Prom_Goles'])
 
-# --- Tablas de Posiciones ---
+# --- Tablas ---
 st.divider()
 st.subheader("Tabla de Posiciones")
-tab1, tab2 = st.tabs(["Grupo 1", "Grupo 2"])
-with tab1:
-    st.dataframe(dp.process_standings(df_partidos, 1), use_container_width=True, hide_index=True)
-with tab2:
-    st.dataframe(dp.process_standings(df_partidos, 2), use_container_width=True, hide_index=True)
+t1, t2 = st.tabs(["Grupo 1", "Grupo 2"])
+with t1: st.dataframe(dp.process_standings(df_partidos, 1), use_container_width=True, hide_index=True)
+with t2: st.dataframe(dp.process_standings(df_partidos, 2), use_container_width=True, hide_index=True)
 
-# --- FASE FINAL (PLAYOFFS) ---
 st.divider()
 st.subheader("🏆 Fase Final")
 playoffs = dp.process_knockout_stage(df_partidos)
-
 if not playoffs.empty:
     for fase in ["Cuartos de Final", "Semifinal", "Gran Final"]:
-        fase_df = playoffs[playoffs['Fase'] == fase]
-        if not fase_df.empty:
+        f_df = playoffs[playoffs['Fase'] == fase]
+        if not f_df.empty:
             st.write(f"#### {fase}")
-            st.dataframe(fase_df.drop(columns=['Fase']), use_container_width=True, hide_index=True)
+            st.dataframe(f_df.drop(columns=['Fase']), use_container_width=True, hide_index=True)
 else:
-    st.info("La fase final se habilitará automáticamente al registrar la Fecha 6.")
+    st.info("Fase final pendiente de inicio.")
 
-# --- Resultados Fase de Grupos ---
 st.divider()
 st.subheader("Resultados Fase de Grupos")
 st.dataframe(dp.process_match_results(df_partidos), use_container_width=True, hide_index=True)
 
-# --- Disciplina y Goleadores ---
+# --- Disciplina ---
 st.divider()
-goleadores, team_cards, top_y, top_r = dp.process_cards_and_scorers(
-    get_tarjetas_clausura_2025(), get_goleadores_clausura_2025()
-)
+goleadores, team_cards, top_y, top_r = dp.process_cards_and_scorers(get_tarjetas_clausura_2025(), get_goleadores_clausura_2025())
 
 st.subheader("Máximos Goleadores")
 st.dataframe(goleadores, use_container_width=True, hide_index=True)
 
-st.subheader("Fair Play: Tarjetas por Equipo")
+st.subheader("Puntos de Sanción por Equipo")
 chart = alt.Chart(team_cards).mark_bar().encode(
-    x=alt.X('Equipo:N', sort='-y', title=""),
-    y=alt.Y('Total_A_Count:Q', title="Puntos de Sanción (1A=1, 2A=2)"),
-    tooltip=['Equipo', 'Total_A_Count']
+    x=alt.X('Equipo:N', sort='-y'), y='Total_A_Count:Q', tooltip=['Equipo', 'Total_A_Count']
 )
 st.altair_chart(chart, use_container_width=True)
 
-col_y, col_r = st.columns(2)
-with col_y:
+cy, cr = st.columns(2)
+with cy:
     st.subheader("Top Amarillas 🟨")
-    st.dataframe(top_y, use_container_width=True, hide_index=True)
-with col_r:
+    st.dataframe(top_y, use_container_width=True, hide_index=True) if not top_y.empty else st.write("Sin amarillas")
+with cr:
     st.subheader("Top Rojas 🟥")
-    st.dataframe(top_r, use_container_width=True, hide_index=True)
+    st.dataframe(top_r, use_container_width=True, hide_index=True) if not top_r.empty else st.write("Cero rojas ✅")
