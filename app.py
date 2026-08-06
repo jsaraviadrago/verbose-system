@@ -10,7 +10,7 @@ st.set_page_config(page_title="Cambridge College Lima", layout="wide")
 
 st.markdown("<h1 style='text-align: center;'>Campeonato Cambridge College Lima</h1>", unsafe_allow_html=True)
 
-if st.button("🤖 Asistente CLC"):
+if st.button("🤖 Asistente CLC en construccion"):
     st.session_state.show_assistant = not st.session_state.get("show_assistant", False)
 
 if st.session_state.get("show_assistant", False):
