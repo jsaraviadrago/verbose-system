@@ -1,5 +1,6 @@
 import streamlit as st
 import altair as alt
+import pandas as pd
 from firestore_client import get_partidos_clausura_2025, get_tarjetas_clausura_2025, get_goleadores_clausura_2025
 from data_processor import DataProcessor
 from assistant import show_assistant
@@ -60,9 +61,12 @@ with c2:
 # --- Tablas de Posiciones ---
 st.divider()
 st.subheader("Tabla de Posiciones")
-t1, t2 = st.tabs(["Grupo 1", "Grupo 2"])
-with t1: st.dataframe(dp.process_standings(df_partidos, 1), use_container_width=True, hide_index=True)
-with t2: st.dataframe(dp.process_standings(df_partidos, 2), use_container_width=True, hide_index=True)
+standings_1 = dp.process_standings(df_partidos, 1).copy()
+standings_2 = dp.process_standings(df_partidos, 2).copy()
+standings_1["Grupo"] = 1
+standings_2["Grupo"] = 2
+standings_all = pd.concat([standings_1, standings_2], ignore_index=True)
+st.dataframe(standings_all, use_container_width=True, hide_index=True)
 
 # --- Playoffs (Corregido para manejar las columnas de Fase Final)
 st.divider()
