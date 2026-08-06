@@ -64,7 +64,10 @@ st.subheader("Tabla de Posiciones")
 standings_1 = dp.process_standings(df_partidos, 1).copy()
 standings_2 = dp.process_standings(df_partidos, 2).copy()
 standings_all = pd.concat([standings_1, standings_2], ignore_index=True)
-standings_all = standings_all.sort_values(by="Puntos", ascending=False).reset_index(drop=True)
+standings_all = standings_all.sort_values(
+    by=["Puntos", "GD", "GF", "GC"],
+    ascending=[False, False, False, True]
+).reset_index(drop=True)
 st.dataframe(standings_all, use_container_width=True, hide_index=True)
 
 # --- Playoffs (Corregido para manejar las columnas de Fase Final)
