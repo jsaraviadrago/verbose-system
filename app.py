@@ -63,8 +63,6 @@ st.divider()
 st.subheader("Tabla de Posiciones")
 standings_1 = dp.process_standings(df_partidos, 1).copy()
 standings_2 = dp.process_standings(df_partidos, 2).copy()
-standings_1["Grupo"] = 1
-standings_2["Grupo"] = 2
 standings_all = pd.concat([standings_1, standings_2], ignore_index=True)
 st.dataframe(standings_all, use_container_width=True, hide_index=True)
 
