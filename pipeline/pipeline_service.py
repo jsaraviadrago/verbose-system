@@ -1,4 +1,5 @@
 from __future__ import annotations
+from urllib.parse import quote
 
 import os
 
@@ -238,52 +239,30 @@ def read_google_sheet(
     spreadsheet_id: str,
     range_name: str,
 ) -> pd.DataFrame:
-    """Read the results capture sheet using Cloud Run credentials."""
-    import google.auth
-    from googleapiclient.discovery import build
+    """Lee la pestaña Resultados como CSV público, sin OAuth."""
 
-    creds, _ = google.auth.default(
-        scopes=[
-            "https://www.googleapis.com/auth/spreadsheets.readonly"
-        ]
+    sheet_name = quote(range_name.split("!")[0])
+
+    url = (
+        f"https://docs.google.com/spreadsheets/d/"
+        f"{spreadsheet_id}/gviz/tq"
+        f"?tqx=out:csv&sheet={sheet_name}"
     )
 
-    service = build(
-        "sheets",
-        "v4",
-        credentials=creds,
-        cache_discovery=False,
-    )
-
-    values = (
-        service.spreadsheets()
-        .values()
-        .get(
-            spreadsheetId=spreadsheet_id,
-            range=range_name,
-        )
-        .execute()
-        .get("values", [])
-    )
-
-    if not values:
+    try:
+        df = pd.read_csv(url)
+    except Exception as exc:
         raise ValueError(
-            "La Google Sheet no devolvio datos."
-        )
+            "No se pudo leer la Google Sheet. "
+            "Verifica que esté compartida como "
+            "'Cualquier persona con el enlace - Lector'."
+        ) from exc
 
-    header = [str(x).strip() for x in values[0]]
-
-    if len(header) != len(set(header)):
-        raise ValueError(
-            "La Google Sheet contiene encabezados duplicados."
-        )
-
-    rows = [
-        r + [""] * (len(header) - len(r))
-        for r in values[1:]
-    ]
-
-    df = pd.DataFrame(rows, columns=header)
+    df.columns = (
+        df.columns
+        .astype(str)
+        .str.strip()
+    )
 
     missing = [
         c
@@ -296,7 +275,6 @@ def read_google_sheet(
             f"La Sheet no tiene estas columnas: {missing}"
         )
 
-    # Extra columns such as "Partido" are allowed and ignored.
     return df[REQUIRED_SHEET_COLUMNS].copy()
 
 
