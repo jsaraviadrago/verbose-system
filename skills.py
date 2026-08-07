@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 from firestore_client import (
-    get_partidos_clausura_2025, get_partidos_apertura_2025,
+    get_partidos_clausura_2026, get_partidos_clausura_2025, get_partidos_apertura_2025,
     get_partidos_clausura_2024, get_partidos_apertura_2024,
     get_goleadores_clausura_2025, get_goleadores_apertura_2025,
     get_goleadores_clausura_2024, get_goleadores_apertura_2024,
@@ -10,6 +10,11 @@ from firestore_client import (
 
 # ── Data loaders por temporada ─────────────────────────────────────────────────
 LOADERS = {
+    "Clausura 2026": {
+        "goleadores": None,
+        "tarjetas":   None,
+        "partidos":   get_partidos_clausura_2026,
+    },
     "Clausura 2025": {
         "goleadores": get_goleadores_clausura_2025,
         "tarjetas":   get_tarjetas_clausura_2025,
@@ -198,6 +203,13 @@ def tarjetas_equipo(equipo: str, temporada: str) -> str:
     if result.empty:
         return f"No se encontró al equipo '{equipo}' en tarjetas de {temporada}."
     return result.to_string(index=False)
+
+
+def tabla_tarjetas(temporada: str) -> str:
+    df = _load(temporada, "tarjetas")
+    if df.empty:
+        return f"No hay datos de tarjetas para {temporada}."
+    return df.to_string(index=False)
 
 
 # ── Skills de Partidos ─────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@ from groq import Groq
 import streamlit as st
 from skills import (
     top_goleadores, goles_jugador, goles_equipo,
-    tarjetas_jugador, tarjetas_equipo,
+    tarjetas_jugador, tarjetas_equipo, tabla_tarjetas,
     resultados_equipo, todos_los_partidos,
 )
 from wiki import get_wiki
@@ -10,7 +10,10 @@ from wiki import get_wiki
 MODEL = "llama-3.1-8b-instant"
 MAX_TOKENS = 1000
 
-EQUIPOS = ["barcelona", "chelsea", "liverpool", "juventus", "manchester city", "real madrid"]
+EQUIPOS = [
+    "barcelona", "chelsea", "liverpool", "juventus", "manchester city",
+    "real cambridge", "bayern", "celtic", "fiorentina", "milan"
+]
 
 
 def _call_groq(client: Groq, system: str, messages: list) -> str:
@@ -70,12 +73,7 @@ def agent_tarjetas(client: Groq, question: str, temporada: str, messages: list) 
     if equipo:
         data = tarjetas_equipo(equipo, temporada)
     else:
-        from firestore_client import get_tarjetas_clausura_2025, get_tarjetas_apertura_2025
-        func = get_tarjetas_clausura_2025 if "clausura" in temporada.lower() else get_tarjetas_apertura_2025
-        try:
-            data = func().to_string(index=False)
-        except Exception:
-            data = "No hay datos de tarjetas disponibles."
+        data = tabla_tarjetas(temporada)
 
     system = f"""Eres el agente experto en tarjetas y disciplina de la Copa Lima de Clubes.
 Responde SIEMPRE en español, claro y conciso.
