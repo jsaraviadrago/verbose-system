@@ -83,11 +83,17 @@ def add_pair_key(
 
 def read_fixture(path: str) -> pd.DataFrame:
     """Read and validate the static current-tournament fixture."""
+
     # sep=None lets pandas detect comma or semicolon, which makes the file
     # robust to how it was exported.
-    df = pd.read_csv(path, sep=None, engine="python")
-    df.columns = df.columns.astype(str).str.strip()
+    df = pd.read_csv(
+        path,
+        sep=None,
+        engine="python",
+        encoding="utf-8-sig",
+    )
 
+    df.columns = df.columns.astype(str).str.strip()
     missing = set(FIXTURE_COLUMNS).difference(df.columns)
     if missing:
         raise ValueError(
