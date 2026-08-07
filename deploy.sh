@@ -7,7 +7,7 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 # COMPLETAR ANTES DEL PRIMER DEPLOY
 # -----------------------------------------------------------------------------
-PROJECT_ID="TU_PROJECT_ID"
+PROJECT_ID="futbol-ccl"
 REGION="us-central1"
 SERVICE="cambridge-results-2026"
 SERVICE_ACCOUNT_NAME="cambridge-results-pipeline"
