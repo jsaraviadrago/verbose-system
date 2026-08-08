@@ -3,7 +3,8 @@ import streamlit as st
 
 from firestore_client import (
     get_partidos_clausura_2026,
-get_goleadores_clausura_2026
+get_goleadores_clausura_2026,
+get_tarjetas_clausura_2026
 )
 from data_processor import DataProcessor
 from assistant import show_assistant
@@ -104,4 +105,93 @@ else:
     st.dataframe(
         top_8,
         use_container_width=True,
+    )
+
+
+st.divider()
+st.subheader("Disciplina")
+
+df_tarjetas = get_tarjetas_clausura_2026()
+
+left, right = st.columns(2)
+
+if df_tarjetas.empty:
+    amarillas = pd.DataFrame(columns=["Jugador", "Equipo", "Amarillas"])
+    rojas = pd.DataFrame(columns=["Jugador", "Equipo", "Rojas"])
+else:
+    cards = df_tarjetas.copy()
+    cards.columns = cards.columns.astype(str).str.strip().str.upper()
+
+    if "AMARILLAS" not in cards.columns:
+    cards["AMARILLAS"] = 0
+
+if "ROJAS" not in cards.columns:
+    cards["ROJAS"] = 0
+
+cards["AMARILLAS"] = pd.to_numeric(
+    cards["AMARILLAS"],
+    errors="coerce",
+).fillna(0).astype(int)
+
+cards["ROJAS"] = pd.to_numeric(
+    cards["ROJAS"],
+    errors="coerce",
+).fillna(0).astype(int)
+
+    cards["JUGADOR"] = (
+        cards["JUGADOR"]
+        .astype(str)
+        .str.strip()
+        .str.title()
+    )
+
+    amarillas = (
+        cards.loc[cards["AMARILLAS"].gt(0)]
+        .sort_values(
+            ["AMARILLAS", "JUGADOR", "EQUIPO"],
+            ascending=[False, True, True],
+        )
+        .head(8)[["JUGADOR", "EQUIPO", "AMARILLAS"]]
+        .rename(
+            columns={
+                "JUGADOR": "Jugador",
+                "EQUIPO": "Equipo",
+                "AMARILLAS": "Amarillas",
+            }
+        )
+        .reset_index(drop=True)
+    )
+
+    rojas = (
+        cards.loc[cards["ROJAS"].gt(0)]
+        .sort_values(
+            ["ROJAS", "JUGADOR", "EQUIPO"],
+            ascending=[False, True, True],
+        )
+        .head(8)[["JUGADOR", "EQUIPO", "ROJAS"]]
+        .rename(
+            columns={
+                "JUGADOR": "Jugador",
+                "EQUIPO": "Equipo",
+                "ROJAS": "Rojas",
+            }
+        )
+        .reset_index(drop=True)
+    )
+
+with left:
+    st.markdown("### 🟨 Amarillas")
+    st.dataframe(
+        amarillas,
+        use_container_width=True,
+        hide_index=True,
+    )
+
+with right:
+    st.markdown("### 🟥 Rojas")
+    # Se muestra incluso si está vacía.
+    st.dataframe(
+        rojas,
+        use_container_width=True,
+        hide_index=True,
     )

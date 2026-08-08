@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   actualizar:
-    name: Resultados + goleadores
+    name: Resultados + goleadores + tarjetas
     runs-on: ubuntu-latest
 
     env:
@@ -25,6 +25,11 @@ jobs:
       GOLEADORES_SHEET_NAME: Goleadores
       FIRESTORE_RESULTS_COLLECTION: partidos_clausura_2026
       FIRESTORE_SCORERS_COLLECTION: goleadores_clausura_2026
+
+      # Tarjetas
+      TARJETAS_SHEET_ID: 1HYWjmjt2zqaTdJ11j9nmjwHS-NH2sgmU3agxlnQkWXk
+      TARJETAS_SHEET_NAME: Tarjetas
+      FIRESTORE_CARDS_COLLECTION: tarjetas_clausura_2026
 
       # Credencial Firebase/Firestore
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/firebase-service-account.json
@@ -58,9 +63,7 @@ jobs:
                   "Falta el secret FIREBASE_SERVICE_ACCOUNT_JSON."
               )
 
-          # Además de escribirlo, validar que realmente sea JSON válido.
           parsed = json.loads(value)
-
           if parsed.get("project_id") != "futbol-ccl":
               raise SystemExit(
                   "El secret no pertenece al proyecto futbol-ccl."
@@ -77,6 +80,7 @@ jobs:
           python -m py_compile \
             pipeline/pipeline_service.py \
             pipeline/pipeline_goleadores.py \
+            pipeline/pipeline_tarjetas.py \
             pipeline/sync_campeonato.py
 
       - name: Actualizar campeonato
