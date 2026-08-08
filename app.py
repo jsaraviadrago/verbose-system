@@ -1,4 +1,6 @@
+import pandas as pd
 import streamlit as st
+
 from firestore_client import (
     get_partidos_clausura_2026,
 get_goleadores_clausura_2026
