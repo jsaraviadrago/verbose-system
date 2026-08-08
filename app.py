@@ -145,7 +145,7 @@ cards["JUGADOR"] = (
         .str.title()
     )
 
-    amarillas = (
+amarillas = (
         cards.loc[cards["AMARILLAS"].gt(0)]
         .sort_values(
             ["AMARILLAS", "JUGADOR", "EQUIPO"],
@@ -162,7 +162,7 @@ cards["JUGADOR"] = (
         .reset_index(drop=True)
     )
 
-    rojas = (
+rojas = (
         cards.loc[cards["ROJAS"].gt(0)]
         .sort_values(
             ["ROJAS", "JUGADOR", "EQUIPO"],
