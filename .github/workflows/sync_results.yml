@@ -1,0 +1,56 @@
+name: Actualizar resultados
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync-resultados:
+    runs-on: ubuntu-latest
+
+    env:
+      GOOGLE_CLOUD_PROJECT: futbol-ccl
+      GOOGLE_SHEET_ID: 1W_2_TOEyyh8LBJe6MA9NCK_ivx89dEjFO_8NUyvwMO4
+      GOOGLE_SHEET_RANGE: "Resultados!A:F"
+      FIXTURE_PATH: CurrentTournament/fixture.csv
+      FIRESTORE_COLLECTION: partidos_clausura_2026
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/firebase-service-account.json
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pipeline/requirements.txt
+
+      - name: Instalar dependencias
+        run: pip install -r pipeline/requirements.txt
+
+      - name: Preparar credencial de Firestore
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          value = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON", "")
+          if not value.strip():
+              raise SystemExit("Falta el secret FIREBASE_SERVICE_ACCOUNT_JSON en GitHub.")
+          Path("/tmp/firebase-service-account.json").write_text(value, encoding="utf-8")
+          PY
+
+      - name: Validar sintaxis
+        run: python -m py_compile pipeline/pipeline_service.py pipeline/sync_results.py
+
+      - name: Publicar resultados
+        run: python -m pipeline.sync_results
+
+      - name: Eliminar credencial temporal
+        if: always()
+        run: rm -f /tmp/firebase-service-account.json
