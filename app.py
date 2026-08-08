@@ -1,5 +1,8 @@
 import streamlit as st
-from firestore_client import get_partidos_clausura_2026
+from firestore_client import (
+    get_partidos_clausura_2026,
+get_goleadores_clausura_2026
+)
 from data_processor import DataProcessor
 from assistant import show_assistant
 
@@ -45,3 +48,58 @@ st.dataframe(dp.process_standings(df_partidos), use_container_width=True, hide_i
 st.divider()
 st.subheader("Resultados")
 st.dataframe(dp.process_match_results(df_partidos), use_container_width=True, hide_index=True)
+
+st.divider()
+st.subheader("⚽ Máximos Goleadores")
+
+df_goleadores = get_goleadores_clausura_2026()
+
+if df_goleadores.empty:
+    st.info("Todavía no hay goleadores publicados.")
+else:
+    goleadores = df_goleadores.copy()
+
+    goleadores.columns = (
+        goleadores.columns
+        .astype(str)
+        .str.strip()
+        .str.upper()
+    )
+
+    goleadores["GOLES"] = pd.to_numeric(
+        goleadores["GOLES"],
+        errors="coerce",
+    ).fillna(0).astype(int)
+
+    goleadores["NOMBRE Y APELLIDO"] = (
+        goleadores["NOMBRE Y APELLIDO"]
+        .astype(str)
+        .str.strip()
+        .str.title()
+    )
+
+    top_8 = (
+        goleadores
+        .sort_values(
+            ["GOLES", "NOMBRE Y APELLIDO", "EQUIPO"],
+            ascending=[False, True, True],
+        )
+        .head(8)
+        [["NOMBRE Y APELLIDO", "EQUIPO", "GOLES"]]
+        .rename(
+            columns={
+                "NOMBRE Y APELLIDO": "Jugador",
+                "EQUIPO": "Equipo",
+                "GOLES": "Goles",
+            }
+        )
+        .reset_index(drop=True)
+    )
+
+    top_8.index = top_8.index + 1
+    top_8.index.name = "Pos."
+
+    st.dataframe(
+        top_8,
+        use_container_width=True,
+    )
