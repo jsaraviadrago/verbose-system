@@ -138,7 +138,7 @@ cards["ROJAS"] = pd.to_numeric(
     errors="coerce",
 ).fillna(0).astype(int)
 
-    cards["JUGADOR"] = (
+cards["JUGADOR"] = (
         cards["JUGADOR"]
         .astype(str)
         .str.strip()
