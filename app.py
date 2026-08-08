@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+import altair as alt
 
 from firestore_client import (
     get_partidos_clausura_2026,
@@ -89,9 +90,27 @@ goles_equipos = (
 with graf_col1:
     st.markdown("### ⚽ Equipos más goleadores")
 
-    st.bar_chart(
-        goles_equipos.set_index("EQUIPO")["GOLES"]
+    chart_goles = (
+    alt.Chart(goles_equipos)
+    .mark_bar()
+    .encode(
+        x=alt.X(
+            "EQUIPO:N",
+            sort="-y",
+            title=""
+        ),
+        y=alt.Y(
+            "GOLES:Q",
+            title="Goles"
+        ),
+        tooltip=["EQUIPO", "GOLES"]
     )
+)
+
+st.altair_chart(
+    chart_goles,
+    use_container_width=True,
+)
 
 
 # 🟨 Equipos con más amarillas
@@ -128,10 +147,27 @@ with graf_col2:
             )
         )
 
-        st.bar_chart(
-            amarillas_equipos
-            .set_index("EQUIPO")["AMARILLAS"]
-        )
+        chart_amarillas = (
+    alt.Chart(amarillas_equipos)
+    .mark_bar()
+    .encode(
+        x=alt.X(
+            "EQUIPO:N",
+            sort="-y",
+            title=""
+        ),
+        y=alt.Y(
+            "AMARILLAS:Q",
+            title="Amarillas"
+        ),
+        tooltip=["EQUIPO", "AMARILLAS"]
+    )
+)
+
+st.altair_chart(
+    chart_amarillas,
+    use_container_width=True,
+)
 
 st.divider()
 st.subheader("⚽ Máximos Goleadores")
