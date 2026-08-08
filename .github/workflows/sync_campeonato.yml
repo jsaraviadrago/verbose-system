@@ -1,4 +1,4 @@
-name: Actualizar resultados
+name: Actualizar campeonato
 
 on:
   workflow_dispatch:
@@ -7,15 +7,26 @@ permissions:
   contents: read
 
 jobs:
-  sync-resultados:
+  actualizar:
+    name: Resultados + goleadores
     runs-on: ubuntu-latest
 
     env:
       GOOGLE_CLOUD_PROJECT: futbol-ccl
+
+      # Resultados
       GOOGLE_SHEET_ID: 1W_2_TOEyyh8LBJe6MA9NCK_ivx89dEjFO_8NUyvwMO4
       GOOGLE_SHEET_RANGE: "Resultados!A:F"
       FIXTURE_PATH: CurrentTournament/fixture.csv
       FIRESTORE_COLLECTION: partidos_clausura_2026
+
+      # Goleadores
+      GOLEADORES_SHEET_ID: 15fdBty1qflPukp4uDg6ncS9WXphhcvkKTvqXiPLbPFM
+      GOLEADORES_SHEET_NAME: Goleadores
+      FIRESTORE_RESULTS_COLLECTION: partidos_clausura_2026
+      FIRESTORE_SCORERS_COLLECTION: goleadores_clausura_2026
+
+      # Credencial Firebase/Firestore
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/firebase-service-account.json
 
     steps:
@@ -37,19 +48,39 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
         run: |
           python - <<'PY'
+          import json
           import os
           from pathlib import Path
+
           value = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON", "")
           if not value.strip():
-              raise SystemExit("Falta el secret FIREBASE_SERVICE_ACCOUNT_JSON en GitHub.")
-          Path("/tmp/firebase-service-account.json").write_text(value, encoding="utf-8")
+              raise SystemExit(
+                  "Falta el secret FIREBASE_SERVICE_ACCOUNT_JSON."
+              )
+
+          # Además de escribirlo, validar que realmente sea JSON válido.
+          parsed = json.loads(value)
+
+          if parsed.get("project_id") != "futbol-ccl":
+              raise SystemExit(
+                  "El secret no pertenece al proyecto futbol-ccl."
+              )
+
+          Path("/tmp/firebase-service-account.json").write_text(
+              value,
+              encoding="utf-8",
+          )
           PY
 
       - name: Validar sintaxis
-        run: python -m py_compile pipeline/pipeline_service.py pipeline/sync_results.py
+        run: |
+          python -m py_compile \
+            pipeline/pipeline_service.py \
+            pipeline/pipeline_goleadores.py \
+            pipeline/sync_campeonato.py
 
-      - name: Publicar resultados
-        run: python -m pipeline.sync_results
+      - name: Actualizar campeonato
+        run: python -m pipeline.sync_campeonato
 
       - name: Eliminar credencial temporal
         if: always()

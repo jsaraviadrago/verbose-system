@@ -27,6 +27,9 @@ def load_collection(collection_name: str) -> pd.DataFrame:
 def get_partidos_clausura_2026() -> pd.DataFrame:
     return load_collection("partidos_clausura_2026")
 
+def get_goleadores_clausura_2026() -> pd.DataFrame:
+    return load_collection("goleadores_clausura_2026")
+
 # Se conservan los historicos existentes.
 def get_goleadores_apertura_2024(): return load_collection("goleadores_apertura_2024")
 def get_goleadores_apertura_2025(): return load_collection("goleadores_apertura_2025")
