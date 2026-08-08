@@ -116,42 +116,55 @@ df_tarjetas = get_tarjetas_clausura_2026()
 left, right = st.columns(2)
 
 if df_tarjetas.empty:
-    amarillas = pd.DataFrame(columns=["Jugador", "Equipo", "Amarillas"])
-    rojas = pd.DataFrame(columns=["Jugador", "Equipo", "Rojas"])
+    amarillas = pd.DataFrame(
+        columns=["Jugador", "Equipo", "Amarillas"]
+    )
+    rojas = pd.DataFrame(
+        columns=["Jugador", "Equipo", "Rojas"]
+    )
+
 else:
     cards = df_tarjetas.copy()
-    cards.columns = cards.columns.astype(str).str.strip().str.upper()
 
-if "AMARILLAS" not in cards.columns:
-    cards["AMARILLAS"] = 0
+    cards.columns = (
+        cards.columns
+        .astype(str)
+        .str.strip()
+        .str.upper()
+    )
 
-if "ROJAS" not in cards.columns:
-    cards["ROJAS"] = 0
+    if "AMARILLAS" not in cards.columns:
+        cards["AMARILLAS"] = 0
 
-cards["AMARILLAS"] = pd.to_numeric(
-    cards["AMARILLAS"],
-    errors="coerce",
-).fillna(0).astype(int)
+    if "ROJAS" not in cards.columns:
+        cards["ROJAS"] = 0
 
-cards["ROJAS"] = pd.to_numeric(
-    cards["ROJAS"],
-    errors="coerce",
-).fillna(0).astype(int)
+    cards["AMARILLAS"] = pd.to_numeric(
+        cards["AMARILLAS"],
+        errors="coerce",
+    ).fillna(0).astype(int)
 
-cards["JUGADOR"] = (
+    cards["ROJAS"] = pd.to_numeric(
+        cards["ROJAS"],
+        errors="coerce",
+    ).fillna(0).astype(int)
+
+    cards["JUGADOR"] = (
         cards["JUGADOR"]
         .astype(str)
         .str.strip()
         .str.title()
     )
 
-amarillas = (
+    amarillas = (
         cards.loc[cards["AMARILLAS"].gt(0)]
         .sort_values(
             ["AMARILLAS", "JUGADOR", "EQUIPO"],
             ascending=[False, True, True],
         )
-        .head(8)[["JUGADOR", "EQUIPO", "AMARILLAS"]]
+        .head(8)[
+            ["JUGADOR", "EQUIPO", "AMARILLAS"]
+        ]
         .rename(
             columns={
                 "JUGADOR": "Jugador",
@@ -162,13 +175,15 @@ amarillas = (
         .reset_index(drop=True)
     )
 
-rojas = (
+    rojas = (
         cards.loc[cards["ROJAS"].gt(0)]
         .sort_values(
             ["ROJAS", "JUGADOR", "EQUIPO"],
             ascending=[False, True, True],
         )
-        .head(8)[["JUGADOR", "EQUIPO", "ROJAS"]]
+        .head(8)[
+            ["JUGADOR", "EQUIPO", "ROJAS"]
+        ]
         .rename(
             columns={
                 "JUGADOR": "Jugador",
@@ -189,7 +204,6 @@ with left:
 
 with right:
     st.markdown("### 🟥 Rojas")
-    # Se muestra incluso si está vacía.
     st.dataframe(
         rojas,
         use_container_width=True,
