@@ -36,31 +36,12 @@ if st.session_state.get("show_assistant", False):
     st.stop()
 
 
-# ── Logos de los equipos ─────────────────────────────────────────────────────
+# ── Logos de los equipos ─────────────────────────────────────────────
 
-logos = [
-    ("Manchester City", "assets/logos/manchester_city.png"),
-    ("Celtic", "assets/logos/celtic.png"),
-    ("Juventus", "assets/logos/juventus.png"),
-    ("Barcelona", "assets/logos/barcelona.png"),
-    ("Milan", "assets/logos/milan.png"),
-    ("Bayern", "assets/logos/bayern.png"),
-    ("Chelsea", "assets/logos/chelsea.png"),
-    ("Fiorentina", "assets/logos/fiorentina.png"),
-    ("Liverpool", "assets/logos/liverpool.png"),
-    ("Real Cambridge", "assets/logos/real_madrid.png"),
-]
-
-fila1 = st.columns(5)
-fila2 = st.columns(5)
-
-for col, (nombre, logo) in zip(fila1, logos[:5]):
-    with col:
-        st.image(logo, width=70)
-
-for col, (nombre, logo) in zip(fila2, logos[5:]):
-    with col:
-        st.image(logo, width=70)
+st.image(
+    "assets/logos_equipos.png",
+    use_container_width=True,
+)
 
 st.divider()
 
