@@ -52,6 +52,87 @@ st.divider()
 st.subheader("Resultados")
 st.dataframe(dp.process_match_results(df_partidos), use_container_width=True, hide_index=True)
 
+# ── Gráficos por equipo ──────────────────────────────────────────────────────
+st.divider()
+st.subheader("Estadísticas por Equipo")
+
+graf_col1, graf_col2 = st.columns(2)
+
+# ⚽ Equipos más goleadores
+goles_equipos = (
+    df_partidos
+    .copy()
+)
+
+goles_equipos.columns = (
+    goles_equipos.columns
+    .astype(str)
+    .str.strip()
+    .str.upper()
+)
+
+goles_equipos["GOLES"] = pd.to_numeric(
+    goles_equipos["GOLES"],
+    errors="coerce",
+).fillna(0)
+
+goles_equipos = (
+    goles_equipos
+    .groupby("EQUIPO", as_index=False)["GOLES"]
+    .sum()
+    .sort_values(
+        ["GOLES", "EQUIPO"],
+        ascending=[False, True],
+    )
+)
+
+with graf_col1:
+    st.markdown("### ⚽ Equipos más goleadores")
+
+    st.bar_chart(
+        goles_equipos.set_index("EQUIPO")["GOLES"]
+    )
+
+
+# 🟨 Equipos con más amarillas
+df_tarjetas_grafico = get_tarjetas_clausura_2026()
+
+with graf_col2:
+    st.markdown("### 🟨 Equipos con más amarillas")
+
+    if df_tarjetas_grafico.empty:
+        st.info("Todavía no hay tarjetas registradas.")
+
+    else:
+        amarillas_equipos = df_tarjetas_grafico.copy()
+
+        amarillas_equipos.columns = (
+            amarillas_equipos.columns
+            .astype(str)
+            .str.strip()
+            .str.upper()
+        )
+
+        amarillas_equipos["AMARILLAS"] = pd.to_numeric(
+            amarillas_equipos["AMARILLAS"],
+            errors="coerce",
+        ).fillna(0)
+
+        amarillas_equipos = (
+            amarillas_equipos
+            .groupby("EQUIPO", as_index=False)["AMARILLAS"]
+            .sum()
+            .sort_values(
+                ["AMARILLAS", "EQUIPO"],
+                ascending=[False, True],
+            )
+        )
+
+        st.bar_chart(
+            amarillas_equipos
+            .set_index("EQUIPO")["AMARILLAS"]
+        )
+
 st.divider()
 st.subheader("⚽ Máximos Goleadores")
 
