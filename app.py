@@ -122,7 +122,7 @@ else:
     cards = df_tarjetas.copy()
     cards.columns = cards.columns.astype(str).str.strip().str.upper()
 
-    if "AMARILLAS" not in cards.columns:
+if "AMARILLAS" not in cards.columns:
     cards["AMARILLAS"] = 0
 
 if "ROJAS" not in cards.columns:
