@@ -1,0 +1,62 @@
+name: Cargar padron 2025
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    env:
+      GOOGLE_CLOUD_PROJECT: futbol-ccl
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/firebase-service-account.json
+      PLAYER_ID_SECRET: ${{ secrets.PLAYER_ID_SECRET }}
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: |
+          pip install pandas openpyxl google-cloud-firestore
+
+      - name: Preparar credencial Firebase
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          value = os.environ["FIREBASE_SERVICE_ACCOUNT_JSON"]
+          json.loads(value)
+
+          Path("/tmp/firebase-service-account.json").write_text(
+              value,
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Validar padron sin escribir
+        run: |
+          python identity/player_identity.py upload \
+            --excel "Padron_y_Maestro_Jugadores_CLC_v2.xlsx" \
+            --dry-run
+
+      - name: Cargar padron 2025
+        run: |
+          python identity/player_identity.py upload \
+            --excel "Padron_y_Maestro_Jugadores_CLC_v2.xlsx"
+
+      - name: Eliminar credencial temporal
+        if: always()
+        run: rm -f /tmp/firebase-service-account.json
