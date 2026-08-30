@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import altair as alt
+from fixture_service import get_pending_fixture
 
 from firestore_client import (
     get_partidos_clausura_2026,
@@ -39,9 +40,32 @@ if st.session_state.get("show_assistant", False):
 # ── Logos de los equipos ─────────────────────────────────────────────
 
 st.image(
-    "assets/logos_equipos.png",
+    str(LOGO_PATH),
     use_container_width=True,
 )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FIXTURE PENDIENTE
+# ─────────────────────────────────────────────────────────────────────────────
+
+if df_partidos.empty:
+    st.info(
+        "Todavia no hay resultados publicados para Clausura 2026."
+    )
+    st.stop()
+
+st.subheader("📅 Próximos Partidos")
+
+fixture_pendiente = get_pending_fixture(df_partidos)
+
+if fixture_pendiente.empty:
+    st.success("🏆 No quedan partidos pendientes.")
+else:
+    st.dataframe(
+        fixture_pendiente,
+        use_container_width=True,
+        hide_index=True,
+    )
 
 st.divider()
 
