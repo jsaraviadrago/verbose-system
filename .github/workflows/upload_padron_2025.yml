@@ -49,13 +49,13 @@ jobs:
       - name: Validar padron sin escribir
         run: |
           python identity/player_identity.py upload \
-            --excel "Padron_y_Maestro_Jugadores_CLC_v2.xlsx" \
+            --excel "Data/Padron_y_Maestro_Jugadores_CLC_v2.xlsx" \
             --dry-run
 
       - name: Cargar padron 2025
         run: |
           python identity/player_identity.py upload \
-            --excel "Padron_y_Maestro_Jugadores_CLC_v2.xlsx"
+            --excel "Data/Padron_y_Maestro_Jugadores_CLC_v2.xlsx"
 
       - name: Eliminar credencial temporal
         if: always()
