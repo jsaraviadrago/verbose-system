@@ -44,7 +44,11 @@ if st.session_state.get("show_assistant", False):
     st.stop()
 
 
+
 # ── Logos de los equipos ─────────────────────────────────────────────
+
+# Cargar resultados una sola vez
+df_partidos = get_partidos_clausura_2026()
 
 st.image(
     str(LOGO_PATH),
@@ -82,13 +86,7 @@ st.divider()
 # RESULTADOS
 # ─────────────────────────────────────────────────────────────────────────────
 
-df_partidos = get_partidos_clausura_2026()
 
-if df_partidos.empty:
-    st.info(
-        "Todavia no hay resultados publicados para Clausura 2026."
-    )
-    st.stop()
 
 promedio, total_goles, stats_fecha = dp.get_general_stats(
     df_partidos
