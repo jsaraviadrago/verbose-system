@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 import altair as alt
 from fixture_service import get_pending_fixture
+from pathlib import Path
 
 from firestore_client import (
     get_partidos_clausura_2026,
@@ -13,6 +14,12 @@ from assistant import show_assistant
 
 
 dp = DataProcessor()
+
+LOGO_PATH = (
+    Path(__file__).parent
+    / "assets"
+    / "logos_equipos.png"
+)
 
 st.set_page_config(
     page_title="Cambridge College Lima",
