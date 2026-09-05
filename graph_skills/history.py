@@ -64,7 +64,12 @@ def historia_equipo(equipo: str) -> str:
         MATCH (t:Team)-[r:REACHED_STAGE]->(s:Stage)
         WHERE toLower(t.name) CONTAINS toLower($equipo)
         MATCH (e:Edition {id: r.editionId})
-        RETURN e.name AS edicion, s.name AS fase_maxima
+        OPTIONAL MATCH (t)-[:PLAYED_MATCH]->(m:Match)-[:AT_STAGE]->(s)
+        WHERE EXISTS { (m)-[:IN_EDITION]->(e) }
+        OPTIONAL MATCH (rival:Team)-[:PLAYED_MATCH]->(m)
+        WHERE rival <> t
+        RETURN e.name AS edicion, s.name AS fase_maxima, t.id AS team_id,
+               m.winnerTeamId AS winner_id, rival.name AS rival
         ORDER BY e.year
         """,
         {"equipo": equipo},
@@ -86,7 +91,13 @@ def historia_equipo(equipo: str) -> str:
         lineas.append("")
         lineas.append("Fase máxima alcanzada por edición:")
         for f in fases:
-            lineas.append(f"  - {f['edicion']}: {f['fase_maxima']}")
+            resultado = ""
+            if f.get("winner_id"):
+                if f["winner_id"] == f["team_id"]:
+                    resultado = " (ganó ese partido)"
+                elif f.get("rival"):
+                    resultado = f" (perdió ante {f['rival']})"
+            lineas.append(f"  - {f['edicion']}: {f['fase_maxima']}{resultado}")
     else:
         lineas.append("")
         lineas.append("Sin registro de fases alcanzadas.")
