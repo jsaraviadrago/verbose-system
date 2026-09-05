@@ -30,8 +30,10 @@ def jugador_perfil_historico(nombre: str) -> str:
         MATCH (p:Player)-[r:CARDED_IN]->(m:Match)
         WHERE toLower(p.name) CONTAINS toLower($nombre)
         MATCH (t:Team {id: r.teamId})
-        RETURN t.name AS equipo, m.partido AS partido,
-               r.yellowCards AS amarillas, r.redCards AS rojas
+        OPTIONAL MATCH (rival:Team)-[:PLAYED_MATCH]->(m)
+        WHERE rival <> t
+        RETURN t.name AS equipo, m.fecha AS fecha, m.partido AS partido,
+               rival.name AS rival, r.yellowCards AS amarillas, r.redCards AS rojas
         """,
         {"nombre": nombre},
     )
@@ -77,7 +79,11 @@ def jugador_perfil_historico(nombre: str) -> str:
                 partes.append(f"{t['amarillas']} amarilla(s)")
             if t["rojas"]:
                 partes.append(f"{t['rojas']} roja(s)")
-            lineas.append(f"  - {t['partido']} ({t['equipo']}): {', '.join(partes) or 'sin sanción registrada'}")
+            rival = f" vs {t['rival']}" if t.get("rival") else ""
+            lineas.append(
+                f"  - Fecha {t['fecha']}, Partido {t['partido']}{rival} ({t['equipo']}): "
+                f"{', '.join(partes) or 'sin sanción registrada'}"
+            )
 
     if premios:
         lineas.append("")
