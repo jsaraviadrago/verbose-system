@@ -1,3 +1,4 @@
+import inspect
 import json
 from groq import Groq
 from graph_tools import TOOL_REGISTRY, TOOL_SCHEMAS
@@ -52,6 +53,9 @@ VOZ Y ESTILO:
   siendo exacto y verificable.
 
 REGLAS ESTRICTAS:
+- Si no tienes un equipo o jugador específico en mente, llama SIEMPRE primero
+  a listar_equipos (o top_goleadores_historico) para partir de nombres reales
+  de este torneo — nunca asumas nombres de clubes de fútbol real que conozcas.
 - Puedes explorar libremente con las tools para encontrar algo interesante que contar.
 - Los HECHOS (números, nombres, fechas) deben venir siempre de una tool — nunca los inventes.
 - Lo único que decides con libertad es QUÉ explorar y CÓMO contarlo (incluyendo el tono).
@@ -119,6 +123,12 @@ def _run_agent(client: Groq, agent_key: str, messages: list) -> tuple[str, list[
                 args = json.loads(call.function.arguments or "{}")
             except json.JSONDecodeError:
                 args = {}
+            if func:
+                # gpt-oss a veces manda argumentos espurios (ej. clave vacía "").
+                # Filtramos a solo los parámetros que la función realmente acepta,
+                # en vez de que un argumento basura tumbe la llamada entera.
+                parametros_validos = set(inspect.signature(func).parameters)
+                args = {k: v for k, v in args.items() if k in parametros_validos}
             try:
                 result = func(**args) if func else f"Tool '{call.function.name}' no existe."
             except Exception as e:

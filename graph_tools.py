@@ -7,7 +7,7 @@ El dato que regresa la tool es siempre exacto, tal cual sale del grafo;
 eso nunca lo decide el LLM.
 """
 from graph_skills import (
-    buscar_jugador, buscar_equipo, buscar_partido, buscar_torneo,
+    buscar_jugador, buscar_equipo, buscar_partido, buscar_torneo, listar_equipos,
     historia_equipo, cambios_nombre, participaciones_equipo,
     jugador_perfil_historico, top_goleadores_historico, finales_por_equipo,
     premios_historicos, historial_entre_equipos,
@@ -26,6 +26,7 @@ TOOL_REGISTRY = {
     "buscar_equipo": buscar_equipo,
     "buscar_partido": buscar_partido,
     "buscar_torneo": buscar_torneo,
+    "listar_equipos": listar_equipos,
     "historia_equipo": historia_equipo,
     "cambios_nombre": cambios_nombre,
     "participaciones_equipo": participaciones_equipo,
@@ -86,6 +87,19 @@ TOOL_SCHEMAS = {
         "function": {
             "name": "buscar_torneo",
             "description": "Lista los torneos y ediciones disponibles en el grafo histórico.",
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    "listar_equipos": {
+        "type": "function",
+        "function": {
+            "name": "listar_equipos",
+            "description": (
+                "Lista TODOS los equipos reales que existen en este torneo. "
+                "Llama esto SIEMPRE primero cuando vayas a explorar o contar algo "
+                "sin tener un equipo específico en mente — para no adivinar nombres "
+                "de clubes de fútbol real que no son parte de este torneo."
+            ),
             "parameters": {"type": "object", "properties": {}},
         },
     },
