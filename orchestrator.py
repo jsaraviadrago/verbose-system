@@ -11,7 +11,7 @@ from groq import Groq
 from agents import agent_historiador, agent_estadistico, agent_narrador
 from verificador import verificar_respuesta
 
-MODEL = "llama-3.1-8b-instant"
+MODEL = "openai/gpt-oss-20b"
 
 AGENT_LABELS = {
     "historiador": "🏛️ Agente Historiador",
