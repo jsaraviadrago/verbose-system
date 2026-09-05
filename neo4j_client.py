@@ -23,11 +23,13 @@ def run_query(cypher: str, params: dict | None = None) -> list[dict]:
     SIEMPRE usa parámetros ($nombre, $equipo, etc.) — nunca f-strings dentro
     del Cypher — para evitar inyección y para que esta función sea segura
     de exponer más adelante como tool de un agente/MCP.
+
+    NOTA: a propósito NO se traga excepciones aquí. Un except silencioso que
+    devuelva [] hace que un fallo de conexión se vea idéntico a "no hay datos"
+    — eso es exactamente lo que nos pasó con la búsqueda de Figari. Si algo
+    falla, que se vea el error real en vez de un falso "no encontrado".
     """
     driver = get_driver()
-    try:
-        with driver.session() as session:
-            result = session.run(cypher, params or {})
-            return [record.data() for record in result]
-    except Exception:
-        return []
+    with driver.session() as session:
+        result = session.run(cypher, params or {})
+        return [record.data() for record in result]
