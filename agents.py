@@ -2,7 +2,7 @@ import json
 from groq import Groq
 from graph_tools import TOOL_REGISTRY, TOOL_SCHEMAS
 
-MODEL = "llama-3.1-8b-instant"
+MODEL = "openai/gpt-oss-20b"
 MAX_TOKENS = 1000
 MAX_TOOL_ROUNDS = 4
 
