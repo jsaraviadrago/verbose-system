@@ -3,3 +3,4 @@ pandas>=2.2,<3
 altair
 firebase-admin
 groq
+neo4j

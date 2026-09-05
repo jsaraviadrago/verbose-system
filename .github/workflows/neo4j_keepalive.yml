@@ -1,0 +1,25 @@
+name: Neo4j Keepalive
+
+on:
+  schedule:
+    # Todos los lunes a las 09:00 UTC (bien dentro de la ventana de 72h)
+    - cron: "0 9 * * 1"
+  workflow_dispatch: {}  # permite correrlo manualmente desde la pestaña Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar driver de Neo4j
+        run: pip install neo4j
+
+      - name: Descargar script de keepalive
+        run: |
+          curl -sO https://raw.githubusercontent.com/${{ github.repository }}/main/neo4j_keepalive.py
+
+      - name: Ping a la instancia
+        env:
+          NEO4J_URI: ${{ secrets.NEO4J_URI }}
+          NEO4J_USER: ${{ secrets.NEO4J_USER }}
+          NEO4J_PASSWORD: ${{ secrets.NEO4J_PASSWORD }}
+        run: python neo4j_keepalive.py

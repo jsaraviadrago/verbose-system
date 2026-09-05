@@ -1,117 +1,123 @@
+import json
 from groq import Groq
-import streamlit as st
-from skills import (
-    top_goleadores, goles_jugador, goles_equipo,
-    tarjetas_jugador, tarjetas_equipo, tabla_tarjetas,
-    resultados_equipo, todos_los_partidos,
-)
-from wiki import get_wiki
+from graph_tools import TOOL_REGISTRY, TOOL_SCHEMAS
 
 MODEL = "llama-3.1-8b-instant"
 MAX_TOKENS = 1000
+MAX_TOOL_ROUNDS = 4
 
-EQUIPOS = [
-    "barcelona", "chelsea", "liverpool", "juventus", "manchester city",
-    "real cambridge", "bayern", "celtic", "fiorentina", "milan"
-]
+# El ajuar es único y compartido — los 3 agentes ven las mismas 15 skills.
+# Cada agente elige cuáles usar según la pregunta y su propio rol (descrito
+# en su system prompt), no por una lista fija que restrinja de antemano.
+ALL_TOOL_NAMES = list(TOOL_SCHEMAS.keys())
 
-
-def _call_groq(client: Groq, system: str, messages: list) -> str:
-    history = [{"role": "system", "content": system}] + messages
-    try:
-        response = client.chat.completions.create(
-            model=MODEL,
-            max_tokens=MAX_TOKENS,
-            messages=history,
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"❌ Error: {e}"
-
-
-# ── Agente Goleadores ──────────────────────────────────────────────────────────
-def agent_goleadores(client: Groq, question: str, temporada: str, messages: list) -> str:
-    q = question.lower()
-    equipo = next((e for e in EQUIPOS if e in q), None)
-
-    if any(w in q for w in ["top", "mejores", "más goles", "tabla", "ranking", "todos"]):
-        data = top_goleadores(temporada)
-    elif equipo:
-        data = goles_equipo(equipo, temporada)
-    else:
-        # Busca por nombre de jugador
-        stopwords = {"goles", "tiene", "cuántos", "cuantos", "metió", "marcó", "anotó"}
-        data = top_goleadores(temporada)
-        for word in question.split():
-            if len(word) > 3 and word.lower() not in stopwords:
-                result = goles_jugador(word, temporada)
-                if "No se encontró" not in result:
-                    data = result
-                    break
-
-    system = f"""Eres el agente experto en goleadores de la Copa Lima de Clubes.
-Responde SIEMPRE en español, claro y conciso.
-CRÍTICO: Reporta los datos exactamente como aparecen. NO hagas cálculos propios.
+AGENT_SYSTEM_PROMPTS = {
+    "historiador": """Eres el Agente Historiador de la Copa Lima de Clubes.
+Reconstruyes la historia institucional de equipos: nombres anteriores,
+participaciones, fases alcanzadas y reglas/formato del torneo.
+Responde SIEMPRE en español.
 
 REGLAS ESTRICTAS:
-- NUNCA sumes goles entre equipos distintos
-- NUNCA inventes equipos o datos que no estén abajo
-- Reporta EXACTAMENTE lo que ves, línea por línea
-- Si el jugador tiene dos equipos, muéstralos POR SEPARADO
+- Usa las tools disponibles para obtener los datos — NUNCA inventes historia.
+- Los datos que traen las tools son exactos: repórtalos tal cual, sin cambiar nada.
+- Si una tool no encuentra algo, dilo claramente — no lo rellenes con suposiciones.
+""",
+    "estadistico": """Eres el Agente Estadístico de la Copa Lima de Clubes.
+Respondes preguntas numéricas: goles, rankings, finales, premios, head-to-head.
+Responde SIEMPRE en español.
 
-Datos de goleadores — {temporada}:
-{data}
-"""
-    return _call_groq(client, system, messages)
+REGLAS ESTRICTAS:
+- Usa las tools disponibles — nunca calcules o inventes números tú mismo.
+- NUNCA sumes goles entre equipos distintos de un mismo jugador.
+- Reporta los datos exactamente como los devuelve la tool.
+""",
+    "narrador": """Eres el Agente Narrador de la Copa Lima de Clubes.
+Conviertes datos del grafo en una historia interesante y bien contada
+(una trayectoria, un dato curioso, una conexión inesperada).
+Responde SIEMPRE en español.
 
-
-# ── Agente Tarjetas ────────────────────────────────────────────────────────────
-def agent_tarjetas(client: Groq, question: str, temporada: str, messages: list) -> str:
-    q = question.lower()
-    equipo = next((e for e in EQUIPOS if e in q), None)
-
-    if equipo:
-        data = tarjetas_equipo(equipo, temporada)
-    else:
-        data = tabla_tarjetas(temporada)
-
-    system = f"""Eres el agente experto en tarjetas y disciplina de la Copa Lima de Clubes.
-Responde SIEMPRE en español, claro y conciso.
-CRÍTICO: Reporta los datos exactamente como aparecen. NO hagas cálculos propios.
-
-Datos de tarjetas — {temporada}:
-{data}
-"""
-    return _call_groq(client, system, messages)
+REGLAS ESTRICTAS:
+- Puedes explorar libremente con las tools para encontrar algo interesante que contar.
+- Los HECHOS (números, nombres, fechas) deben venir siempre de una tool — nunca los inventes.
+- Lo único que decides con libertad es QUÉ explorar y CÓMO contarlo.
+- Si no encuentras nada interesante con las tools disponibles, dilo — no inventes una historia.
+""",
+}
 
 
-# ── Agente Partidos ────────────────────────────────────────────────────────────
-def agent_partidos(client: Groq, question: str, temporada: str, messages: list) -> str:
-    q = question.lower()
-    equipo = next((e for e in EQUIPOS if e in q), None)
-
-    if equipo:
-        data = resultados_equipo(equipo, temporada)
-    else:
-        data = todos_los_partidos(temporada)
-
-    system = f"""Eres el agente experto en partidos y resultados de la Copa Lima de Clubes.
-Responde SIEMPRE en español, claro y conciso.
-CRÍTICO: Reporta los datos exactamente como aparecen. NO inventes resultados.
-
-Datos de partidos — {temporada}:
-{data}
-"""
-    return _call_groq(client, system, messages)
+def _tool_call_to_dict(call) -> dict:
+    """Normaliza un tool_call del SDK de Groq a dict plano, para reenviarlo en el historial."""
+    return {
+        "id": call.id,
+        "type": "function",
+        "function": {"name": call.function.name, "arguments": call.function.arguments},
+    }
 
 
-# ── Agente Wiki ────────────────────────────────────────────────────────────────
-def agent_wiki(client: Groq, question: str, messages: list) -> str:
-    system = f"""Eres el agente experto en la historia y reglas de la Copa Lima de Clubes.
-Responde SIEMPRE en español, claro y conciso.
-Solo usa la información del torneo proporcionada.
+def _run_agent(client: Groq, agent_key: str, messages: list) -> tuple[str, list[str]]:
+    """
+    Loop de function-calling para un agente. Devuelve (respuesta_final,
+    lista_de_resultados_crudos_de_tools) — esto último se usa en verificador.py.
+    """
+    tool_names = ALL_TOOL_NAMES
+    tools = [TOOL_SCHEMAS[name] for name in tool_names]
+    system = AGENT_SYSTEM_PROMPTS[agent_key]
+    history = [{"role": "system", "content": system}] + messages
+    raw_tool_outputs: list[str] = []
 
-Información del torneo:
-{get_wiki()}
-"""
-    return _call_groq(client, system, messages)
+    for _ in range(MAX_TOOL_ROUNDS):
+        try:
+            response = client.chat.completions.create(
+                model=MODEL,
+                max_tokens=MAX_TOKENS,
+                messages=history,
+                tools=tools,
+                tool_choice="auto",
+            )
+        except Exception as e:
+            return f"❌ Error: {e}", raw_tool_outputs
+
+        msg = response.choices[0].message
+        tool_calls = getattr(msg, "tool_calls", None)
+
+        if not tool_calls:
+            return msg.content or "", raw_tool_outputs
+
+        history.append({
+            "role": "assistant",
+            "content": msg.content or "",
+            "tool_calls": [_tool_call_to_dict(c) for c in tool_calls],
+        })
+
+        for call in tool_calls:
+            func = TOOL_REGISTRY.get(call.function.name)
+            try:
+                args = json.loads(call.function.arguments or "{}")
+            except json.JSONDecodeError:
+                args = {}
+            try:
+                result = func(**args) if func else f"Tool '{call.function.name}' no existe."
+            except Exception as e:
+                result = f"Error ejecutando {call.function.name}: {e}"
+
+            raw_tool_outputs.append(result)
+            history.append({
+                "role": "tool",
+                "tool_call_id": call.id,
+                "name": call.function.name,
+                "content": str(result),
+            })
+
+    return "No pude completar la respuesta en el número de pasos permitido.", raw_tool_outputs
+
+
+def agent_historiador(client: Groq, messages: list) -> tuple[str, list[str]]:
+    return _run_agent(client, "historiador", messages)
+
+
+def agent_estadistico(client: Groq, messages: list) -> tuple[str, list[str]]:
+    return _run_agent(client, "estadistico", messages)
+
+
+def agent_narrador(client: Groq, messages: list) -> tuple[str, list[str]]:
+    return _run_agent(client, "narrador", messages)
