@@ -1,0 +1,7 @@
+STAGE_ID,NAME,ORDER
+stage_group,Fase de grupos / regular,1
+stage_quarterfinal,Cuartos de final,2
+stage_semifinal,Semifinal,3
+stage_third_place,Tercer y cuarto puesto,4
+stage_final,Final,5
+stage_finalisima,La Finalisima,6

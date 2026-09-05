@@ -1,0 +1,254 @@
+PLAYER_ID,CANONICAL_NAME,IDENTITY_STATUS,IDENTITY_METHOD,CONFIDENCE,NOTES
+pl_0001,Juan Carlos Torres,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0002,Tomas Vaca,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0003,Galo Yepez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0004,Norberto Iglesias,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0005,Mauricio Mendez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0006,Alejandro Tovar,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0007,William Whelan,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0008,Fallo Urteaga,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0009,Jose Garcia,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0010,Carlos Fernando Guerra Colorado,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0011,Carlos Callirgos,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0012,Daniel Tello,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0013,Rafael Hurtado,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0014,Jose Bello,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0015,Anibal Pacheco,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0016,Oscar Ballon,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0017,Juan Carlos Carrillo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0018,Alfredo Lira,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0019,Claudio Riva,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0020,Mauricio Chavez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0021,Ronny De Souza Peixoto,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0022,Raul Arevalo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0023,Jorge Luis Kisic,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0024,Robert Maestre,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0025,Miguel Angel Mubarak Zerene,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0026,Iro Petris Chiozza,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0027,Raul Suito,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0028,Juan Felipe Llona Silva,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0029,Francisco Pardo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0030,Victor Alcazar,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0031,Ernesto Dominguez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0032,Carlos Morales,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0033,Cesar Urrunaga,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0034,David Ruiz,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0035,Adel Ode,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0036,Ben Oviedo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0037,Sandro Omonte,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0038,Augusto De La Piedra,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0039,Joaquin Aramburu Romero,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0040,Fernando Gonzalez Cabrera,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0041,Luigi Marin Escate,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0042,Gabriel Garcia,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0043,Giorgio Lopez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0044,Jorge Cheng Lo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0045,Martin Klingenberger,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0046,Julio Nuñez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0047,Alvaro Villanueva,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0048,Pedro Jose Clavijo Chang,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0049,Carlos Jaime,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0050,Edmundo Morales Oliva,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0051,Jorge Allende,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0052,Jose Garcia,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0053,Paul Cuba,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0054,Julio Sebastiani,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0055,Erick Andre Monge Jhon,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0056,Giancarlo Berenguel,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0057,Manuel Pino Gilardi,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0058,Roberto Duffo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0059,Ivan Juarez Alarcon,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0060,Rafael Benavides,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0061,Luis Miguel Milla,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0062,Daniel Salazar,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0063,Mariano Leon,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0064,Jeronimo Castagnetto,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0065,Gabriel Missaglia,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0066,Douglas Marrache Urbina,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0067,Stanislav Bezzubikoff,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0068,German Merino,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0069,Joaquin Llosa,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0070,Aldo Roa,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0071,Rodolfo Vlaverde,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0072,Andrew Yep,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0073,Diego Prada,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0074,Jorge Leon,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0075,Giacomo Figari,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0076,Martin Elias Leigh,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0077,Patrick Searles Mejia,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0078,Jose Alonso Vasquez Ortiz,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0079,Jose Antonio Cacho Souza,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0080,Cesar Caparo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0081,Erik Sanchez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0082,Pablo Tabini,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0083,Nicolas Buckley,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0084,Giorfi Perez Palma,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0085,Arnold Inti Perez - Aleman,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0086,Fernando Ortiz De Zevallos Malaga,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0087,Pedro Pulgar,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0088,Gianmarco Franco,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0089,Gonzalo Garcia Labarthe,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0090,David Ballon,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0091,Fausto Alvarado Aggiuro,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0092,Luis Delgado,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0093,Luis Sanabria,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0094,Loic Dumas,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0095,Erick Rojo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0096,Luis Seminario,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0097,Luciano Cuozzo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0098,Gustavo Castro,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0099,Farid Arana,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0100,Antonio Diaz Fernandez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0101,Gustavo Dulanto,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0102,Juan Carlos Saravia,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0103,Pedro Pablo Tomatis Salazar,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0104,Benjamin Rueckner,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0105,Gerardo Daniel Muñoz Jugo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0106,Pablo Castro Levy,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0107,Oriel Cesar,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0108,Carlos Saenz,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0109,Christian Jaime,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0110,Arturo Salazar,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0111,Rafael Noriega Schultz,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0112,Alberto Ferrer,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0113,Joel Alfaro Hurtado,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0114,Alejandro Borasino,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0115,Neil Arredondo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0116,Cesar Eduardo Castañeda Castañeda,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0117,Gonzalo Casapia,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0118,Vasco Cilloniz,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0119,Luis Miguel Quispe Navarro,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0120,Alex Baertl,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0121,Bruce Mongrut,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0122,Eduardo Bush De Armero,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0123,Luis Alfaro,CONFIRMED,PADRON_MASTER,HIGH,Existing master identity; canonical display name user-confirmed as Luis Alfaro. Historical aliases Lucho/Luis Alfaro are linked to this PLAYER_ID.
+pl_0124,Luis Fernando Edwards Rios,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0125,Juan Diego Angulo Ljubicic,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0126,Renato Gereda,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0127,David Gomez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0128,Giancarlo Paoli,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0129,Andres Nuñez Gainza,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0130,Hugo Delgado,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0131,Omar Alvarado,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0132,Humberto Viacava,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0133,Bernardo Saavedra Balarezo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0134,Joan Tello,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0135,Luis Buckley Cabrera,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0136,Gino Nanetti,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0137,Luis Manuel Vasquez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0138,Jorge Nuñez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0139,Carlos Francia,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0140,Fernando Balarin,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0141,Nicolas Corbetto Bellido,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0142,Nicolas Corbetto,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0143,Alejandro Zagazeta,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0144,Bruno Monteverde,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0145,Alvaro Del Castillo Miranda,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0146,Diego Titinger,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0147,Mario Drago,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0148,Jose Rios,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0149,Diego Lopez De Romaña Gallofre,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0150,Michel Macara-Chvili Mazzini,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0151,Jorge Villalobos,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0152,Martin Arrospide Benavides,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0153,Harold Cardenas,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0154,Ricardo Zevallos Drago,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0155,Mario Chirinos,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0156,Alvaro Collado,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0157,Diego Eduardo Huaraz Zuloaga,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0158,Lucio Vasquez Herrera,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0159,Girgis Morote,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0160,Salvador Larco,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0161,Eduardo Lulli,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0162,Carlos Antonio Luksic Mendiburu,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0163,Carlos Sarmiento Freundt,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0164,Vani Angeles Zevallos,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0165,Franco Lema,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0166,Alonso Palacios Madrid,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0167,Luis G. Aspilcueta Carnero,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0168,Omar Jose Hernandez Humire,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0169,Walter Hein Lopez-Albujar,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0170,Luis Carlos Carmona Otero,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0171,Camilo Moreno,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0172,Luis Fernando Reyes Vega,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0173,Renzo Weber Lizarzaburu,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0174,Jose Pilares,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0175,Rodrigo De La Rocha,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0176,Mateo Giulfo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0177,Patrick Fry,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0178,Rodrigo Haro,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0179,Diego Gandolfo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0180,Jose Antonio Soto,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0181,Jose Garcia,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0182,Diego Cortegana,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0183,Roy Escalante,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0184,Juan Diego Rivera,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0185,Jose Cayo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0186,Alvaro Velez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0187,Benjamin Arrospide Benavides,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0188,Cesar Tello Guerrero,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0189,Cesar Prada Simpson,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0190,Dante Vasquez Schwarz,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0191,Giovanni Moreno Flores,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0192,Gonzalo Alberto Parra Chico,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0193,Gonzalo Javier Valdez Olivari,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0194,Javier Hartog cosentino,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0195,Jonathan Valdivia Oporto,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0196,Leandro Guillermo Peirano,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0197,Leonardo Barrena Sierra,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0198,Michele Trece Mancinelli,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0199,Pablo Abad Razuri,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0200,Renzo Ballon Larrieu,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0201,Yuno Jimenez Acevedo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0202,Piero Macciotta,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0203,Sergio Rotalde,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0204,Hans Neufuss,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0205,Felipe Gagliardo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0206,Jianming Su (Lucas) Su Tian,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0207,Pedro Huaraj,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0208,Augusto Castro,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0209,Diego Saavedra,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0210,Aldo Federeci,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0211,Genaro Delgado,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0212,Luiggi De Marzo Gagliardi,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0213,Patrick Searles,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0214,Rafael Noriega,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0215,Dante Vasquez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0216,Joel Alfaro,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0217,Cali Luchessi,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0218,Benjamin Arrospide,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0219,Alonso Seguin,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0220,Jean Paul Leon,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0221,Martin Echevarria,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0222,Pablo Eduardo Tabini Cacho Sousa,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0223,Vasco Cilloniz Gonzales Daly,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0224,Luis Miguel Milla Vera,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0225,Jose Garcia,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0226,Jose Garcia Linares,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0227,Alvaro Galarreta,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0228,Francisco Vilca,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0229,Giorfi Perez-Palma Kleimam,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0230,Jhony Ramirez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0231,Edinsson Valdez,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0232,Luis Olcese,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0233,Rodolfo,CONFIRMED,PADRON_MASTER,HIGH,Existing 2025/2026 master identity
+pl_0236,Teodo Gonzalez,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0238,Arturo Aza,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0239,Miguel Ruiz,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0240,Miguel Ruiz,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0244,Rolando Young,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0246,Alfredo Lores,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0247,Javier Barrenechea,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0248,Klelmen Palma,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0250,Renzo Sebastiani,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0253,Jose Arteaga,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0255,Pepe P,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0258,Carlos Zambrano,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0259,Sandro Omirfe,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0262,Rafael Urteaga,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0263,Ivan Suarez,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0267,Rafael Urteaga,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0269,Rafael Olcese,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0270,Fernando Valenzuela,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0271,Pepe,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it
+pl_0275,Diego Titaje,HISTORICAL_PERMANENT,HISTORICAL_USER_ACCEPTED,MEDIUM,Permanent historical PLAYER_ID retained because no unequivocal master identity was confirmed; merge only if future evidence supports it

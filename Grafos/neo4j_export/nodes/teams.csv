@@ -1,0 +1,13 @@
+TEAM_ID,CANONICAL_NAME,ACTIVE_2026,NOTES
+team_0001,Barcelona,YES,
+team_0002,Chelsea,YES,
+team_0003,Liverpool,YES,
+team_0004,Juventus,YES,
+team_0005,Manchester City,YES,
+team_0006,Real Cambridge,YES,
+team_0007,Celtic,YES,
+team_0008,Atletico de Madrid,NO,Atletico de Madrid no participa en 2026.
+team_0009,Borussia Dortmund,NO,Borussia Dortmund participo en 2024 y 2025; no participa en 2026.
+team_0010,Milan,YES,
+team_0011,Bayern de Munich,YES,Nombre canonico confirmado; Bayern/Bayern Munich son aliases.
+team_0012,Fiorentina,YES,

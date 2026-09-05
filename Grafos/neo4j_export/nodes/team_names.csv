@@ -1,0 +1,22 @@
+NAME_ID,NAME,NAME_TYPE
+team_0001_canonical,Barcelona,CANONICAL
+team_0002_canonical,Chelsea,CANONICAL
+team_0003_canonical,Liverpool,CANONICAL
+team_0004_canonical,Juventus,CANONICAL
+team_0005_canonical,Manchester City,CANONICAL
+team_0006_canonical,Real Cambridge,CANONICAL
+team_0007_canonical,Celtic,CANONICAL
+team_0008_canonical,Atletico de Madrid,CANONICAL
+team_0009_canonical,Borussia Dortmund,CANONICAL
+team_0010_canonical,Milan,CANONICAL
+team_0011_canonical,Bayern de Munich,CANONICAL
+team_0012_canonical,Fiorentina,CANONICAL
+team_0003_alias_1,Holanda,HISTORICAL_NAME
+team_0005_alias_1,City,SPELLING_OR_DISPLAY_VARIANT
+team_0006_alias_1,Real Madrid,HISTORICAL_NAME
+team_0008_alias_1,Atletico Madrid,SPELLING_OR_DISPLAY_VARIANT
+team_0009_alias_1,Bouroussia Dortmund,SPELLING_OR_DISPLAY_VARIANT
+team_0011_alias_1,Bayern Munich,SPELLING_OR_DISPLAY_VARIANT
+team_0012_alias_1,Fioretina,SPELLING_OR_DISPLAY_VARIANT
+team_0009_alias_2,Bourussia Dortmund,SPELLING_OR_DISPLAY_VARIANT
+team_0011_alias_2,Bayern,SPELLING_OR_DISPLAY_VARIANT
