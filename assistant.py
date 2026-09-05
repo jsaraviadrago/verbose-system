@@ -38,10 +38,16 @@ def show_assistant():
         with st.chat_message("assistant"):
             with st.spinner("Consultando el grafo..."):
                 history = [{"role": m["role"], "content": m["content"]} for m in messages]
-                answer, agent_used = handle(client, prompt, history)
+                answer, agent_used, tool_outputs = handle(client, prompt, history)
 
             st.caption(agent_used)
             st.markdown(answer)
+            with st.expander("🔍 Debug: tools llamadas"):
+                if tool_outputs:
+                    for i, out in enumerate(tool_outputs, 1):
+                        st.text(f"--- resultado {i} ---\n{out}")
+                else:
+                    st.text("El agente no llamó ninguna tool para esta respuesta.")
             messages.append({"role": "assistant", "content": answer, "agent": agent_used})
 
     if messages:

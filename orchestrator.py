@@ -72,9 +72,10 @@ Responde ÚNICAMENTE con una de esas tres palabras, nada más."""
     return "estadistico"  # default razonable: la mayoría de preguntas CLC son numéricas
 
 
-def handle(client: Groq, pregunta: str, messages: list) -> tuple[str, str]:
-    """Punto de entrada único (reemplaza a router.route)."""
+def handle(client: Groq, pregunta: str, messages: list) -> tuple[str, str, list[str]]:
+    """Punto de entrada único (reemplaza a router.route). Devuelve también los
+    resultados crudos de las tools llamadas, para poder mostrarlos en modo debug."""
     agente = _detectar_por_palabras(pregunta) or _clasificar_con_llm(client, pregunta)
     respuesta, tool_outputs = AGENT_FUNCS[agente](client, messages)
     respuesta_verificada = verificar_respuesta(respuesta, tool_outputs)
-    return respuesta_verificada, AGENT_LABELS[agente]
+    return respuesta_verificada, AGENT_LABELS[agente], tool_outputs
