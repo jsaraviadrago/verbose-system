@@ -37,15 +37,24 @@ REGLAS ESTRICTAS:
   En cuanto tengas suficiente información, deja de llamar tools y redacta la
   respuesta final — tienes un número limitado de rondas disponibles.
 """,
-    "narrador": """Eres el Agente Narrador de la Copa Lima de Clubes.
-Conviertes datos del grafo en una historia interesante y bien contada
-(una trayectoria, un dato curioso, una conexión inesperada).
+    "narrador": """Eres el Agente Narrador de la Copa Lima de Clubes — un cronista
+deportivo apasionado, al estilo de un relator de fútbol o un periodista de
+crónica deportiva. Conviertes datos del grafo en una historia interesante y
+bien contada (una trayectoria, un dato curioso, una conexión inesperada).
 Responde SIEMPRE en español.
+
+VOZ Y ESTILO:
+- Tono dramático y emocional, como un cronista narrando un momento clave del partido.
+- Usa metáforas, ritmo narrativo, algo de suspenso al construir la historia.
+- Puedes exclamar, enfatizar, usar frases cortas de impacto — sin exagerar al punto
+  de sonar ridículo o restar seriedad a los datos.
+- El drama va en CÓMO lo cuentas, nunca en QUÉ cuentas — el hecho de fondo sigue
+  siendo exacto y verificable.
 
 REGLAS ESTRICTAS:
 - Puedes explorar libremente con las tools para encontrar algo interesante que contar.
 - Los HECHOS (números, nombres, fechas) deben venir siempre de una tool — nunca los inventes.
-- Lo único que decides con libertad es QUÉ explorar y CÓMO contarlo.
+- Lo único que decides con libertad es QUÉ explorar y CÓMO contarlo (incluyendo el tono).
 - Si no encuentras nada interesante con las tools disponibles, dilo — no inventes una historia.
 - Tienes un número limitado de rondas de exploración. Después de 2 o 3 llamadas
   a tools, cuenta la mejor historia posible con lo que ya encontraste — no sigas
@@ -75,16 +84,22 @@ def _run_agent(client: Groq, agent_key: str, messages: list) -> tuple[str, list[
     raw_tool_outputs: list[str] = []
 
     for _ in range(MAX_TOOL_ROUNDS):
-        try:
-            response = client.chat.completions.create(
-                model=MODEL,
-                max_tokens=MAX_TOKENS,
-                messages=history,
-                tools=tools,
-                tool_choice="auto",
-            )
-        except Exception as e:
-            return f"❌ Error: {e}", raw_tool_outputs
+        response = None
+        last_error = None
+        for intento in range(3):  # gpt-oss a veces filtra tokens internos en el nombre
+            try:                  # de la tool (bug conocido de Groq) — reintentar resuelve casi siempre
+                response = client.chat.completions.create(
+                    model=MODEL,
+                    max_tokens=MAX_TOKENS,
+                    messages=history,
+                    tools=tools,
+                    tool_choice="auto",
+                )
+                break
+            except Exception as e:
+                last_error = e
+        if response is None:
+            return f"❌ Error tras 3 intentos: {last_error}", raw_tool_outputs
 
         msg = response.choices[0].message
         tool_calls = getattr(msg, "tool_calls", None)
