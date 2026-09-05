@@ -8,7 +8,7 @@ de selección de agente que no existía en el router anterior (ese solo hacía
 matching de keywords, sin fallback).
 """
 from groq import Groq
-from agents_new import agent_historiador, agent_estadistico, agent_narrador
+from agents import agent_historiador, agent_estadistico, agent_narrador
 from verificador import verificar_respuesta
 
 MODEL = "llama-3.1-8b-instant"
