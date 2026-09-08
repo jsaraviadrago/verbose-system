@@ -31,8 +31,12 @@ def formatear_racha(resultados):
 
 
 def tabla_cruce(cruces, columnas=("Local", "Visitante")):
-    """Convierte una lista de tuplas (equipo_a, equipo_b) en un DataFrame."""
-    return pd.DataFrame(cruces, columns=list(columnas))
+    """Convierte una lista de tuplas (equipo_a, equipo_b) en un DataFrame,
+    agregando columnas vacias de marcador para llenar cuando se juegue."""
+    tabla = pd.DataFrame(cruces, columns=list(columnas))
+    tabla["Goles Local"] = ""
+    tabla["Goles Visitante"] = ""
+    return tabla
 
 
 st.set_page_config(
@@ -153,6 +157,11 @@ st.dataframe(
     use_container_width=True,
     hide_index=True,
 )
+st.caption(
+    "Nota: la Racha muestra los últimos 3 partidos de cada equipo, "
+    "de izquierda a derecha del más antiguo al más reciente "
+    "(🟢 ganó · 🟡 empató · 🔴 perdió)."
+)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # RESULTADOS
@@ -176,43 +185,48 @@ st.caption(
     "No son oficiales hasta que se jueguen los partidos reales."
 )
 
+POR_DEFINIR = ("Por definir", "Por definir")
+
 if len(standings) >= 8:
     cuartos = dp.calcular_cuartos_proyectados(standings)
     semifinal = dp.calcular_semifinal_proyectada(standings)
     final = [dp.calcular_final_proyectada(standings)]
     tercer_puesto = [dp.calcular_tercer_puesto_proyectado(standings)]
-
-    st.markdown("#### Cuartos de Final")
-    st.dataframe(
-        tabla_cruce(cuartos),
-        use_container_width=True,
-        hide_index=True,
-    )
-
-    st.markdown("#### Semifinal")
-    st.dataframe(
-        tabla_cruce(semifinal),
-        use_container_width=True,
-        hide_index=True,
-    )
-
-    col_final, col_tercer = st.columns(2)
-    with col_final:
-        st.markdown("#### Final")
-        st.dataframe(
-            tabla_cruce(final),
-            use_container_width=True,
-            hide_index=True,
-        )
-    with col_tercer:
-        st.markdown("#### Tercer y Cuarto Puesto")
-        st.dataframe(
-            tabla_cruce(tercer_puesto),
-            use_container_width=True,
-            hide_index=True,
-        )
 else:
-    st.info("Todavía no hay suficientes equipos con partidos jugados para proyectar playoffs.")
+    cuartos = [POR_DEFINIR] * 4
+    semifinal = [POR_DEFINIR] * 2
+    final = [POR_DEFINIR]
+    tercer_puesto = [POR_DEFINIR]
+
+st.markdown("#### Cuartos de Final")
+st.dataframe(
+    tabla_cruce(cuartos),
+    use_container_width=True,
+    hide_index=True,
+)
+
+st.markdown("#### Semifinal")
+st.dataframe(
+    tabla_cruce(semifinal),
+    use_container_width=True,
+    hide_index=True,
+)
+
+col_final, col_tercer = st.columns(2)
+with col_final:
+    st.markdown("#### Final")
+    st.dataframe(
+        tabla_cruce(final),
+        use_container_width=True,
+        hide_index=True,
+    )
+with col_tercer:
+    st.markdown("#### Tercer y Cuarto Puesto")
+    st.dataframe(
+        tabla_cruce(tercer_puesto),
+        use_container_width=True,
+        hide_index=True,
+    )
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ESTADÍSTICAS POR EQUIPO
@@ -631,4 +645,15 @@ with st.expander("Expectativa pitagórica (puntos reales vs. esperados)"):
         dp.calcular_puntos_esperados(standings),
         use_container_width=True,
         hide_index=True,
+    )
+    st.caption(
+        "**Pyth**: expectativa pitagórica. Compara los goles a favor y en contra de un equipo "
+        "para estimar qué proporción de sus partidos 'debería' haber ganado, más allá del resultado real "
+        "de cada partido puntual.\n\n"
+        "**Puntos Esperados**: son los puntos que le tocarían al equipo si hubiera ganado exactamente esa "
+        "proporción (Pyth) de todos sus partidos jugados, en vez de los resultados reales.\n\n"
+        "**Diferencia**: Puntos Reales menos Puntos Esperados. "
+        "Si es positiva, el equipo está sacando más puntos de los que su rendimiento en goles sugiere "
+        "(le está yendo mejor en el marcador final de lo que 'merece' por juego). "
+        "Si es negativa, es al revés: rinde bien en goles pero no lo está traduciendo en puntos."
     )
