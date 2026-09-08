@@ -32,11 +32,12 @@ def formatear_racha(resultados):
 
 def tabla_cruce(cruces, columnas=("Local", "Visitante")):
     """Convierte una lista de tuplas (equipo_a, equipo_b) en un DataFrame,
-    agregando columnas vacias de marcador para llenar cuando se juegue."""
-    tabla = pd.DataFrame(cruces, columns=list(columnas))
-    tabla["Goles Local"] = ""
-    tabla["Goles Visitante"] = ""
-    return tabla
+    con el orden: Equipo, Resultado, Equipo, Resultado."""
+    local_col, visitante_col = columnas
+    tabla = pd.DataFrame(cruces, columns=[local_col, visitante_col])
+    tabla["Goles " + local_col] = ""
+    tabla["Goles " + visitante_col] = ""
+    return tabla[[local_col, "Goles " + local_col, visitante_col, "Goles " + visitante_col]]
 
 
 st.set_page_config(
@@ -189,14 +190,14 @@ POR_DEFINIR = ("Por definir", "Por definir")
 
 if len(standings) >= 8:
     cuartos = dp.calcular_cuartos_proyectados(standings)
-    semifinal = dp.calcular_semifinal_proyectada(standings)
-    final = [dp.calcular_final_proyectada(standings)]
-    tercer_puesto = [dp.calcular_tercer_puesto_proyectado(standings)]
 else:
     cuartos = [POR_DEFINIR] * 4
-    semifinal = [POR_DEFINIR] * 2
-    final = [POR_DEFINIR]
-    tercer_puesto = [POR_DEFINIR]
+
+# Semifinal, Final y Tercer/Cuarto puesto quedan vacios hasta que se jueguen
+# los cuartos reales -- no se proyectan en cascada asumiendo ganadores.
+semifinal = [POR_DEFINIR] * 2
+final = [POR_DEFINIR]
+tercer_puesto = [POR_DEFINIR]
 
 st.markdown("#### Cuartos de Final")
 st.dataframe(

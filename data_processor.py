@@ -134,7 +134,7 @@ class DataProcessor:
             "PythEXP": "Pyth",
         })
         return tabla[["Equipo", "Puntos Reales", "Pyth", "Puntos_Esperados", "Diferencia"]] \
-            .sort_values("Diferencia", ascending=False)
+            .sort_values("Puntos Reales", ascending=False)
 
     def calcular_cuartos_proyectados(self, standings_df):
         """Cruces de cuartos segun posicion actual: 1v8, 2v7, 3v6, 4v5."""
