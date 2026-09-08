@@ -32,11 +32,27 @@ class DataProcessor:
         stats["FECHA"] = stats["FECHA"].astype(str)
         return promedio, int(total_goles), stats[["FECHA", "Total_Goles", "Prom_Goles"]]
 
+    def calcular_racha(self, match_results, equipo, n=3):
+        """Ultimos n partidos de un equipo, ordenados de mas antiguo a mas reciente.
+        Devuelve la lista de resultados ('G', 'E', 'P'); la visualizacion
+        (emojis, colores, etc.) se hace en app.py."""
+        partidos = match_results[
+            (match_results["Equipo A"] == equipo) | (match_results["Equipo B"] == equipo)
+        ].sort_values(["FECHA", "HORA"]).tail(n)
+
+        resultados = []
+        for _, p in partidos.iterrows():
+            es_a = p["Equipo A"] == equipo
+            gf = p["Goles A"] if es_a else p["Goles B"]
+            gc = p["Goles B"] if es_a else p["Goles A"]
+            resultados.append("G" if gf > gc else "E" if gf == gc else "P")
+        return resultados
+
     def process_standings(self, df):
         """Tabla unica de posiciones para Clausura 2026, sin grupos."""
         data = self._played(df)
         if data.empty:
-            return pd.DataFrame(columns=["EQUIPO", "G", "E", "P", "PJ", "GF", "GC", "GD", "Puntos", "PythEXP"])
+            return pd.DataFrame(columns=["EQUIPO", "G", "E", "P", "PJ", "GF", "GC", "GD", "Puntos", "PythEXP", "Racha"])
 
         data["g_count"] = data["RESULTADO"].eq("G").astype(int)
         data["e_count"] = data["RESULTADO"].eq("E").astype(int)
@@ -59,7 +75,13 @@ class DataProcessor:
         stats["Puntos"] = stats["G"] * 3 + stats["E"]
         gf_p, gc_p = stats["GF"] ** 1.2, stats["GC"] ** 1.2
         stats["PythEXP"] = (gf_p / (gf_p + gc_p)).fillna(0).round(2)
-        return stats.sort_values(["Puntos", "GD", "GF", "GC"], ascending=[False, False, False, True]).reset_index(drop=True)
+
+        stats = stats.sort_values(["Puntos", "GD", "GF", "GC"], ascending=[False, False, False, True]).reset_index(drop=True)
+
+        match_results = self.process_match_results(df)
+        stats["Racha"] = stats["EQUIPO"].apply(lambda e: self.calcular_racha(match_results, e))
+
+        return stats
 
     def process_match_results(self, df):
         """Todos los resultados de Clausura 2026, sin grupos."""
@@ -100,3 +122,42 @@ class DataProcessor:
         top_y = cards[cards["Amarillas"] > 0][["JUGADOR", "EQUIPO", "Amarillas"]].sort_values("Amarillas", ascending=False).head(8)
         top_r = cards[cards["Rojas"] > 0][["JUGADOR", "EQUIPO", "Rojas"]].sort_values("Rojas", ascending=False).head(8)
         return goleadores_sorted[[nombre_col, "EQUIPO", "GOLES"]], team_cards, top_y, top_r
+
+    def calcular_puntos_esperados(self, standings_df):
+        """Compara puntos reales vs. esperados segun expectativa pitagorica (PythEXP)."""
+        tabla = standings_df[["EQUIPO", "Puntos", "PJ", "PythEXP"]].copy()
+        tabla["Puntos_Esperados"] = (tabla["PythEXP"] * tabla["PJ"] * 3).round(1)
+        tabla["Diferencia"] = (tabla["Puntos"] - tabla["Puntos_Esperados"]).round(1)
+        tabla = tabla.rename(columns={
+            "EQUIPO": "Equipo",
+            "Puntos": "Puntos Reales",
+            "PythEXP": "Pyth",
+        })
+        return tabla[["Equipo", "Puntos Reales", "Pyth", "Puntos_Esperados", "Diferencia"]] \
+            .sort_values("Diferencia", ascending=False)
+
+    def calcular_cuartos_proyectados(self, standings_df):
+        """Cruces de cuartos segun posicion actual: 1v8, 2v7, 3v6, 4v5."""
+        top8 = standings_df.head(8).reset_index(drop=True)
+        cruces = [(0, 7), (1, 6), (2, 5), (3, 4)]
+        return [(top8.loc[a, "EQUIPO"], top8.loc[b, "EQUIPO"]) for a, b in cruces]
+
+    def calcular_semifinal_proyectada(self, standings_df):
+        """Asume que el mejor sembrado de cada cruce de cuartos avanza."""
+        cuartos = self.calcular_cuartos_proyectados(standings_df)
+        # cuartos[0]=1v8, cuartos[1]=2v7, cuartos[2]=3v6, cuartos[3]=4v5
+        # SF1: ganador(1v8) vs ganador(4v5) | SF2: ganador(2v7) vs ganador(3v6)
+        return [
+            (cuartos[0][0], cuartos[3][0]),  # 1 vs 4
+            (cuartos[1][0], cuartos[2][0]),  # 2 vs 3
+        ]
+
+    def calcular_final_proyectada(self, standings_df):
+        """Asume que el mejor sembrado de cada semifinal avanza."""
+        semis = self.calcular_semifinal_proyectada(standings_df)
+        return (semis[0][0], semis[1][0])  # 1 vs 2
+
+    def calcular_tercer_puesto_proyectado(self, standings_df):
+        """Asume que el peor sembrado de cada semifinal cae a este partido."""
+        semis = self.calcular_semifinal_proyectada(standings_df)
+        return (semis[0][1], semis[1][1])  # 4 vs 3
