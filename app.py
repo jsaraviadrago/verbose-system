@@ -297,7 +297,7 @@ with graf_col1:
 # 🛡️ MEJORES DEFENSAS
 with graf_col2:
     st.markdown("### 🛡️ Mejores defensas")
-    defensas = standings.sort_values("GC", ascending=True).head(8)
+    defensas = standings.sort_values("GC", ascending=True)
     chart_defensas = (
         alt.Chart(defensas)
         .mark_bar()
