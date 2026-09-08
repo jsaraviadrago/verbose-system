@@ -83,10 +83,13 @@ if fixture_pendiente.empty:
     st.success("🏆 No quedan partidos pendientes.")
 else:
     standings_preview = dp.process_standings(df_partidos)
-    fixture_pendiente = dp.resolver_equipos_pendientes(
-        fixture_pendiente,
-        standings_preview,
-    )
+    try:
+        fixture_pendiente = dp.resolver_equipos_pendientes(
+            fixture_pendiente,
+            standings_preview,
+        )
+    except Exception as e:
+        st.warning(f"No se pudo proyectar equipos de playoff pendientes: {e}")
     st.dataframe(
         fixture_pendiente,
         use_container_width=True,
