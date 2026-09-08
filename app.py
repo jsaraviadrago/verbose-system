@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import altair as alt
+
 from fixture_service import get_pending_fixture
 from pathlib import Path
 
@@ -12,7 +13,6 @@ from firestore_client import (
 from data_processor import DataProcessor
 from assistant import show_assistant
 
-
 dp = DataProcessor()
 
 LOGO_PATH = (
@@ -20,6 +20,20 @@ LOGO_PATH = (
     / "assets"
     / "logos_equipos.png"
 )
+
+ICONOS_RACHA = {"G": "🟢", "E": "🟡", "P": "🔴"}
+
+
+def formatear_racha(resultados):
+    if not resultados:
+        return ""
+    return " ".join(ICONOS_RACHA.get(r, "⚪") for r in resultados)
+
+
+def tabla_cruce(cruces, columnas=("Local", "Visitante")):
+    """Convierte una lista de tuplas (equipo_a, equipo_b) en un DataFrame."""
+    return pd.DataFrame(cruces, columns=list(columnas))
+
 
 st.set_page_config(
     page_title="Cambridge College Lima",
@@ -43,10 +57,7 @@ if st.session_state.get("show_assistant", False):
     show_assistant()
     st.stop()
 
-
-
 # ── Logos de los equipos ─────────────────────────────────────────────
-
 # Cargar resultados una sola vez
 df_partidos = get_partidos_clausura_2026()
 
@@ -58,7 +69,6 @@ st.image(
 # ─────────────────────────────────────────────────────────────────────────────
 # FIXTURE PENDIENTE
 # ─────────────────────────────────────────────────────────────────────────────
-
 if df_partidos.empty:
     st.info(
         "Todavia no hay resultados publicados para Clausura 2026."
@@ -72,6 +82,11 @@ fixture_pendiente = get_pending_fixture(df_partidos)
 if fixture_pendiente.empty:
     st.success("🏆 No quedan partidos pendientes.")
 else:
+    standings_preview = dp.process_standings(df_partidos)
+    fixture_pendiente = dp.resolver_equipos_pendientes(
+        fixture_pendiente,
+        standings_preview,
+    )
     st.dataframe(
         fixture_pendiente,
         use_container_width=True,
@@ -80,49 +95,37 @@ else:
 
 st.divider()
 
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 # RESULTADOS
 # ─────────────────────────────────────────────────────────────────────────────
-
-
-
 promedio, total_goles, stats_fecha = dp.get_general_stats(
     df_partidos
 )
 
 col_m1, col_m2 = st.columns(2)
-
 with col_m1:
     st.metric(
         "⚽ Promedio goles por partido",
         f"{promedio:.2f}",
     )
-
 with col_m2:
     st.metric(
         "🔢 Total goles",
         int(total_goles),
     )
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # ESTADÍSTICAS POR FECHA
 # ─────────────────────────────────────────────────────────────────────────────
-
 if not stats_fecha.empty:
     st.subheader("Estadísticas por Fecha")
-
     c1, c2 = st.columns(2)
-
     with c1:
         st.write("**Goles Totales**")
         st.line_chart(
             stats_fecha
             .set_index("FECHA")["Total_Goles"]
         )
-
     with c2:
         st.write("**Promedio de Goles**")
         st.line_chart(
@@ -130,25 +133,27 @@ if not stats_fecha.empty:
             .set_index("FECHA")["Prom_Goles"]
         )
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # TABLA DE POSICIONES
 # ─────────────────────────────────────────────────────────────────────────────
-
 st.divider()
 st.subheader("Tabla de Posiciones")
 
+standings = dp.process_standings(df_partidos)
+standings_display = standings.copy()
+standings_display["Racha"] = standings_display["Racha"].apply(formatear_racha)
+
+columnas_orden = ["EQUIPO", "Puntos", "Racha", "PJ", "G", "E", "P", "GF", "GC", "GD"]
+
 st.dataframe(
-    dp.process_standings(df_partidos),
+    standings_display[columnas_orden],
     use_container_width=True,
     hide_index=True,
 )
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # RESULTADOS
 # ─────────────────────────────────────────────────────────────────────────────
-
 st.divider()
 st.subheader("Resultados")
 
@@ -158,33 +163,74 @@ st.dataframe(
     hide_index=True,
 )
 
+# ─────────────────────────────────────────────────────────────────────────────
+# PLAYOFFS (PROYECCIÓN)
+# ─────────────────────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("🏆 Playoffs — Proyección según tabla actual")
+st.caption(
+    "⚠️ Cruces estimados asumiendo que el mejor sembrado avanza en cada ronda. "
+    "No son oficiales hasta que se jueguen los partidos reales."
+)
+
+if len(standings) >= 8:
+    cuartos = dp.calcular_cuartos_proyectados(standings)
+    semifinal = dp.calcular_semifinal_proyectada(standings)
+    final = [dp.calcular_final_proyectada(standings)]
+    tercer_puesto = [dp.calcular_tercer_puesto_proyectado(standings)]
+
+    st.markdown("#### Cuartos de Final")
+    st.dataframe(
+        tabla_cruce(cuartos),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    st.markdown("#### Semifinal")
+    st.dataframe(
+        tabla_cruce(semifinal),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    col_final, col_tercer = st.columns(2)
+    with col_final:
+        st.markdown("#### Final")
+        st.dataframe(
+            tabla_cruce(final),
+            use_container_width=True,
+            hide_index=True,
+        )
+    with col_tercer:
+        st.markdown("#### Tercer y Cuarto Puesto")
+        st.dataframe(
+            tabla_cruce(tercer_puesto),
+            use_container_width=True,
+            hide_index=True,
+        )
+else:
+    st.info("Todavía no hay suficientes equipos con partidos jugados para proyectar playoffs.")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ESTADÍSTICAS POR EQUIPO
 # ─────────────────────────────────────────────────────────────────────────────
-
 st.divider()
 st.subheader("Estadísticas por Equipo")
 
-graf_col1, graf_col2 = st.columns(2)
-
+graf_col1, graf_col2, graf_col3 = st.columns(3)
 
 # ⚽ EQUIPOS MÁS GOLEADORES
-
 goles_equipos = df_partidos.copy()
-
 goles_equipos.columns = (
     goles_equipos.columns
     .astype(str)
     .str.strip()
     .str.upper()
 )
-
 goles_equipos["GOLES"] = pd.to_numeric(
     goles_equipos["GOLES"],
     errors="coerce",
 ).fillna(0)
-
 goles_equipos = (
     goles_equipos
     .groupby(
@@ -200,7 +246,6 @@ goles_equipos = (
 
 with graf_col1:
     st.markdown("### ⚽ Equipos más goleadores")
-
     chart_goles = (
         alt.Chart(goles_equipos)
         .mark_bar()
@@ -226,45 +271,54 @@ with graf_col1:
             ],
         )
     )
-
     st.altair_chart(
         chart_goles,
         use_container_width=True,
     )
 
+# 🛡️ MEJORES DEFENSAS
+with graf_col2:
+    st.markdown("### 🛡️ Mejores defensas")
+    defensas = standings.sort_values("GC", ascending=True).head(8)
+    chart_defensas = (
+        alt.Chart(defensas)
+        .mark_bar()
+        .encode(
+            x=alt.X("EQUIPO:N", sort="y", title=""),
+            y=alt.Y("GC:Q", title="Goles en contra"),
+            tooltip=[
+                alt.Tooltip("EQUIPO:N", title="Equipo"),
+                alt.Tooltip("GC:Q", title="Goles en contra"),
+            ],
+        )
+    )
+    st.altair_chart(chart_defensas, use_container_width=True)
 
 # 🟨 EQUIPOS CON MÁS AMARILLAS
-
 df_tarjetas_grafico = get_tarjetas_clausura_2026()
 
-with graf_col2:
+with graf_col3:
     st.markdown("### 🟨 Equipos con más amarillas")
-
     if df_tarjetas_grafico.empty:
         st.info(
             "Todavía no hay tarjetas registradas."
         )
-
     else:
         amarillas_equipos = (
             df_tarjetas_grafico.copy()
         )
-
         amarillas_equipos.columns = (
             amarillas_equipos.columns
             .astype(str)
             .str.strip()
             .str.upper()
         )
-
         if "AMARILLAS" not in amarillas_equipos.columns:
             amarillas_equipos["AMARILLAS"] = 0
-
         amarillas_equipos["AMARILLAS"] = pd.to_numeric(
             amarillas_equipos["AMARILLAS"],
             errors="coerce",
         ).fillna(0)
-
         amarillas_equipos = (
             amarillas_equipos
             .groupby(
@@ -277,7 +331,6 @@ with graf_col2:
                 ascending=[False, True],
             )
         )
-
         chart_amarillas = (
             alt.Chart(amarillas_equipos)
             .mark_bar()
@@ -303,17 +356,14 @@ with graf_col2:
                 ],
             )
         )
-
         st.altair_chart(
             chart_amarillas,
             use_container_width=True,
         )
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # GOLEADORES
 # ─────────────────────────────────────────────────────────────────────────────
-
 st.divider()
 st.subheader("⚽ Máximos Goleadores")
 
@@ -323,22 +373,18 @@ if df_goleadores.empty:
     st.info(
         "Todavía no hay goleadores publicados."
     )
-
 else:
     goleadores = df_goleadores.copy()
-
     goleadores.columns = (
         goleadores.columns
         .astype(str)
         .str.strip()
         .str.upper()
     )
-
     goleadores["GOLES"] = pd.to_numeric(
         goleadores["GOLES"],
         errors="coerce",
     ).fillna(0).astype(int)
-
     goleadores["NOMBRE Y APELLIDO"] = (
         goleadores["NOMBRE Y APELLIDO"]
         .astype(str)
@@ -386,7 +432,6 @@ else:
             len(top_8) + 1,
         ),
     )
-
     top_8["Pos."] = top_8["Pos."].replace(
         {
             1: "🥇",
@@ -401,11 +446,9 @@ else:
         hide_index=True,
     )
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # DISCIPLINA
 # ─────────────────────────────────────────────────────────────────────────────
-
 st.divider()
 st.subheader("Disciplina")
 
@@ -414,7 +457,6 @@ df_tarjetas = get_tarjetas_clausura_2026()
 left, right = st.columns(2)
 
 if df_tarjetas.empty:
-
     amarillas = pd.DataFrame(
         columns=[
             "Pos.",
@@ -423,7 +465,6 @@ if df_tarjetas.empty:
             "Amarillas",
         ]
     )
-
     rojas = pd.DataFrame(
         columns=[
             "Pos.",
@@ -432,33 +473,26 @@ if df_tarjetas.empty:
             "Rojas",
         ]
     )
-
 else:
     cards = df_tarjetas.copy()
-
     cards.columns = (
         cards.columns
         .astype(str)
         .str.strip()
         .str.upper()
     )
-
     if "AMARILLAS" not in cards.columns:
         cards["AMARILLAS"] = 0
-
     if "ROJAS" not in cards.columns:
         cards["ROJAS"] = 0
-
     cards["AMARILLAS"] = pd.to_numeric(
         cards["AMARILLAS"],
         errors="coerce",
     ).fillna(0).astype(int)
-
     cards["ROJAS"] = pd.to_numeric(
         cards["ROJAS"],
         errors="coerce",
     ).fillna(0).astype(int)
-
     cards["JUGADOR"] = (
         cards["JUGADOR"]
         .astype(str)
@@ -544,7 +578,6 @@ else:
             len(amarillas) + 1,
         ),
     )
-
     amarillas["Pos."] = amarillas["Pos."].replace(
         {
             1: "🥇",
@@ -561,7 +594,6 @@ else:
             len(rojas) + 1,
         ),
     )
-
     rojas["Pos."] = rojas["Pos."].replace(
         {
             1: "🥇",
@@ -570,22 +602,30 @@ else:
         }
     )
 
-
 with left:
     st.markdown("### 🟨 Amarillas")
-
     st.dataframe(
         amarillas,
         use_container_width=True,
         hide_index=True,
     )
-
-
 with right:
     st.markdown("### 🟥 Rojas")
-
     st.dataframe(
         rojas,
+        use_container_width=True,
+        hide_index=True,
+    )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ANALÍTICA
+# ─────────────────────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("📊 Analítica")
+
+with st.expander("Expectativa pitagórica (puntos reales vs. esperados)"):
+    st.dataframe(
+        dp.calcular_puntos_esperados(standings),
         use_container_width=True,
         hide_index=True,
     )

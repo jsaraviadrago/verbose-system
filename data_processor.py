@@ -161,3 +161,74 @@ class DataProcessor:
         """Asume que el peor sembrado de cada semifinal cae a este partido."""
         semis = self.calcular_semifinal_proyectada(standings_df)
         return (semis[0][1], semis[1][1])  # 4 vs 3
+
+    def resolver_equipos_pendientes(self, fixture_df, standings_df):
+        """Completa equipos vacios en el fixture pendiente (filas de playoffs
+        aun sin definir) usando la proyeccion actual de la tabla, en vez de
+        nombres hardcodeados. Si el partido no matchea ninguna ronda de
+        playoff reconocida, o no hay suficientes equipos jugados todavia
+        para proyectar, se deja 'Por definir'.
+
+        Asume que la columna con el nombre/identificador del partido se
+        llama 'PARTIDO' y que ahi aparece una palabra clave: CUARTO,
+        SEMIFINAL, TERCER o FINAL (sin SEMI ni TERCER). Ajusta las
+        palabras clave si tu fixture usa otra nomenclatura.
+        """
+        data = fixture_df.copy()
+        data.columns = data.columns.str.strip().str.upper()
+
+        col_e1 = "EQUIPO_1" if "EQUIPO_1" in data.columns else "EQUIPO A"
+        col_e2 = "EQUIPO_2" if "EQUIPO_2" in data.columns else "EQUIPO B"
+
+        if col_e1 not in data.columns or col_e2 not in data.columns or "PARTIDO" not in data.columns:
+            return fixture_df  # esquema inesperado, no tocar nada
+
+        vacio = data[col_e1].isna() | (data[col_e1].astype(str).str.strip() == "") \
+            | data[col_e2].isna() | (data[col_e2].astype(str).str.strip() == "")
+
+        if not vacio.any():
+            return fixture_df
+
+        puede_proyectar = len(standings_df) >= 8
+
+        cuartos = self.calcular_cuartos_proyectados(standings_df) if puede_proyectar else []
+        semifinal = self.calcular_semifinal_proyectada(standings_df) if puede_proyectar else []
+        final = self.calcular_final_proyectada(standings_df) if puede_proyectar else None
+        tercer_puesto = self.calcular_tercer_puesto_proyectado(standings_df) if puede_proyectar else None
+
+        def resolver_fila(row):
+            if not vacio.loc[row.name]:
+                return row[col_e1], row[col_e2]
+            if not puede_proyectar:
+                return "Por definir", "Por definir"
+
+            nombre = str(row["PARTIDO"]).upper()
+
+            if "CUARTO" in nombre:
+                # Extrae el numero del cruce si viene en el nombre (ej. "Cuartos 1")
+                digitos = "".join(c for c in nombre if c.isdigit())
+                idx = int(digitos) - 1 if digitos and 0 <= int(digitos) - 1 < len(cuartos) else None
+                if idx is not None:
+                    return cuartos[idx]
+                return "Por definir", "Por definir"
+
+            if "SEMIFINAL" in nombre or "SEMI" in nombre:
+                digitos = "".join(c for c in nombre if c.isdigit())
+                idx = int(digitos) - 1 if digitos and 0 <= int(digitos) - 1 < len(semifinal) else None
+                if idx is not None:
+                    return semifinal[idx]
+                return "Por definir", "Por definir"
+
+            if "TERCER" in nombre:
+                return tercer_puesto if tercer_puesto else ("Por definir", "Por definir")
+
+            if "FINAL" in nombre:
+                return final if final else ("Por definir", "Por definir")
+
+            return "Por definir", "Por definir"
+
+        resueltos = data.apply(resolver_fila, axis=1, result_type="expand")
+        data[col_e1] = resueltos[0]
+        data[col_e2] = resueltos[1]
+
+        return data
