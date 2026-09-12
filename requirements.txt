@@ -4,3 +4,4 @@ altair
 firebase-admin
 groq
 neo4j
+mcp
