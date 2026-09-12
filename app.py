@@ -8,6 +8,7 @@ from pathlib import Path
 from firestore_client import (
     get_partidos_clausura_2026,
     get_goleadores_clausura_2026,
+    get_goleadores_detalle_clausura_2026,
     get_tarjetas_clausura_2026,
 )
 from data_processor import DataProcessor
@@ -391,6 +392,29 @@ else:
     )
 
 # ─────────────────────────────────────────────────────────────────────────────
+# JUGADORES EN RACHA
+# ─────────────────────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("🔥 Jugadores en Racha")
+st.caption(
+    "Jugadores que anotaron en al menos 2 de sus últimos 3 partidos jugados."
+)
+
+df_goleadores_detalle = get_goleadores_detalle_clausura_2026()
+en_racha = dp.calcular_jugadores_en_racha(df_goleadores_detalle)
+
+if en_racha.empty:
+    st.info(
+        "Todavía no hay suficientes datos por partido para calcular rachas."
+    )
+else:
+    st.dataframe(
+        en_racha,
+        use_container_width=True,
+        hide_index=True,
+    )
+
+# ─────────────────────────────────────────────────────────────────────────────
 # DISCIPLINA
 # ─────────────────────────────────────────────────────────────────────────────
 st.divider()
@@ -430,10 +454,12 @@ with st.expander("Expectativa pitagórica (puntos reales vs. esperados)"):
     )
     st.caption(
         "**Pyth**: expectativa pitagórica. Compara los goles a favor y en contra de un equipo "
-        "para estimar qué proporción de sus partidos 'debería' haber ganado, más allá del resultado real "
-        "de cada partido puntual.\n\n"
-        "**Puntos Esperados**: son los puntos que le tocarían al equipo si hubiera ganado exactamente esa "
-        "proporción (Pyth) de todos sus partidos jugados, en vez de los resultados reales.\n\n"
+        "para estimar qué proporción de sus partidos SIN CONTAR empates 'debería' haber ganado, "
+        "más allá del resultado real de cada partido puntual.\n\n"
+        "**Puntos Esperados**: toma en cuenta la proporción real de empates de cada equipo "
+        "(esos ya valen 1 punto fijo) y reparte el resto de partidos entre victoria y derrota "
+        "según Pyth. Son los puntos que le tocarían al equipo si esa proyección se hubiera "
+        "cumplido exactamente, en vez de los resultados reales.\n\n"
         "**Diferencia**: Puntos Reales menos Puntos Esperados. "
         "Si es positiva, el equipo está sacando más puntos de los que su rendimiento en goles sugiere "
         "(le está yendo mejor en el marcador final de lo que 'merece' por juego). "

@@ -27,11 +27,22 @@ def load_collection(collection_name: str) -> pd.DataFrame:
 def get_partidos_clausura_2026() -> pd.DataFrame:
     return load_collection("partidos_clausura_2026")
 
+
 def get_goleadores_clausura_2026() -> pd.DataFrame:
     return load_collection("goleadores_clausura_2026")
 
+
+def get_goleadores_detalle_clausura_2026() -> pd.DataFrame:
+    """Detalle por partido (FECHA incluida) de goleadores de Clausura 2026 --
+    necesario para calcular rachas de jugadores. La versión agregada
+    (get_goleadores_clausura_2026) sigue siendo la fuente para el total de
+    temporada; esta es una colección independiente, no la reemplaza."""
+    return load_collection("goleadores_clausura_2026_partidos")
+
+
 def get_tarjetas_clausura_2026():
     return load_collection("tarjetas_clausura_2026")
+
 
 # Se conservan los historicos existentes.
 def get_goleadores_apertura_2024(): return load_collection("goleadores_apertura_2024")

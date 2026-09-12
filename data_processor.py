@@ -139,6 +139,46 @@ class DataProcessor:
 
         return _top("AMARILLAS", "Amarillas"), _top("ROJAS", "Rojas")
 
+    def calcular_jugadores_en_racha(self, df_detalle, ultimos_n=3, min_con_gol=2):
+        """
+        Jugadores que anotaron en al menos min_con_gol de sus ultimos_n
+        partidos mas recientes (requiere datos por partido, no el total de
+        temporada -- viene de goleadores_clausura_2026_partidos).
+        Ordenado por goles dentro de esa racha, de mayor a menor.
+        """
+        columnas = ["Jugador", "Equipo", f"Partidos (últimos {ultimos_n})", "Goles en racha"]
+        if df_detalle.empty:
+            return pd.DataFrame(columns=columnas)
+
+        data = df_detalle.copy()
+        data.columns = data.columns.astype(str).str.strip().str.upper()
+        data["GOLES"] = pd.to_numeric(data["GOLES"], errors="coerce").fillna(0).astype(int)
+        data["FECHA"] = pd.to_numeric(data["FECHA"], errors="coerce")
+        data = data.dropna(subset=["FECHA"])
+        data["FECHA"] = data["FECHA"].astype(int)
+        data["NOMBRE Y APELLIDO"] = data["NOMBRE Y APELLIDO"].astype(str).str.strip().str.title()
+
+        filas = []
+        for (jugador, equipo), grupo in data.groupby(["NOMBRE Y APELLIDO", "EQUIPO"]):
+            ultimos = grupo.sort_values("FECHA").tail(ultimos_n)
+            partidos_con_gol = int((ultimos["GOLES"] > 0).sum())
+            if partidos_con_gol >= min_con_gol:
+                filas.append({
+                    "Jugador": jugador,
+                    "Equipo": equipo,
+                    f"Partidos (últimos {ultimos_n})": len(ultimos),
+                    "Goles en racha": int(ultimos["GOLES"].sum()),
+                })
+
+        if not filas:
+            return pd.DataFrame(columns=columnas)
+
+        return (
+            pd.DataFrame(filas)
+            .sort_values(["Goles en racha", "Jugador"], ascending=[False, True])
+            .reset_index(drop=True)
+        )
+
     def ordenar_para_grafico_goleadores(self, standings_df):
         """Standings ordenado por GF descendente, listo para el grafico
         'Equipos mas goleadores'."""

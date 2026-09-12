@@ -9,7 +9,6 @@ from urllib.parse import quote
 import pandas as pd
 from google.cloud import firestore
 
-
 PLAYER_PAIRS = [(f"Jugador{i}", f"Goles{i}") for i in range(1, 8)]
 
 TEAM_ALIASES = {
@@ -52,10 +51,8 @@ def normalize_team(value: object) -> str:
 def normalize_player_key(value: object) -> str:
     """
     Clave conservadora para reconocer al mismo jugador.
-
     Unifica:
-      José Pérez / JOSE  PEREZ / Jose Perez
-
+      José Pérez / JOSE PEREZ / Jose Perez
     No hace fuzzy matching:
       Perez != Peres
     """
@@ -90,7 +87,6 @@ def read_public_sheet(spreadsheet_id: str, sheet_name: str) -> pd.DataFrame:
             "No se pudo leer la hoja de goleadores. "
             "Compártela como 'Cualquier persona con el enlace - Lector'."
         ) from exc
-
     df.columns = df.columns.astype(str).str.strip()
     return df
 
@@ -99,7 +95,6 @@ def validate_sheet_structure(df: pd.DataFrame) -> None:
     required = ["Fecha", "Equipo"]
     for player_col, goals_col in PLAYER_PAIRS:
         required.extend([player_col, goals_col])
-
     missing = [col for col in required if col not in df.columns]
     if missing:
         raise ValueError(
@@ -113,7 +108,6 @@ def load_official_results(
 ) -> pd.DataFrame:
     db = firestore.Client(project=project_id)
     docs = [doc.to_dict() for doc in db.collection(collection_name).stream()]
-
     if not docs:
         return pd.DataFrame(columns=["FECHA", "EQUIPO", "GOLES"])
 
@@ -136,7 +130,6 @@ def load_official_results(
             "Resultados oficiales contienen más de una fila para "
             "la misma Fecha + Equipo."
         )
-
     return df
 
 
@@ -144,7 +137,9 @@ def sheet_to_long(sheet: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Devuelve:
       responses: una fila por Fecha + Equipo enviado en el Form
-      scorers: una fila por jugador con goles
+      scorers: una fila por jugador con goles (conserva FECHA -- este es el
+               dato que despues usa reconcile_firestore_detalle para no
+               perder el detalle por partido)
     """
     data = sheet.copy()
     data = data.dropna(how="all")
@@ -178,12 +173,10 @@ def sheet_to_long(sheet: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
         )
 
     parts: list[pd.DataFrame] = []
-
     for player_col, goals_col in PLAYER_PAIRS:
         part = data[
             ["Fecha", "Equipo", "EQUIPO_NORM", player_col, goals_col]
         ].copy()
-
         part.columns = [
             "FECHA",
             "EQUIPO",
@@ -212,7 +205,6 @@ def sheet_to_long(sheet: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
             continue
 
         part["GOLES"] = pd.to_numeric(part["GOLES"], errors="raise")
-
         invalid_goals = (
             part["GOLES"].le(0)
             | part["GOLES"].mod(1).ne(0)
@@ -226,8 +218,8 @@ def sheet_to_long(sheet: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
                 "Los goles de un goleador deben ser enteros mayores a 0:\n"
                 + bad.to_string(index=False)
             )
-
         part["GOLES"] = part["GOLES"].astype(int)
+
         part["PLAYER_KEY"] = part["JUGADOR"].map(normalize_player_key)
         part["JUGADOR"] = part["JUGADOR"].map(display_player_name)
 
@@ -251,7 +243,6 @@ def sheet_to_long(sheet: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     responses = data[["Fecha", "Equipo", "EQUIPO_NORM"]].rename(
         columns={"Fecha": "FECHA", "Equipo": "EQUIPO"}
     )
-
     return responses, scorers
 
 
@@ -262,14 +253,12 @@ def validate_teams(
 ) -> tuple[pd.DataFrame, list[dict], list[dict]]:
     """
     Valida independientemente cada Fecha + Equipo.
-
     Un equipo inválido queda pendiente, pero no bloquea a los demás.
     """
     official_lookup = {
         (int(row.FECHA), row.EQUIPO_NORM): int(row.GOLES)
         for row in official.itertuples(index=False)
     }
-
     response_keys = set(
         map(
             tuple,
@@ -391,7 +380,6 @@ def aggregate_scorers(valid: pd.DataFrame) -> pd.DataFrame:
         how="left",
         validate="one_to_one",
     )
-
     result = result.rename(
         columns={"JUGADOR": "NOMBRE Y APELLIDO"}
     )
@@ -408,9 +396,61 @@ def aggregate_scorers(valid: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+def aggregate_scorers_detalle(valid: pd.DataFrame) -> pd.DataFrame:
+    """
+    Igual que aggregate_scorers, pero SIN sumar entre fechas -- conserva el
+    detalle por partido. Necesario para calcular rachas de jugadores, que
+    aggregate_scorers no puede dar porque ya llega colapsado a un total.
+    Un jugador puede tener mas de una fila en la misma Fecha+Equipo si se
+    cargo en mas de una casilla del Form; esa fila puntual si se suma.
+    """
+    columnas = ["PLAYER_KEY", "NOMBRE Y APELLIDO", "EQUIPO", "FECHA", "GOLES"]
+    if valid.empty:
+        return pd.DataFrame(columns=columnas)
+
+    visible = (
+        valid.sort_values(["FECHA"])
+        .groupby(["EQUIPO_NORM", "PLAYER_KEY"], as_index=False)
+        .tail(1)[["EQUIPO_NORM", "PLAYER_KEY", "EQUIPO"]]
+    )
+
+    por_fecha = (
+        valid.groupby(
+            ["EQUIPO_NORM", "PLAYER_KEY", "FECHA"],
+            as_index=False,
+        )["GOLES"]
+        .sum()
+    )
+
+    result = por_fecha.merge(
+        valid[["EQUIPO_NORM", "PLAYER_KEY", "JUGADOR"]].drop_duplicates(
+            ["EQUIPO_NORM", "PLAYER_KEY"]
+        ),
+        on=["EQUIPO_NORM", "PLAYER_KEY"],
+        how="left",
+    ).merge(
+        visible[["EQUIPO_NORM", "PLAYER_KEY", "EQUIPO"]],
+        on=["EQUIPO_NORM", "PLAYER_KEY"],
+        how="left",
+        validate="many_to_one",
+    )
+    result = result.rename(columns={"JUGADOR": "NOMBRE Y APELLIDO"})
+
+    return (
+        result[columnas]
+        .sort_values(["FECHA", "GOLES", "NOMBRE Y APELLIDO"], ascending=[True, False, True])
+        .reset_index(drop=True)
+    )
+
+
 def _doc_id(team: str, player_key: str) -> str:
     raw = f"{normalize_team(team)}|{player_key}".encode("utf-8")
     return "g_" + hashlib.sha1(raw).hexdigest()[:20]
+
+
+def _doc_id_detalle(team: str, player_key: str, fecha: int) -> str:
+    raw = f"{normalize_team(team)}|{player_key}|{int(fecha)}".encode("utf-8")
+    return "gd_" + hashlib.sha1(raw).hexdigest()[:20]
 
 
 def reconcile_firestore(
@@ -428,7 +468,6 @@ def reconcile_firestore(
     }
 
     desired: dict[str, dict] = {}
-
     for row in aggregated.to_dict(orient="records"):
         doc_id = _doc_id(row["EQUIPO"], row["PLAYER_KEY"])
         desired[doc_id] = {
@@ -453,13 +492,68 @@ def reconcile_firestore(
         }
 
     batch = db.batch()
-
     for doc_id, payload in to_set.items():
         batch.set(collection.document(doc_id), payload, merge=False)
-
     for doc_id in to_delete:
         batch.delete(collection.document(doc_id))
+    batch.commit()
 
+    return {
+        "writes": len(to_set),
+        "deletes": len(to_delete),
+        "existing_reads": len(existing),
+    }
+
+
+def reconcile_firestore_detalle(
+    detalle: pd.DataFrame,
+    project_id: str,
+    collection_name: str,
+) -> dict:
+    """
+    Igual que reconcile_firestore, pero para el detalle por partido (incluye
+    FECHA en el payload y en el doc_id). Colección independiente de la
+    agregada -- ninguna de las dos depende de la otra para funcionar.
+    """
+    db = firestore.Client(project=project_id)
+    collection = db.collection(collection_name)
+
+    existing_snaps = list(collection.stream())
+    existing = {
+        snap.id: snap.to_dict()
+        for snap in existing_snaps
+    }
+
+    desired: dict[str, dict] = {}
+    for row in detalle.to_dict(orient="records"):
+        doc_id = _doc_id_detalle(row["EQUIPO"], row["PLAYER_KEY"], row["FECHA"])
+        desired[doc_id] = {
+            "PLAYER_KEY": str(row["PLAYER_KEY"]),
+            "NOMBRE Y APELLIDO": str(row["NOMBRE Y APELLIDO"]),
+            "EQUIPO": str(row["EQUIPO"]),
+            "FECHA": int(row["FECHA"]),
+            "GOLES": int(row["GOLES"]),
+        }
+
+    to_set = {
+        doc_id: payload
+        for doc_id, payload in desired.items()
+        if existing.get(doc_id) != payload
+    }
+    to_delete = sorted(set(existing) - set(desired))
+
+    if not to_set and not to_delete:
+        return {
+            "writes": 0,
+            "deletes": 0,
+            "existing_reads": len(existing),
+        }
+
+    batch = db.batch()
+    for doc_id, payload in to_set.items():
+        batch.set(collection.document(doc_id), payload, merge=False)
+    for doc_id in to_delete:
+        batch.delete(collection.document(doc_id))
     batch.commit()
 
     return {
@@ -481,6 +575,10 @@ def run_goleadores_pipeline() -> dict:
         "FIRESTORE_SCORERS_COLLECTION",
         "goleadores_clausura_2026",
     )
+    scorers_detail_collection = env(
+        "FIRESTORE_SCORERS_DETAIL_COLLECTION",
+        "goleadores_clausura_2026_partidos",
+    )
 
     sheet = read_public_sheet(sheet_id, sheet_name)
     validate_sheet_structure(sheet)
@@ -489,7 +587,6 @@ def run_goleadores_pipeline() -> dict:
         project_id,
         results_collection,
     )
-
     if official.empty:
         return {
             "status": "waiting_results",
@@ -502,7 +599,6 @@ def run_goleadores_pipeline() -> dict:
         }
 
     responses, scorers = sheet_to_long(sheet)
-
     valid, pending, invalid = validate_teams(
         responses,
         scorers,
@@ -530,6 +626,13 @@ def run_goleadores_pipeline() -> dict:
         scorers_collection,
     )
 
+    detalle = aggregate_scorers_detalle(valid)
+    sync_detalle = reconcile_firestore_detalle(
+        detalle,
+        project_id,
+        scorers_detail_collection,
+    )
+
     valid_team_entries = int(
         valid[["FECHA", "EQUIPO_NORM"]]
         .drop_duplicates()
@@ -542,5 +645,8 @@ def run_goleadores_pipeline() -> dict:
         "pending": pending,
         "invalid": invalid,
         "players": int(len(aggregated)),
+        "detalle_partidos": int(len(detalle)),
+        "detalle_writes": sync_detalle["writes"],
+        "detalle_deletes": sync_detalle["deletes"],
         **sync,
     }
