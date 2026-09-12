@@ -83,6 +83,101 @@ class DataProcessor:
 
         return stats
 
+    def procesar_top_goleadores(self, df_goleadores, n=8):
+        """Top n goleadores para 'Maximos Goleadores', ya limpio y listo para
+        mostrar (nombres formateados, ordenado, con medallas en Pos.)."""
+        if df_goleadores.empty:
+            return pd.DataFrame(columns=["Pos.", "Jugador", "Equipo", "Goles"])
+
+        goleadores = df_goleadores.copy()
+        goleadores.columns = goleadores.columns.astype(str).str.strip().str.upper()
+        goleadores["GOLES"] = pd.to_numeric(goleadores["GOLES"], errors="coerce").fillna(0).astype(int)
+        goleadores["NOMBRE Y APELLIDO"] = goleadores["NOMBRE Y APELLIDO"].astype(str).str.strip().str.title()
+
+        top = (
+            goleadores.sort_values(
+                ["GOLES", "NOMBRE Y APELLIDO", "EQUIPO"],
+                ascending=[False, True, True],
+            )
+            .head(n)[["NOMBRE Y APELLIDO", "EQUIPO", "GOLES"]]
+            .rename(columns={"NOMBRE Y APELLIDO": "Jugador", "EQUIPO": "Equipo", "GOLES": "Goles"})
+            .reset_index(drop=True)
+        )
+        top.insert(0, "Pos.", range(1, len(top) + 1))
+        top["Pos."] = top["Pos."].replace({1: "🥇", 2: "🥈", 3: "🥉"})
+        return top
+
+    def procesar_disciplina_jugadores(self, df_tarjetas, n=8):
+        """Top n jugadores con mas amarillas y con mas rojas, ya listos para
+        mostrar. Devuelve (amarillas_df, rojas_df)."""
+        cols_am = ["Pos.", "Jugador", "Equipo", "Amarillas"]
+        cols_ro = ["Pos.", "Jugador", "Equipo", "Rojas"]
+        if df_tarjetas.empty:
+            return pd.DataFrame(columns=cols_am), pd.DataFrame(columns=cols_ro)
+
+        cards = df_tarjetas.copy()
+        cards.columns = cards.columns.astype(str).str.strip().str.upper()
+        if "AMARILLAS" not in cards.columns:
+            cards["AMARILLAS"] = 0
+        if "ROJAS" not in cards.columns:
+            cards["ROJAS"] = 0
+        cards["AMARILLAS"] = pd.to_numeric(cards["AMARILLAS"], errors="coerce").fillna(0).astype(int)
+        cards["ROJAS"] = pd.to_numeric(cards["ROJAS"], errors="coerce").fillna(0).astype(int)
+        cards["JUGADOR"] = cards["JUGADOR"].astype(str).str.strip().str.title()
+
+        def _top(col_valor, nombre_col):
+            top = (
+                cards.loc[cards[col_valor].gt(0)]
+                .sort_values([col_valor, "JUGADOR", "EQUIPO"], ascending=[False, True, True])
+                .head(n)[["JUGADOR", "EQUIPO", col_valor]]
+                .rename(columns={"JUGADOR": "Jugador", "EQUIPO": "Equipo", col_valor: nombre_col})
+                .reset_index(drop=True)
+            )
+            top.insert(0, "Pos.", range(1, len(top) + 1))
+            top["Pos."] = top["Pos."].replace({1: "🥇", 2: "🥈", 3: "🥉"})
+            return top
+
+        return _top("AMARILLAS", "Amarillas"), _top("ROJAS", "Rojas")
+
+    def ordenar_para_grafico_goleadores(self, standings_df):
+        """Standings ordenado por GF descendente, listo para el grafico
+        'Equipos mas goleadores'."""
+        return standings_df[["EQUIPO", "GF"]].sort_values(
+            ["GF", "EQUIPO"], ascending=[False, True]
+        )
+
+    def ordenar_para_grafico_defensas(self, standings_df):
+        """Standings ordenado por GC ascendente (mejor defensa primero),
+        listo para el grafico 'Mejores defensas'."""
+        return standings_df.sort_values("GC", ascending=True)
+
+    def agrupar_amarillas_por_equipo(self, df_tarjetas):
+        """Total de tarjetas amarillas por equipo, para el grafico de barras
+        'Equipos con mas amarillas'. Vive aca para que app.py no calcule nada,
+        solo presente lo que esta funcion ya devuelve listo."""
+        if df_tarjetas.empty:
+            return pd.DataFrame(columns=["EQUIPO", "AMARILLAS"])
+
+        cards = df_tarjetas.copy()
+        cards.columns = cards.columns.astype(str).str.strip().str.upper()
+        if "AMARILLAS" not in cards.columns:
+            cards["AMARILLAS"] = 0
+        cards["AMARILLAS"] = pd.to_numeric(cards["AMARILLAS"], errors="coerce").fillna(0)
+
+        return (
+            cards.groupby("EQUIPO", as_index=False)["AMARILLAS"]
+            .sum()
+            .sort_values(["AMARILLAS", "EQUIPO"], ascending=[False, True])
+        )
+
+    def calcular_medianas_ataque_defensa(self, standings_df):
+        """Medianas de GF y GC, usadas para trazar las lineas de cuadrante
+        del scatter Ataque vs Defensa. Vive aca, no en app.py, para que
+        toda la logica de calculo quede en un solo lugar."""
+        if standings_df.empty:
+            return 0.0, 0.0
+        return standings_df["GF"].median(), standings_df["GC"].median()
+
     def process_match_results(self, df):
         """Todos los resultados de Clausura 2026, sin grupos."""
         data = self._played(df)
@@ -145,8 +240,6 @@ class DataProcessor:
     def calcular_semifinal_proyectada(self, standings_df):
         """Asume que el mejor sembrado de cada cruce de cuartos avanza."""
         cuartos = self.calcular_cuartos_proyectados(standings_df)
-        # cuartos[0]=1v8, cuartos[1]=2v7, cuartos[2]=3v6, cuartos[3]=4v5
-        # SF1: ganador(1v8) vs ganador(4v5) | SF2: ganador(2v7) vs ganador(3v6)
         return [
             (cuartos[0][0], cuartos[3][0]),  # 1 vs 4
             (cuartos[1][0], cuartos[2][0]),  # 2 vs 3
@@ -205,7 +298,6 @@ class DataProcessor:
             nombre = str(row["PARTIDO"]).upper()
 
             if "CUARTO" in nombre:
-                # Extrae el numero del cruce si viene en el nombre (ej. "Cuartos 1")
                 digitos = "".join(c for c in nombre if c.isdigit())
                 idx = int(digitos) - 1 if digitos and 0 <= int(digitos) - 1 < len(cuartos) else None
                 if idx is not None:
