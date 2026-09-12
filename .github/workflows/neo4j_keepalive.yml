@@ -2,8 +2,10 @@ name: Neo4j Keepalive
 
 on:
   schedule:
-    # Todos los lunes a las 09:00 UTC (bien dentro de la ventana de 72h)
-    - cron: "0 9 * * 1"
+    # Todos los dias a las 09:00 UTC -- muy por debajo del limite de 72h
+    # de inactividad de AuraDB Free (el cron semanal anterior dejaba pasar
+    # demasiado tiempo entre pings y la instancia se pausaba igual).
+    - cron: "0 9 * * *"
   workflow_dispatch: {}  # permite correrlo manualmente desde la pestaña Actions
 
 jobs:
