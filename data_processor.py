@@ -139,14 +139,16 @@ class DataProcessor:
 
         return _top("AMARILLAS", "Amarillas"), _top("ROJAS", "Rojas")
 
-    def calcular_jugadores_en_racha(self, df_detalle, ultimos_n=3, min_con_gol=2):
+    def calcular_jugadores_en_racha(self, df_detalle, ultimos_n=3, n_top=8):
         """
-        Jugadores que anotaron en al menos min_con_gol de sus ultimos_n
-        partidos mas recientes (requiere datos por partido, no el total de
-        temporada -- viene de goleadores_clausura_2026_partidos).
-        Ordenado por goles dentro de esa racha, de mayor a menor.
+        Los n_top jugadores con mas goles en sus ultimos_n partidos jugados
+        (requiere datos por partido -- goleadores_clausura_2026_partidos).
+        'Racha' es la secuencia de anoto/no anoto en esos partidos, de mas
+        antiguo a mas reciente (lista de bool) -- la visualizacion (circulos
+        de color) se hace en app.py, igual que con la Racha de equipos.
+        Ordenado descendente por goles; empates se desempatan por nombre.
         """
-        columnas = ["Jugador", "Equipo", f"Partidos (últimos {ultimos_n})", "Goles en racha"]
+        columnas = ["Pos.", "Jugador", "Racha", "Equipo", "Goles"]
         if df_detalle.empty:
             return pd.DataFrame(columns=columnas)
 
@@ -161,23 +163,25 @@ class DataProcessor:
         filas = []
         for (jugador, equipo), grupo in data.groupby(["NOMBRE Y APELLIDO", "EQUIPO"]):
             ultimos = grupo.sort_values("FECHA").tail(ultimos_n)
-            partidos_con_gol = int((ultimos["GOLES"] > 0).sum())
-            if partidos_con_gol >= min_con_gol:
-                filas.append({
-                    "Jugador": jugador,
-                    "Equipo": equipo,
-                    f"Partidos (últimos {ultimos_n})": len(ultimos),
-                    "Goles en racha": int(ultimos["GOLES"].sum()),
-                })
+            filas.append({
+                "Jugador": jugador,
+                "Equipo": equipo,
+                "Racha": [g > 0 for g in ultimos["GOLES"]],
+                "Goles": int(ultimos["GOLES"].sum()),
+            })
 
         if not filas:
             return pd.DataFrame(columns=columnas)
 
-        return (
+        tabla = (
             pd.DataFrame(filas)
-            .sort_values(["Goles en racha", "Jugador"], ascending=[False, True])
+            .sort_values(["Goles", "Jugador"], ascending=[False, True])
+            .head(n_top)
             .reset_index(drop=True)
         )
+        tabla.insert(0, "Pos.", range(1, len(tabla) + 1))
+        tabla["Pos."] = tabla["Pos."].replace({1: "🥇", 2: "🥈", 3: "🥉"})
+        return tabla[columnas]
 
     def ordenar_para_grafico_goleadores(self, standings_df):
         """Standings ordenado por GF descendente, listo para el grafico

@@ -31,6 +31,14 @@ def formatear_racha(resultados):
     return " ".join(ICONOS_RACHA.get(r, "⚪") for r in resultados)
 
 
+def formatear_racha_goles(anoto_lista):
+    """Igual que formatear_racha, pero para la racha de gol de un jugador:
+    🟢 si anotó ese partido, 🔴 si no."""
+    if not anoto_lista:
+        return ""
+    return " ".join("🟢" if anoto else "🔴" for anoto in anoto_lista)
+
+
 def tabla_cruce(cruces, columnas=("Local", "Visitante")):
     """Convierte una lista de tuplas (equipo_a, equipo_b) en un DataFrame,
     con el orden: Equipo, Resultado, Equipo, Resultado."""
@@ -397,7 +405,8 @@ else:
 st.divider()
 st.subheader("🔥 Jugadores en Racha")
 st.caption(
-    "Jugadores que anotaron en al menos 2 de sus últimos 3 partidos jugados."
+    "Los 8 jugadores con más goles en sus últimos 3 partidos jugados. "
+    "🟢 anotó ese partido · 🔴 no anotó."
 )
 
 df_goleadores_detalle = get_goleadores_detalle_clausura_2026()
@@ -408,8 +417,10 @@ if en_racha.empty:
         "Todavía no hay suficientes datos por partido para calcular rachas."
     )
 else:
+    en_racha_display = en_racha.copy()
+    en_racha_display["Racha"] = en_racha_display["Racha"].apply(formatear_racha_goles)
     st.dataframe(
-        en_racha,
+        en_racha_display[["Pos.", "Jugador", "Racha", "Equipo", "Goles"]],
         use_container_width=True,
         hide_index=True,
     )
