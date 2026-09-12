@@ -141,12 +141,13 @@ class DataProcessor:
 
     def calcular_jugadores_en_racha(self, df_detalle, ultimos_n=3, n_top=8):
         """
-        Los n_top jugadores con mas goles en sus ultimos_n partidos jugados
-        (requiere datos por partido -- goleadores_clausura_2026_partidos).
-        'Racha' es la secuencia de anoto/no anoto en esos partidos, de mas
-        antiguo a mas reciente (lista de bool) -- la visualizacion (circulos
-        de color) se hace en app.py, igual que con la Racha de equipos.
-        Ordenado descendente por goles; empates se desempatan por nombre.
+        Los n_top jugadores con mas goles en las ultimas_n FECHAS jugadas del
+        torneo (no las ultimas ultimas_n filas de cada jugador -- si un
+        jugador no anoto en alguna de esas fechas, cuenta como 0/roja, no se
+        salta la fecha). Requiere datos por partido
+        (goleadores_clausura_2026_partidos). 'Racha' es la secuencia
+        anoto/no-anoto en esas fechas, de mas antigua a mas reciente -- la
+        visualizacion (circulos de color) se hace en app.py.
         """
         columnas = ["Pos.", "Jugador", "Racha", "Equipo", "Goles"]
         if df_detalle.empty:
@@ -160,14 +161,20 @@ class DataProcessor:
         data["FECHA"] = data["FECHA"].astype(int)
         data["NOMBRE Y APELLIDO"] = data["NOMBRE Y APELLIDO"].astype(str).str.strip().str.title()
 
+        fechas_recientes = sorted(data["FECHA"].unique())[-ultimos_n:]
+        if not fechas_recientes:
+            return pd.DataFrame(columns=columnas)
+
         filas = []
         for (jugador, equipo), grupo in data.groupby(["NOMBRE Y APELLIDO", "EQUIPO"]):
-            ultimos = grupo.sort_values("FECHA").tail(ultimos_n)
+            goles_por_fecha = grupo.groupby("FECHA")["GOLES"].sum()
+            racha = [goles_por_fecha.get(f, 0) > 0 for f in fechas_recientes]
+            goles = int(sum(goles_por_fecha.get(f, 0) for f in fechas_recientes))
             filas.append({
                 "Jugador": jugador,
                 "Equipo": equipo,
-                "Racha": [g > 0 for g in ultimos["GOLES"]],
-                "Goles": int(ultimos["GOLES"].sum()),
+                "Racha": racha,
+                "Goles": goles,
             })
 
         if not filas:
