@@ -127,19 +127,11 @@ with col_m2:
 # ─────────────────────────────────────────────────────────────────────────────
 if not stats_fecha.empty:
     st.subheader("Estadísticas por Fecha")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.write("**Goles Totales**")
-        st.line_chart(
-            stats_fecha
-            .set_index("FECHA")["Total_Goles"]
-        )
-    with c2:
-        st.write("**Promedio de Goles**")
-        st.line_chart(
-            stats_fecha
-            .set_index("FECHA")["Prom_Goles"]
-        )
+    st.write("**Goles Totales**")
+    st.line_chart(
+        stats_fecha
+        .set_index("FECHA")["Total_Goles"]
+    )
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TABLA DE POSICIONES
@@ -256,7 +248,9 @@ else:
         ],
     )
 
-    etiquetas = base.mark_text(align="left", dx=9, dy=-9, fontSize=11).encode(
+    etiquetas = base.mark_text(
+        align="left", dx=9, dy=-9, fontSize=11, color="#1f77b4", fontWeight="bold"
+    ).encode(
         x="GC:Q",
         y="GF:Q",
         text="EQUIPO:N",
@@ -277,14 +271,8 @@ else:
 
     st.altair_chart(cuadrantes, use_container_width=True)
     st.caption(
-        "**Cómo leer el gráfico:** cada punto es un equipo, ubicado según sus goles "
-        "anotados (eje vertical) y recibidos (eje horizontal, invertido para que menos "
-        "goles en contra quede a la derecha). Las líneas punteadas marcan la mediana de "
-        "cada eje y dividen el gráfico en 4 cuadrantes — "
-        "**arriba-derecha**: buen ataque y buena defensa · "
-        "**arriba-izquierda**: buen ataque, defensa floja · "
-        "**abajo-derecha**: buena defensa, ataque flojo · "
-        "**abajo-izquierda**: por debajo de la mediana en ambos."
+        "Cuanto más arriba y a la derecha, mejor: ataca y defiende bien. "
+        "Abajo a la izquierda, el que más necesita mejorar en ambos frentes."
     )
 
 # ── 📊 Detalle en barras (goleadores, defensas, amarillas) ─────────────────

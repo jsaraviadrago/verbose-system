@@ -219,9 +219,18 @@ class DataProcessor:
         return goleadores_sorted[[nombre_col, "EQUIPO", "GOLES"]], team_cards, top_y, top_r
 
     def calcular_puntos_esperados(self, standings_df):
-        """Compara puntos reales vs. esperados segun expectativa pitagorica (PythEXP)."""
-        tabla = standings_df[["EQUIPO", "Puntos", "PJ", "PythEXP"]].copy()
-        tabla["Puntos_Esperados"] = (tabla["PythEXP"] * tabla["PJ"] * 3).round(1)
+        """Compara puntos reales vs. esperados segun expectativa pitagorica.
+        PythEXP estima la proporcion de partidos GANADOS asumiendo que no hay
+        empates. Para no sobreestimar (tratando todo lo que no es victoria
+        como derrota de 0 puntos), se reserva la proporcion REAL de empates
+        de cada equipo (E / PJ) y solo el resto de partidos se reparte entre
+        victoria/derrota segun Pyth."""
+        tabla = standings_df[["EQUIPO", "Puntos", "PJ", "E", "PythEXP"]].copy()
+        prop_empates = (tabla["E"] / tabla["PJ"]).fillna(0)
+        prop_ganados_esperada = tabla["PythEXP"] * (1 - prop_empates)
+        tabla["Puntos_Esperados"] = (
+            (prop_ganados_esperada * 3 + prop_empates * 1) * tabla["PJ"]
+        ).round(1)
         tabla["Diferencia"] = (tabla["Puntos"] - tabla["Puntos_Esperados"]).round(1)
         tabla = tabla.rename(columns={
             "EQUIPO": "Equipo",
