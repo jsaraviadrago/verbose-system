@@ -65,6 +65,9 @@ st.markdown(
 # ─────────────────────────────────────────────────────────────────────────────
 # BOTONES: DONAR POR YAPE / COMPARTIR (arriba a la derecha)
 # ─────────────────────────────────────────────────────────────────────────────
+if "YAPE_NUMERO" not in st.secrets:
+    st.error(f"Secret 'YAPE_NUMERO' no encontrado. Claves disponibles en st.secrets: {list(st.secrets.keys())}")
+    st.stop()
 NUMERO_YAPE = st.secrets["YAPE_NUMERO"]
 LINK_APP = "https://futbol-ccl-apafa.streamlit.app/"
 
