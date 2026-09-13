@@ -53,7 +53,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-NUMERO_YAPE = "999 999 999"  # reemplaza con el número real de la cuenta de donaciones
+NUMERO_YAPE = "980424164"  # reemplaza con el número real de la cuenta de donaciones
 LINK_APP = "https://futbol-ccl-apafa.streamlit.app/"
 
 YAPE_LOGO_SVG_PATH = Path(__file__).parent / "assets" / "yape_logo.svg"
