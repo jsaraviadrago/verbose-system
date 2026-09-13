@@ -53,6 +53,87 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+NUMERO_YAPE = "999 999 999"  # reemplaza con el número real de la cuenta de donaciones
+LINK_APP = "https://futbol-ccl-apafa.streamlit.app/"
+
+_, col_yape, col_compartir = st.columns([8, 1.3, 1.3])
+
+with col_yape:
+    with st.popover("📲 Yape", use_container_width=True):
+        components.html(
+            f"""
+            <div style="font-family: sans-serif; text-align: center; padding: 8px;">
+                <p style="color: #555; margin-bottom: 4px; font-size: 13px;">CELULAR</p>
+                <p style="font-size: 22px; font-weight: bold; margin-top: 0;">{NUMERO_YAPE}</p>
+                <button id="btn-copiar" style="
+                    background-color: #4B2E83;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    width: 100%;
+                ">
+                    Copiar número
+                </button>
+            </div>
+            <script>
+                const btn = document.getElementById("btn-copiar");
+                btn.addEventListener("click", () => {{
+                    navigator.clipboard.writeText("{NUMERO_YAPE.replace(" ", "")}");
+                    btn.innerText = "¡Copiado! ✅";
+                    setTimeout(() => {{ btn.innerText = "Copiar número"; }}, 2000);
+                }});
+            </script>
+            """,
+            height=140,
+        )
+
+with col_compartir:
+    components.html(
+        f"""
+        <div style="text-align: center;">
+            <button id="btn-compartir" style="
+                background-color: #1a73e8;
+                color: white;
+                border: none;
+                padding: 7px 14px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                width: 100%;
+            ">
+                🔗 Compartir
+            </button>
+        </div>
+        <script>
+            const btnShare = document.getElementById("btn-compartir");
+            btnShare.addEventListener("click", async () => {{
+                const shareData = {{
+                    title: "Cambridge College Lima - Clausura 2026",
+                    text: "Mira los resultados y la tabla de posiciones del campeonato:",
+                    url: "{LINK_APP}"
+                }};
+                try {{
+                    if (navigator.share) {{
+                        await navigator.share(shareData);
+                    }} else {{
+                        await navigator.clipboard.writeText(shareData.url);
+                        btnShare.innerText = "¡Copiado! ✅";
+                        setTimeout(() => {{ btnShare.innerText = "🔗 Compartir"; }}, 2000);
+                    }}
+                }} catch (err) {{
+                    // el usuario cerro el menu de compartir, no hacer nada
+                }}
+            }});
+        </script>
+        """,
+        height=45,
+    )
+
 if st.button("🤖 Asistente CLC en construccion"):
     st.session_state.show_assistant = not st.session_state.get(
         "show_assistant",
@@ -662,92 +743,4 @@ with st.expander("Expectativa pitagórica (puntos reales vs. esperados)"):
         "Si es positiva, el equipo está sacando más puntos de los que su rendimiento en goles sugiere "
         "(le está yendo mejor en el marcador final de lo que 'merece' por juego). "
         "Si es negativa, es al revés: rinde bien en goles pero no lo está traduciendo en puntos."
-    )
-
-# ─────────────────────────────────────────────────────────────────────────────
-# APOYA A LA LIGA / COMPARTIR
-# ─────────────────────────────────────────────────────────────────────────────
-st.divider()
-st.subheader("💛 Apoya a la liga")
-
-NUMERO_YAPE = "980424164"  # reemplaza con el número real de la cuenta de donaciones
-LINK_APP = "https://futbol-ccl-apafa.streamlit.app/"
-
-col_yape, col_compartir = st.columns(2)
-
-with col_yape:
-    with st.popover("📲 Donar por Yape", use_container_width=True):
-        components.html(
-            f"""
-            <div style="font-family: sans-serif; text-align: center; padding: 8px;">
-                <p style="color: #555; margin-bottom: 4px;">CELULAR</p>
-                <p style="font-size: 24px; font-weight: bold; margin-top: 0;">{NUMERO_YAPE}</p>
-                <button id="btn-copiar" style="
-                    background-color: #4B2E83;
-                    color: white;
-                    border: none;
-                    padding: 12px 24px;
-                    border-radius: 8px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    width: 100%;
-                ">
-                    Copiar número
-                </button>
-            </div>
-            <script>
-                const btn = document.getElementById("btn-copiar");
-                btn.addEventListener("click", () => {{
-                    navigator.clipboard.writeText("{NUMERO_YAPE.replace(" ", "")}");
-                    btn.innerText = "¡Copiado! ✅";
-                    setTimeout(() => {{ btn.innerText = "Copiar número"; }}, 2000);
-                }});
-            </script>
-            """,
-            height=160,
-        )
-        st.caption("Cuenta exclusiva para donaciones de la liga.")
-
-with col_compartir:
-    components.html(
-        f"""
-        <div style="text-align: center; padding-top: 8px;">
-            <button id="btn-compartir" style="
-                background-color: #1a73e8;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 8px;
-                font-size: 15px;
-                font-weight: bold;
-                cursor: pointer;
-                width: 100%;
-            ">
-                🔗 Compartir
-            </button>
-        </div>
-        <script>
-            const btnShare = document.getElementById("btn-compartir");
-            btnShare.addEventListener("click", async () => {{
-                const shareData = {{
-                    title: "Cambridge College Lima - Clausura 2026",
-                    text: "Mira los resultados y la tabla de posiciones del campeonato:",
-                    url: "{LINK_APP}"
-                }};
-                try {{
-                    if (navigator.share) {{
-                        await navigator.share(shareData);
-                    }} else {{
-                        await navigator.clipboard.writeText(shareData.url);
-                        btnShare.innerText = "¡Link copiado! ✅";
-                        setTimeout(() => {{ btnShare.innerText = "🔗 Compartir"; }}, 2000);
-                    }}
-                }} catch (err) {{
-                    // el usuario cerro el menu de compartir, no hacer nada
-                }}
-            }});
-        </script>
-        """,
-        height=70,
     )
