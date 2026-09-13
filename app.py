@@ -65,7 +65,7 @@ st.markdown(
 # ─────────────────────────────────────────────────────────────────────────────
 # BOTONES: DONAR POR YAPE / COMPARTIR (arriba a la derecha)
 # ─────────────────────────────────────────────────────────────────────────────
-NUMERO_YAPE = "999 999 999"  # reemplaza con el número real de la cuenta de donaciones
+NUMERO_YAPE = "980424164"  # reemplaza con el número real de la cuenta de donaciones
 LINK_APP = "https://futbol-ccl-apafa.streamlit.app/"
 
 YAPE_LOGO_SVG_PATH = Path(__file__).parent / "assets" / "yape_logo.svg"
@@ -123,13 +123,19 @@ with col_botones:
             </div>
         </div>
         <script>
+            function resizeFrame(h) {{
+                window.parent.postMessage({{type: "streamlit:setFrameHeight", height: h}}, "*");
+            }}
+
             const btnYape = document.getElementById("btn-yape");
             const panel = document.getElementById("panel-yape");
             const btnCopiar = document.getElementById("btn-copiar");
             const btnShare = document.getElementById("btn-compartir");
 
             btnYape.addEventListener("click", () => {{
-                panel.style.display = panel.style.display === "none" ? "block" : "none";
+                const abriendo = panel.style.display === "none";
+                panel.style.display = abriendo ? "block" : "none";
+                resizeFrame(abriendo ? 200 : 55);
             }});
 
             btnCopiar.addEventListener("click", () => {{
@@ -156,9 +162,11 @@ with col_botones:
                     // el usuario cerro el menu de compartir, no hacer nada
                 }}
             }});
+
+            resizeFrame(55);
         </script>
         """,
-        height=210,
+        height=55,
     )
 
 if st.button("🤖 Asistente CLC en construccion"):
