@@ -75,100 +75,53 @@ YAPE_LOGO_SVG_PATH = Path(__file__).parent / "assets" / "yape_logo.svg"
 YAPE_LOGO_PNG_PATH = Path(__file__).parent / "assets" / "yape_logo.png"
 YAPE_LOGO_WEBP_PATH = Path(__file__).parent / "assets" / "yape_logo.webp"
 
+_, col_yape, col_compartir = st.columns([8, 1.3, 1.3])
 
-def _logo_tag():
-    import base64
-    if YAPE_LOGO_SVG_PATH.exists():
-        svg_code = YAPE_LOGO_SVG_PATH.read_text(encoding="utf-8")
-        return f'<span style="height:16px; width:16px; display:inline-block; vertical-align:middle; margin-right:6px;">{svg_code}</span>'
-    if YAPE_LOGO_WEBP_PATH.exists():
-        b64 = base64.b64encode(YAPE_LOGO_WEBP_PATH.read_bytes()).decode()
-        return f'<img src="data:image/webp;base64,{b64}" style="height:16px; vertical-align:middle; margin-right:6px;">'
-    if YAPE_LOGO_PNG_PATH.exists():
-        b64 = base64.b64encode(YAPE_LOGO_PNG_PATH.read_bytes()).decode()
-        return f'<img src="data:image/png;base64,{b64}" style="height:16px; vertical-align:middle; margin-right:6px;">'
-    return "📲 "
+with col_yape:
+    with st.popover("📲 Yape", use_container_width=True):
+        if YAPE_LOGO_WEBP_PATH.exists():
+            st.image(str(YAPE_LOGO_WEBP_PATH), width=60)
+        elif YAPE_LOGO_PNG_PATH.exists():
+            st.image(str(YAPE_LOGO_PNG_PATH), width=60)
+        st.caption("CELULAR")
+        st.markdown(f"### {NUMERO_YAPE}")
+        st.code(NUMERO_YAPE, language=None)
+        st.caption("Toca el número para copiarlo. Cuenta exclusiva para donaciones de la liga.")
 
-
-yape_img_tag = _logo_tag()
-
-components.html(
-    f"""
-    <div style="display:flex; gap:6px; justify-content:flex-end; position:relative; font-family:sans-serif; padding-right:4px;">
-        <button id="btn-yape" style="
-            display:flex; align-items:center; justify-content:center;
-            background-color:#4B2E83; color:#ffffff; border:none;
-            padding:7px 12px; border-radius:8px; font-size:13px;
-            font-weight:600; cursor:pointer;
-        ">{yape_img_tag}Yape</button>
-
-        <button id="btn-compartir" style="
-            background-color:#1a73e8; color:#ffffff; border:none;
-            padding:7px 12px; border-radius:8px; font-size:13px;
-            font-weight:600; cursor:pointer;
-        ">🔗 Compartir</button>
-
-        <div id="panel-yape" style="
-            display:none; position:absolute; top:38px; right:0;
-            background:#ffffff; border:1px solid #ddd; border-radius:10px;
-            box-shadow:0 4px 12px rgba(0,0,0,0.15); padding:14px;
-            width:min(220px, 90vw); text-align:center; z-index:999;
-        ">
-            <p style="color:#555555; margin:0 0 4px 0; font-size:12px;">CELULAR</p>
-            <p style="color:#1a1a1a; font-size:20px; font-weight:bold; margin:0 0 10px 0;">{NUMERO_YAPE}</p>
-            <button id="btn-copiar" style="
-                background-color:#4B2E83; color:#ffffff; border:none;
-                padding:8px 16px; border-radius:8px; font-size:13px;
-                font-weight:bold; cursor:pointer; width:100%;
-            ">Copiar número</button>
+with col_compartir:
+    components.html(
+        f"""
+        <div style="text-align:center; font-family:sans-serif;">
+            <button id="btn-compartir" style="
+                background-color:#1a73e8; color:#ffffff; border:none;
+                padding:7px 12px; border-radius:8px; font-size:13px;
+                font-weight:600; cursor:pointer; width:100%;
+            ">🔗 Compartir</button>
         </div>
-    </div>
-    <script>
-        function resizeFrame(h) {{
-            window.parent.postMessage({{type: "streamlit:setFrameHeight", height: h}}, "*");
-        }}
-
-        const btnYape = document.getElementById("btn-yape");
-        const panel = document.getElementById("panel-yape");
-        const btnCopiar = document.getElementById("btn-copiar");
-        const btnShare = document.getElementById("btn-compartir");
-
-        btnYape.addEventListener("click", () => {{
-            const abriendo = panel.style.display === "none";
-            panel.style.display = abriendo ? "block" : "none";
-            resizeFrame(abriendo ? 200 : 55);
-        }});
-
-        btnCopiar.addEventListener("click", () => {{
-            navigator.clipboard.writeText("{NUMERO_YAPE}");
-            btnCopiar.innerText = "¡Copiado! ✅";
-            setTimeout(() => {{ btnCopiar.innerText = "Copiar número"; }}, 2000);
-        }});
-
-        btnShare.addEventListener("click", async () => {{
-            const shareData = {{
-                title: "Cambridge College Lima - Clausura 2026",
-                text: "Mira los resultados y la tabla de posiciones del campeonato:",
-                url: "{LINK_APP}"
-            }};
-            try {{
-                if (navigator.share) {{
-                    await navigator.share(shareData);
-                }} else {{
-                    await navigator.clipboard.writeText(shareData.url);
-                    btnShare.innerText = "¡Copiado! ✅";
-                    setTimeout(() => {{ btnShare.innerText = "🔗 Compartir"; }}, 2000);
+        <script>
+            const btnShare = document.getElementById("btn-compartir");
+            btnShare.addEventListener("click", async () => {{
+                const shareData = {{
+                    title: "Cambridge College Lima - Clausura 2026",
+                    text: "Mira los resultados y la tabla de posiciones del campeonato:",
+                    url: "{LINK_APP}"
+                }};
+                try {{
+                    if (navigator.share) {{
+                        await navigator.share(shareData);
+                    }} else {{
+                        await navigator.clipboard.writeText(shareData.url);
+                        btnShare.innerText = "¡Copiado! ✅";
+                        setTimeout(() => {{ btnShare.innerText = "🔗 Compartir"; }}, 2000);
+                    }}
+                }} catch (err) {{
+                    // el usuario cerro el menu de compartir, no hacer nada
                 }}
-            }} catch (err) {{
-                // el usuario cerro el menu de compartir, no hacer nada
-            }}
-        }});
-
-        resizeFrame(55);
-    </script>
-    """,
-    height=55,
-)
+            }});
+        </script>
+        """,
+        height=45,
+    )
 
 if st.button("🤖 Asistente CLC en construccion"):
     st.session_state.show_assistant = not st.session_state.get(
