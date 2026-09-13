@@ -56,61 +56,76 @@ st.markdown(
 NUMERO_YAPE = "999 999 999"  # reemplaza con el número real de la cuenta de donaciones
 LINK_APP = "https://futbol-ccl-apafa.streamlit.app/"
 
-_, col_yape, col_compartir = st.columns([8, 1.3, 1.3])
+YAPE_LOGO_SVG_PATH = Path(__file__).parent / "assets" / "yape_logo.svg"
+YAPE_LOGO_PNG_PATH = Path(__file__).parent / "assets" / "yape_logo.png"
+YAPE_LOGO_WEBP_PATH = Path(__file__).parent / "assets" / "yape_logo.webp"
 
-with col_yape:
-    with st.popover("📲 Yape", use_container_width=True):
-        components.html(
-            f"""
-            <div style="font-family: sans-serif; text-align: center; padding: 8px;">
-                <p style="color: #555; margin-bottom: 4px; font-size: 13px;">CELULAR</p>
-                <p style="font-size: 22px; font-weight: bold; margin-top: 0;">{NUMERO_YAPE}</p>
-                <button id="btn-copiar" style="
-                    background-color: #4B2E83;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 8px;
-                    font-size: 14px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    width: 100%;
-                ">
-                    Copiar número
-                </button>
-            </div>
-            <script>
-                const btn = document.getElementById("btn-copiar");
-                btn.addEventListener("click", () => {{
-                    navigator.clipboard.writeText("{NUMERO_YAPE.replace(" ", "")}");
-                    btn.innerText = "¡Copiado! ✅";
-                    setTimeout(() => {{ btn.innerText = "Copiar número"; }}, 2000);
-                }});
-            </script>
-            """,
-            height=140,
-        )
 
-with col_compartir:
+def _logo_tag():
+    import base64
+    if YAPE_LOGO_SVG_PATH.exists():
+        svg_code = YAPE_LOGO_SVG_PATH.read_text(encoding="utf-8")
+        return f'<span style="height:16px; width:16px; display:inline-block; vertical-align:middle; margin-right:6px;">{svg_code}</span>'
+    if YAPE_LOGO_WEBP_PATH.exists():
+        b64 = base64.b64encode(YAPE_LOGO_WEBP_PATH.read_bytes()).decode()
+        return f'<img src="data:image/webp;base64,{b64}" style="height:16px; vertical-align:middle; margin-right:6px;">'
+    if YAPE_LOGO_PNG_PATH.exists():
+        b64 = base64.b64encode(YAPE_LOGO_PNG_PATH.read_bytes()).decode()
+        return f'<img src="data:image/png;base64,{b64}" style="height:16px; vertical-align:middle; margin-right:6px;">'
+    return "📲 "
+
+
+yape_img_tag = _logo_tag()
+
+_, col_botones = st.columns([8, 2.6])
+
+with col_botones:
     components.html(
         f"""
-        <div style="text-align: center;">
+        <div style="display:flex; gap:6px; justify-content:flex-end; position:relative; font-family:sans-serif;">
+            <button id="btn-yape" style="
+                display:flex; align-items:center; justify-content:center;
+                background-color:#4B2E83; color:white; border:none;
+                padding:7px 12px; border-radius:8px; font-size:13px;
+                font-weight:600; cursor:pointer;
+            ">{yape_img_tag}Yape</button>
+
             <button id="btn-compartir" style="
-                background-color: #1a73e8;
-                color: white;
-                border: none;
-                padding: 7px 14px;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 600;
-                cursor: pointer;
-                width: 100%;
+                background-color:#1a73e8; color:white; border:none;
+                padding:7px 12px; border-radius:8px; font-size:13px;
+                font-weight:600; cursor:pointer;
+            ">🔗 Compartir</button>
+
+            <div id="panel-yape" style="
+                display:none; position:absolute; top:38px; right:90px;
+                background:#ffffff; border:1px solid #ddd; border-radius:10px;
+                box-shadow:0 4px 12px rgba(0,0,0,0.15); padding:14px; width:200px; text-align:center; z-index:999;
             ">
-                🔗 Compartir
-            </button>
+                <p style="color:#555555; margin:0 0 4px 0; font-size:12px;">CELULAR</p>
+                <p style="color:#1a1a1a; font-size:20px; font-weight:bold; margin:0 0 10px 0;">{NUMERO_YAPE}</p>
+                <button id="btn-copiar" style="
+                    background-color:#4B2E83; color:#ffffff; border:none;
+                    padding:8px 16px; border-radius:8px; font-size:13px;
+                    font-weight:bold; cursor:pointer; width:100%;
+                ">Copiar número</button>
+            </div>
         </div>
         <script>
+            const btnYape = document.getElementById("btn-yape");
+            const panel = document.getElementById("panel-yape");
+            const btnCopiar = document.getElementById("btn-copiar");
             const btnShare = document.getElementById("btn-compartir");
+
+            btnYape.addEventListener("click", () => {{
+                panel.style.display = panel.style.display === "none" ? "block" : "none";
+            }});
+
+            btnCopiar.addEventListener("click", () => {{
+                navigator.clipboard.writeText("{NUMERO_YAPE.replace(" ", "")}");
+                btnCopiar.innerText = "¡Copiado! ✅";
+                setTimeout(() => {{ btnCopiar.innerText = "Copiar número"; }}, 2000);
+            }});
+
             btnShare.addEventListener("click", async () => {{
                 const shareData = {{
                     title: "Cambridge College Lima - Clausura 2026",
@@ -131,7 +146,7 @@ with col_compartir:
             }});
         </script>
         """,
-        height=45,
+        height=210,
     )
 
 if st.button("🤖 Asistente CLC en construccion"):
