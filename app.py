@@ -65,7 +65,7 @@ st.markdown(
 # ─────────────────────────────────────────────────────────────────────────────
 # BOTONES: DONAR POR YAPE / COMPARTIR (arriba a la derecha)
 # ─────────────────────────────────────────────────────────────────────────────
-NUMERO_YAPE = "980424164"  # reemplaza con el número real de la cuenta de donaciones
+NUMERO_YAPE = st.secrets["YAPE_NUMERO"]
 LINK_APP = "https://futbol-ccl-apafa.streamlit.app/"
 
 YAPE_LOGO_SVG_PATH = Path(__file__).parent / "assets" / "yape_logo.svg"
@@ -89,85 +89,83 @@ def _logo_tag():
 
 yape_img_tag = _logo_tag()
 
-_, col_botones = st.columns([8, 2.6])
+components.html(
+    f"""
+    <div style="display:flex; gap:6px; justify-content:flex-end; position:relative; font-family:sans-serif; padding-right:4px;">
+        <button id="btn-yape" style="
+            display:flex; align-items:center; justify-content:center;
+            background-color:#4B2E83; color:#ffffff; border:none;
+            padding:7px 12px; border-radius:8px; font-size:13px;
+            font-weight:600; cursor:pointer;
+        ">{yape_img_tag}Yape</button>
 
-with col_botones:
-    components.html(
-        f"""
-        <div style="display:flex; gap:6px; justify-content:flex-end; position:relative; font-family:sans-serif;">
-            <button id="btn-yape" style="
-                display:flex; align-items:center; justify-content:center;
+        <button id="btn-compartir" style="
+            background-color:#1a73e8; color:#ffffff; border:none;
+            padding:7px 12px; border-radius:8px; font-size:13px;
+            font-weight:600; cursor:pointer;
+        ">🔗 Compartir</button>
+
+        <div id="panel-yape" style="
+            display:none; position:absolute; top:38px; right:0;
+            background:#ffffff; border:1px solid #ddd; border-radius:10px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.15); padding:14px;
+            width:min(220px, 90vw); text-align:center; z-index:999;
+        ">
+            <p style="color:#555555; margin:0 0 4px 0; font-size:12px;">CELULAR</p>
+            <p style="color:#1a1a1a; font-size:20px; font-weight:bold; margin:0 0 10px 0;">{NUMERO_YAPE}</p>
+            <button id="btn-copiar" style="
                 background-color:#4B2E83; color:#ffffff; border:none;
-                padding:7px 12px; border-radius:8px; font-size:13px;
-                font-weight:600; cursor:pointer;
-            ">{yape_img_tag}Yape</button>
-
-            <button id="btn-compartir" style="
-                background-color:#1a73e8; color:#ffffff; border:none;
-                padding:7px 12px; border-radius:8px; font-size:13px;
-                font-weight:600; cursor:pointer;
-            ">🔗 Compartir</button>
-
-            <div id="panel-yape" style="
-                display:none; position:absolute; top:38px; right:90px;
-                background:#ffffff; border:1px solid #ddd; border-radius:10px;
-                box-shadow:0 4px 12px rgba(0,0,0,0.15); padding:14px; width:200px; text-align:center; z-index:999;
-            ">
-                <p style="color:#555555; margin:0 0 4px 0; font-size:12px;">CELULAR</p>
-                <p style="color:#1a1a1a; font-size:20px; font-weight:bold; margin:0 0 10px 0;">{NUMERO_YAPE}</p>
-                <button id="btn-copiar" style="
-                    background-color:#4B2E83; color:#ffffff; border:none;
-                    padding:8px 16px; border-radius:8px; font-size:13px;
-                    font-weight:bold; cursor:pointer; width:100%;
-                ">Copiar número</button>
-            </div>
+                padding:8px 16px; border-radius:8px; font-size:13px;
+                font-weight:bold; cursor:pointer; width:100%;
+            ">Copiar número</button>
         </div>
-        <script>
-            function resizeFrame(h) {{
-                window.parent.postMessage({{type: "streamlit:setFrameHeight", height: h}}, "*");
-            }}
+    </div>
+    <script>
+        function resizeFrame(h) {{
+            window.parent.postMessage({{type: "streamlit:setFrameHeight", height: h}}, "*");
+        }}
 
-            const btnYape = document.getElementById("btn-yape");
-            const panel = document.getElementById("panel-yape");
-            const btnCopiar = document.getElementById("btn-copiar");
-            const btnShare = document.getElementById("btn-compartir");
+        const btnYape = document.getElementById("btn-yape");
+        const panel = document.getElementById("panel-yape");
+        const btnCopiar = document.getElementById("btn-copiar");
+        const btnShare = document.getElementById("btn-compartir");
 
-            btnYape.addEventListener("click", () => {{
-                const abriendo = panel.style.display === "none";
-                panel.style.display = abriendo ? "block" : "none";
-                resizeFrame(abriendo ? 200 : 55);
-            }});
+        btnYape.addEventListener("click", () => {{
+            const abriendo = panel.style.display === "none";
+            panel.style.display = abriendo ? "block" : "none";
+            resizeFrame(abriendo ? 200 : 55);
+        }});
 
-            btnCopiar.addEventListener("click", () => {{
-                navigator.clipboard.writeText("{NUMERO_YAPE.replace(" ", "")}");
-                btnCopiar.innerText = "¡Copiado! ✅";
-                setTimeout(() => {{ btnCopiar.innerText = "Copiar número"; }}, 2000);
-            }});
+        btnCopiar.addEventListener("click", () => {{
+            navigator.clipboard.writeText("{NUMERO_YAPE}");
+            btnCopiar.innerText = "¡Copiado! ✅";
+            setTimeout(() => {{ btnCopiar.innerText = "Copiar número"; }}, 2000);
+        }});
 
-            btnShare.addEventListener("click", async () => {{
-                const shareData = {{
-                    title: "Cambridge College Lima - Clausura 2026",
-                    text: "Mira los resultados y la tabla de posiciones del campeonato:",
-                    url: "{LINK_APP}"
-                }};
-                try {{
-                    if (navigator.share) {{
-                        await navigator.share(shareData);
-                    }} else {{
-                        await navigator.clipboard.writeText(shareData.url);
-                        btnShare.innerText = "¡Copiado! ✅";
-                        setTimeout(() => {{ btnShare.innerText = "🔗 Compartir"; }}, 2000);
-                    }}
-                }} catch (err) {{
-                    // el usuario cerro el menu de compartir, no hacer nada
+        btnShare.addEventListener("click", async () => {{
+            const shareData = {{
+                title: "Cambridge College Lima - Clausura 2026",
+                text: "Mira los resultados y la tabla de posiciones del campeonato:",
+                url: "{LINK_APP}"
+            }};
+            try {{
+                if (navigator.share) {{
+                    await navigator.share(shareData);
+                }} else {{
+                    await navigator.clipboard.writeText(shareData.url);
+                    btnShare.innerText = "¡Copiado! ✅";
+                    setTimeout(() => {{ btnShare.innerText = "🔗 Compartir"; }}, 2000);
                 }}
-            }});
+            }} catch (err) {{
+                // el usuario cerro el menu de compartir, no hacer nada
+            }}
+        }});
 
-            resizeFrame(55);
-        </script>
-        """,
-        height=55,
-    )
+        resizeFrame(55);
+    </script>
+    """,
+    height=55,
+)
 
 if st.button("🤖 Asistente CLC en construccion"):
     st.session_state.show_assistant = not st.session_state.get(
