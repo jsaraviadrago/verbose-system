@@ -27,7 +27,7 @@ claude_desktop_config.json:
 Reinicia Claude Desktop después de guardar — debería aparecer "clc-grafo"
 en el ícono de herramientas (🔨) del chat.
 """
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from graph_skills import (
     buscar_jugador,
@@ -47,7 +47,7 @@ from graph_skills import (
 )
 from wiki import get_wiki
 
-mcp = FastMCP("CLC Grafo Historico")
+mcp = MCPServer("CLC Grafo Historico")
 
 
 @mcp.tool()
