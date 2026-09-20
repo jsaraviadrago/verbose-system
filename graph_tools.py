@@ -81,8 +81,8 @@ TOOL_SCHEMAS = {
                 "type": "object",
                 "properties": {
                     "equipo1": {"type": "string"},
-                    "equipo2": {"type": "string"},
-                    "edicion": {"type": "string"},
+                    "equipo2": {"type": ["string", "null"]},
+                    "edicion": {"type": ["string", "null"]},
                 },
                 "required": ["equipo1"],
             },
@@ -193,7 +193,7 @@ TOOL_SCHEMAS = {
             "description": "Ranking histórico de goleadores, sumado correctamente por jugador+equipo (nunca entre equipos distintos).",
             "parameters": {
                 "type": "object",
-                "properties": {"n": {"type": "integer", "description": "Cuántos mostrar, default 10"}},
+                "properties": {"n": {"type": ["integer", "null"], "description": "Cuántos mostrar, default 10"}},
             },
         },
     },
@@ -262,8 +262,8 @@ TOOL_SCHEMAS = {
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "equipo1": {"type": "string", "description": "Opcional. Omite junto con equipo2 para el escaneo global."},
-                    "equipo2": {"type": "string", "description": "Opcional, solo válido si ya diste equipo1."},
+                    "equipo1": {"type": ["string", "null"], "description": "Opcional. Omite (o manda null) junto con equipo2 para el escaneo global."},
+                    "equipo2": {"type": ["string", "null"], "description": "Opcional, solo válido si ya diste equipo1."},
                 },
             },
         },
@@ -277,7 +277,7 @@ TOOL_SCHEMAS = {
                 "type": "object",
                 "properties": {
                     "numero_fecha": {"type": "integer", "description": "Número de fecha/jornada"},
-                    "edicion": {"type": "string", "description": "Opcional, ej. 'Apertura 2024'"},
+                    "edicion": {"type": ["string", "null"], "description": "Opcional, ej. 'Apertura 2024'"},
                 },
                 "required": ["numero_fecha"],
             },
@@ -297,7 +297,7 @@ TOOL_SCHEMAS = {
             ),
             "parameters": {
                 "type": "object",
-                "properties": {"equipo": {"type": "string", "description": "Opcional. Omite para buscar en toda la historia."}},
+                "properties": {"equipo": {"type": ["string", "null"], "description": "Opcional. Omite (o manda null) para buscar en toda la historia."}},
             },
         },
     },
