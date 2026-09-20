@@ -251,9 +251,13 @@ TOOL_SCHEMAS = {
                 "esos dos; (2) solo equipo1 -> su récord agregado contra CADA rival que ha enfrentado "
                 "(incluye contra quién nunca ha ganado o nunca ha perdido); (3) sin ningún equipo -> "
                 "escanea TODO el grafo y devuelve pares de equipos donde uno nunca le ha ganado al "
-                "otro. Esto es lo mismo visto al revés que '¿qué equipo siempre le ha ganado a otro?' "
-                "— si B nunca le ganó a A, entonces A siempre le ganó a B. Usa este modo (3) para "
-                "cualquiera de esas dos preguntas abiertas sin nombre de equipo específico."
+                "otro (0 victorias, puede incluir empates) Y por separado los casos de DOMINIO "
+                "ABSOLUTO donde el otro equipo ganó TODOS los partidos sin ningún empate — estas "
+                "son categorías DISTINTAS, no la misma cosa vista al revés. 'Nunca ha ganado' NO "
+                "implica que el rival 'siempre ha ganado' si hubo empates de por medio. El resultado "
+                "ya viene separado en ambas categorías con su conteo — úsalo tal cual, no infieras "
+                "una de la otra. Usa este modo (3) para preguntas abiertas sobre quién nunca ha "
+                "ganado o quién siempre ha ganado, sin nombre de equipo específico."
             ),
             "parameters": {
                 "type": "object",

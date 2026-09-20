@@ -154,6 +154,10 @@ def premios_historicos(award_type: str) -> str:
     return f"Ganadores históricos — {nombre_premio}:\n{df[['edicion', 'jugador']].to_string(index=False)}"
 
 
+def _vez_o_veces(n: int) -> str:
+    return "1 vez" if n == 1 else f"{n} veces"
+
+
 def enfrentamientos_entre_equipos(equipo1: str = None, equipo2: str = None) -> str:
     """
     Estadísticas AGREGADAS de enfrentamientos (victorias-empates-derrotas),
@@ -213,30 +217,59 @@ def enfrentamientos_entre_equipos(equipo1: str = None, equipo2: str = None) -> s
         WITH t1, t2,
              sum(CASE WHEN r1.result = 'G' THEN 1 ELSE 0 END) AS t1_gano,
              sum(CASE WHEN r2.result = 'G' THEN 1 ELSE 0 END) AS t2_gano,
+             sum(CASE WHEN r1.result = 'E' THEN 1 ELSE 0 END) AS empates,
              count(*) AS partidos
         WHERE partidos >= 2 AND (t1_gano = 0 OR t2_gano = 0)
-        RETURN t1.name AS equipo1, t2.name AS equipo2, t1_gano, t2_gano, partidos
+        RETURN t1.name AS equipo1, t2.name AS equipo2, t1_gano, t2_gano, empates, partidos
         ORDER BY partidos DESC
         """
     )
     if not filas:
         return "No se encontró ningún par de equipos donde uno nunca le haya ganado al otro (con al menos 2 partidos jugados entre ellos)."
 
+    # OJO: "nunca ha ganado" (0 victorias) NO es lo mismo que "el otro SIEMPRE
+    # ha ganado" — puede haber empates de por medio. Solo es "siempre ganó"
+    # si el otro equipo ganó TODOS los partidos (0 empates, 0 derrotas propias).
+    siempre_gano = [f for f in filas if f["t1_gano"] == f["partidos"] or f["t2_gano"] == f["partidos"]]
+    nunca_gano_con_empates = [f for f in filas if f not in siempre_gano and not (f["t1_gano"] == 0 and f["t2_gano"] == 0)]
+    todo_empate = [f for f in filas if f["t1_gano"] == 0 and f["t2_gano"] == 0]
+
     lineas = [
-        f"TOTAL DE CASOS ENCONTRADOS: {len(filas)} pares de equipos donde uno nunca le ha ganado al otro "
-        "(mínimo 2 partidos jugados). Usa este número exacto si te preguntan cuántos hay — no cuentes tú mismo.",
-        "",
-        "Lista completa:",
+        f"TOTAL: {len(filas)} pares donde un equipo nunca ha ganado al otro (mínimo 2 partidos). "
+        f"De esos, {len(siempre_gano)} son de dominio absoluto (el otro equipo ganó todos los partidos, "
+        f"sin empates ni derrotas), {len(nunca_gano_con_empates)} tienen victorias del otro equipo mezcladas "
+        f"con empates, y {len(todo_empate)} son solo empates. Usa estos números exactos — no cuentes tú mismo.",
         "",
     ]
-    for f in filas:
-        if f["t1_gano"] == 0 and f["t2_gano"] == 0:
-            lineas.append(f"  - {f['equipo1']} y {f['equipo2']}: {f['partidos']} partidos, todos empate — ninguno le ha ganado al otro")
-        elif f["t1_gano"] == 0:
-            lineas.append(f"  - {f['equipo1']} nunca le ha ganado a {f['equipo2']} ({f['partidos']} partidos jugados)")
-        else:
-            lineas.append(f"  - {f['equipo2']} nunca le ha ganado a {f['equipo1']} ({f['partidos']} partidos jugados)")
+    if siempre_gano:
+        lineas.append(f"Dominio absoluto — el otro equipo ganó todos los partidos ({len(siempre_gano)} casos):")
+        for f in siempre_gano:
+            ganador, perdedor = (f["equipo1"], f["equipo2"]) if f["t1_gano"] == f["partidos"] else (f["equipo2"], f["equipo1"])
+            lineas.append(f"  - {ganador} siempre le ha ganado a {perdedor}: le ganó los {f['partidos']} partidos que jugaron, sin ningún empate.")
+        lineas.append("")
+    if nunca_gano_con_empates:
+        lineas.append(f"Nunca ganó, con empates y/o victorias del rival mezcladas ({len(nunca_gano_con_empates)} casos):")
+        for f in nunca_gano_con_empates:
+            perdedor, ganador, veces_gano = (f["equipo1"], f["equipo2"], f["t2_gano"]) if f["t1_gano"] == 0 else (f["equipo2"], f["equipo1"], f["t1_gano"])
+            derrotas = f["partidos"] - veces_gano - f["empates"]
+            partes = []
+            if veces_gano:
+                partes.append(f"{ganador} le ganó {_vez_o_veces(veces_gano)}")
+            if f["empates"]:
+                partes.append(f"empataron {_vez_o_veces(f['empates'])}")
+            detalle = " y ".join(partes) if partes else ""
+            lineas.append(
+                f"  - {perdedor} nunca le ha ganado a {ganador} en {f['partidos']} partidos jugados: {detalle}."
+            )
+        lineas.append("")
+    if todo_empate:
+        lineas.append(f"Solo empates — nunca hubo un ganador entre ellos ({len(todo_empate)} casos):")
+        for f in todo_empate:
+            lineas.append(
+                f"  - {f['equipo1']} nunca le ha ganado a {f['equipo2']}, han empatado {_vez_o_veces(f['partidos'])}."
+            )
     return "\n".join(lineas)
+
 
 
 def ficha_equipo(equipo: str) -> str:
