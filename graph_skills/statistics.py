@@ -166,6 +166,12 @@ def enfrentamientos_entre_equipos(equipo1: str = None, equipo2: str = None) -> s
       de los dos nunca le ha ganado al otro (con al menos 2 partidos jugados
       entre ellos) — para preguntas abiertas tipo '¿qué equipo nunca le ha
       ganado a otro?'.
+
+    IMPORTANTE: usa r.result ('G'/'E'/'P'), NUNCA compara goles directamente.
+    Un partido definido por penales (ej. 0-0) tiene goles empatados pero SÍ
+    hay un ganador real — comparar goles a favor lo contaría como empate,
+    ocultando la victoria/derrota real. r.result ya viene calculado
+    correctamente desde el dato original, penales incluidos.
     """
     if equipo1:
         filtro_equipo2 = "AND toLower(t2.name) CONTAINS toLower($equipo2)" if equipo2 else ""
@@ -175,9 +181,9 @@ def enfrentamientos_entre_equipos(equipo1: str = None, equipo2: str = None) -> s
             WHERE toLower(t1.name) CONTAINS toLower($equipo1) AND t1 <> t2
             {filtro_equipo2}
             WITH t1, t2,
-                 sum(CASE WHEN r1.goals > r2.goals THEN 1 ELSE 0 END) AS victorias,
-                 sum(CASE WHEN r1.goals = r2.goals THEN 1 ELSE 0 END) AS empates,
-                 sum(CASE WHEN r1.goals < r2.goals THEN 1 ELSE 0 END) AS derrotas,
+                 sum(CASE WHEN r1.result = 'G' THEN 1 ELSE 0 END) AS victorias,
+                 sum(CASE WHEN r1.result = 'E' THEN 1 ELSE 0 END) AS empates,
+                 sum(CASE WHEN r1.result = 'P' THEN 1 ELSE 0 END) AS derrotas,
                  count(*) AS partidos
             RETURN t1.name AS equipo1, t2.name AS rival, victorias, empates, derrotas, partidos
             ORDER BY partidos DESC
@@ -205,8 +211,8 @@ def enfrentamientos_entre_equipos(equipo1: str = None, equipo2: str = None) -> s
         MATCH (t1:Team)-[r1:PLAYED_MATCH]->(m:Match)<-[r2:PLAYED_MATCH]-(t2:Team)
         WHERE elementId(t1) < elementId(t2)
         WITH t1, t2,
-             sum(CASE WHEN r1.goals > r2.goals THEN 1 ELSE 0 END) AS t1_gano,
-             sum(CASE WHEN r2.goals > r1.goals THEN 1 ELSE 0 END) AS t2_gano,
+             sum(CASE WHEN r1.result = 'G' THEN 1 ELSE 0 END) AS t1_gano,
+             sum(CASE WHEN r2.result = 'G' THEN 1 ELSE 0 END) AS t2_gano,
              count(*) AS partidos
         WHERE partidos >= 2 AND (t1_gano = 0 OR t2_gano = 0)
         RETURN t1.name AS equipo1, t2.name AS equipo2, t1_gano, t2_gano, partidos
