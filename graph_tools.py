@@ -3,14 +3,14 @@ Capa de 'tools' expuesta a los agentes vía function-calling de Groq.
 
 Cada tool envuelve una función de graph_skills. El agente decide CUÁNDO
 llamar cada una y con qué parámetros — esa es la parte probabilística.
-El dato que regresa la tool es siempre exacto, tal cual sale del grafo;
-eso nunca lo decide el LLM.
+El dato que regresa la tool es siempre exacto, tal cual sale del grafo.
 """
 from graph_skills import (
-    buscar_jugador, buscar_equipo, buscar_partido, buscar_torneo,
+    buscar_jugador, buscar_equipo, buscar_partido, buscar_torneo, listar_equipos,
     historia_equipo, cambios_nombre, participaciones_equipo,
     jugador_perfil_historico, top_goleadores_historico, finales_por_equipo,
-    premios_historicos, historial_entre_equipos,
+    premios_historicos, historial_entre_equipos, enfrentamientos_entre_equipos,
+    ficha_equipo, comparar_jugadores, partidos_por_fecha, racha_historica, equipo_mas_dominante,
     encontrar_conexiones, explorar_vecinos,
 )
 from wiki import get_wiki
@@ -26,6 +26,7 @@ TOOL_REGISTRY = {
     "buscar_equipo": buscar_equipo,
     "buscar_partido": buscar_partido,
     "buscar_torneo": buscar_torneo,
+    "listar_equipos": listar_equipos,
     "historia_equipo": historia_equipo,
     "cambios_nombre": cambios_nombre,
     "participaciones_equipo": participaciones_equipo,
@@ -34,6 +35,12 @@ TOOL_REGISTRY = {
     "finales_por_equipo": finales_por_equipo,
     "premios_historicos": premios_historicos,
     "historial_entre_equipos": historial_entre_equipos,
+    "enfrentamientos_entre_equipos": enfrentamientos_entre_equipos,
+    "ficha_equipo": ficha_equipo,
+    "comparar_jugadores": comparar_jugadores,
+    "partidos_por_fecha": partidos_por_fecha,
+    "racha_historica": racha_historica,
+    "equipo_mas_dominante": equipo_mas_dominante,
     "encontrar_conexiones": encontrar_conexiones,
     "explorar_vecinos": explorar_vecinos,
     "consultar_wiki": consultar_wiki,
@@ -89,11 +96,24 @@ TOOL_SCHEMAS = {
             "parameters": {"type": "object", "properties": {}},
         },
     },
+    "listar_equipos": {
+        "type": "function",
+        "function": {
+            "name": "listar_equipos",
+            "description": (
+                "Lista TODOS los equipos reales que existen en este torneo. "
+                "Llama esto SIEMPRE primero cuando vayas a explorar o contar algo "
+                "sin tener un equipo específico en mente — para no adivinar nombres "
+                "de clubes de fútbol real que no son parte de este torneo."
+            ),
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
     "historia_equipo": {
         "type": "function",
         "function": {
             "name": "historia_equipo",
-            "description": "Historia institucional completa de un equipo: nombres anteriores, participaciones y fase máxima por edición.",
+            "description": "Historia institucional de un equipo: nombres anteriores, participaciones y fase máxima por edición (con resultado). Para una ficha más completa (incluye goleador del equipo), usa ficha_equipo.",
             "parameters": {
                 "type": "object",
                 "properties": {"equipo": {"type": "string"}},
@@ -125,11 +145,28 @@ TOOL_SCHEMAS = {
             },
         },
     },
+    "ficha_equipo": {
+        "type": "function",
+        "function": {
+            "name": "ficha_equipo",
+            "description": (
+                "Ficha CONSOLIDADA de un equipo: nombres anteriores, fase máxima por edición "
+                "con resultado, cuántas finales jugó, y su goleador histórico — todo en una sola "
+                "llamada. Úsala para preguntas abiertas tipo 'cuéntame todo sobre X equipo' o "
+                "'características de X equipo', en vez de llamar varias tools sueltas."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"equipo": {"type": "string"}},
+                "required": ["equipo"],
+            },
+        },
+    },
     "jugador_perfil_historico": {
         "type": "function",
         "function": {
             "name": "jugador_perfil_historico",
-            "description": "Perfil histórico completo de un jugador: goles por equipo/edición, tarjetas y premios.",
+            "description": "Perfil histórico completo de un jugador: goles por equipo/edición, tarjetas (con rival y fecha) y premios.",
             "parameters": {
                 "type": "object",
                 "properties": {"nombre": {"type": "string"}},
@@ -137,11 +174,23 @@ TOOL_SCHEMAS = {
             },
         },
     },
+    "comparar_jugadores": {
+        "type": "function",
+        "function": {
+            "name": "comparar_jugadores",
+            "description": "Compara dos jugadores lado a lado: goles por equipo, tarjetas y premios. Úsala cuando te pidan comparar a dos jugadores en vez de llamar jugador_perfil_historico dos veces.",
+            "parameters": {
+                "type": "object",
+                "properties": {"nombre1": {"type": "string"}, "nombre2": {"type": "string"}},
+                "required": ["nombre1", "nombre2"],
+            },
+        },
+    },
     "top_goleadores_historico": {
         "type": "function",
         "function": {
             "name": "top_goleadores_historico",
-            "description": "Ranking histórico de goleadores, sumado correctamente por jugador+equipo.",
+            "description": "Ranking histórico de goleadores, sumado correctamente por jugador+equipo (nunca entre equipos distintos).",
             "parameters": {
                 "type": "object",
                 "properties": {"n": {"type": "integer", "description": "Cuántos mostrar, default 10"}},
@@ -178,12 +227,87 @@ TOOL_SCHEMAS = {
         "type": "function",
         "function": {
             "name": "historial_entre_equipos",
-            "description": "Head-to-head: todos los partidos jugados entre dos equipos específicos.",
+            "description": (
+                "Lista PARTIDO POR PARTIDO todos los enfrentamientos entre dos equipos, "
+                "cada uno con su fase (grupos, cuartos, semifinal, final, etc.) y marcador "
+                "exacto. Cada fila es un partido independiente — nunca combines marcadores "
+                "de dos filas distintas. Para un RESUMEN agregado (cuántas veces ganó cada "
+                "uno en total), usa mejor enfrentamientos_entre_equipos."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {"equipo1": {"type": "string"}, "equipo2": {"type": "string"}},
                 "required": ["equipo1", "equipo2"],
             },
+        },
+    },
+    "enfrentamientos_entre_equipos": {
+        "type": "function",
+        "function": {
+            "name": "enfrentamientos_entre_equipos",
+            "description": (
+                "Estadística AGREGADA de enfrentamientos (victorias-empates-derrotas totales), "
+                "no partido por partido. Tres usos: (1) equipo1+equipo2 -> resumen agregado entre "
+                "esos dos; (2) solo equipo1 -> su récord agregado contra CADA rival que ha enfrentado "
+                "(incluye contra quién nunca ha ganado o nunca ha perdido); (3) sin ningún equipo -> "
+                "escanea TODO el grafo y devuelve pares de equipos donde uno nunca le ha ganado al "
+                "otro. Esto es lo mismo visto al revés que '¿qué equipo siempre le ha ganado a otro?' "
+                "— si B nunca le ganó a A, entonces A siempre le ganó a B. Usa este modo (3) para "
+                "cualquiera de esas dos preguntas abiertas sin nombre de equipo específico."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "equipo1": {"type": "string", "description": "Opcional. Omite junto con equipo2 para el escaneo global."},
+                    "equipo2": {"type": "string", "description": "Opcional, solo válido si ya diste equipo1."},
+                },
+            },
+        },
+    },
+    "partidos_por_fecha": {
+        "type": "function",
+        "function": {
+            "name": "partidos_por_fecha",
+            "description": "Lista los partidos jugados en una fecha/jornada específica (número), opcionalmente filtrado por edición. Úsala para preguntas sobre qué pasó en una fecha concreta.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "numero_fecha": {"type": "integer", "description": "Número de fecha/jornada"},
+                    "edicion": {"type": "string", "description": "Opcional, ej. 'Apertura 2024'"},
+                },
+                "required": ["numero_fecha"],
+            },
+        },
+    },
+    "racha_historica": {
+        "type": "function",
+        "function": {
+            "name": "racha_historica",
+            "description": (
+                "Racha ganadora, perdedora Y DE EMPATES más larga, calculado partido a partido "
+                "(se reinicia entre ediciones distintas). Dos usos: (1) con equipo -> rachas de "
+                "ESE equipo; (2) sin equipo -> busca en TODA la historia quién tiene la racha "
+                "ganadora/perdedora/de-empates más larga de todos. Usa el modo (2) para preguntas "
+                "abiertas tipo '¿qué equipo tiene la mayor racha de partidos ganados?' sin nombre "
+                "de equipo específico."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"equipo": {"type": "string", "description": "Opcional. Omite para buscar en toda la historia."}},
+            },
+        },
+    },
+    "equipo_mas_dominante": {
+        "type": "function",
+        "function": {
+            "name": "equipo_mas_dominante",
+            "description": (
+                "Ranking histórico agregado de equipos por una métrica compuesta de 'dominancia' "
+                "(fase máxima alcanzada + bonus por ganarla). ACLARA SIEMPRE al usuario que esta "
+                "métrica es compuesta y no un título oficial del torneo. Úsala para '¿quién ha sido "
+                "el mejor equipo de la historia?'."
+            ),
+            "parameters": {"type": "object", "properties": {}},
         },
     },
     "encontrar_conexiones": {
@@ -214,7 +338,7 @@ TOOL_SCHEMAS = {
         "type": "function",
         "function": {
             "name": "consultar_wiki",
-            "description": "Información estática del torneo: formato, reglas, equipos participantes, temporadas disponibles.",
+            "description": "Reglamento oficial del torneo: formato, sanciones, reglas de juego, desempates. NO sirve para preguntas de datos/estadísticas — solo para reglas.",
             "parameters": {"type": "object", "properties": {}},
         },
     },
