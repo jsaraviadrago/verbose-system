@@ -222,7 +222,13 @@ def enfrentamientos_entre_equipos(equipo1: str = None, equipo2: str = None) -> s
     if not filas:
         return "No se encontró ningún par de equipos donde uno nunca le haya ganado al otro (con al menos 2 partidos jugados entre ellos)."
 
-    lineas = ["Pares de equipos donde uno nunca le ha ganado al otro (mínimo 2 partidos jugados):", ""]
+    lineas = [
+        f"TOTAL DE CASOS ENCONTRADOS: {len(filas)} pares de equipos donde uno nunca le ha ganado al otro "
+        "(mínimo 2 partidos jugados). Usa este número exacto si te preguntan cuántos hay — no cuentes tú mismo.",
+        "",
+        "Lista completa:",
+        "",
+    ]
     for f in filas:
         if f["t1_gano"] == 0 and f["t2_gano"] == 0:
             lineas.append(f"  - {f['equipo1']} y {f['equipo2']}: {f['partidos']} partidos, todos empate — ninguno le ha ganado al otro")
