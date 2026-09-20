@@ -136,7 +136,23 @@ def _run_agent(client: Groq, agent_key: str, messages: list) -> tuple[str, list[
         tool_calls = getattr(msg, "tool_calls", None)
 
         if not tool_calls:
-            return msg.content or "", raw_tool_outputs
+            if msg.content and msg.content.strip():
+                return msg.content, raw_tool_outputs
+            if raw_tool_outputs:
+                # El modelo ya tiene datos buenos de una tool pero devolvió
+                # texto vacío en vez de redactar — le pedimos explícitamente
+                # que responda con texto, en vez de dejar la respuesta en blanco.
+                history.append({"role": "assistant", "content": ""})
+                history.append({
+                    "role": "user",
+                    "content": (
+                        "Ya tienes los datos de la tool. Responde ahora en texto, "
+                        "en español, explicando esos datos al usuario — no dejes "
+                        "la respuesta vacía."
+                    ),
+                })
+                continue
+            return "", raw_tool_outputs
 
         history.append({
             "role": "assistant",
@@ -169,6 +185,11 @@ def _run_agent(client: Groq, agent_key: str, messages: list) -> tuple[str, list[
                 "content": str(result),
             })
 
+    if raw_tool_outputs:
+        return (
+            "No logré redactar una respuesta narrada, pero esto es lo que encontré "
+            "en el grafo (datos exactos, sin editar):\n\n" + "\n\n".join(str(o) for o in raw_tool_outputs)
+        ), raw_tool_outputs
     return "No pude completar la respuesta en el número de pasos permitido.", raw_tool_outputs
 
 
