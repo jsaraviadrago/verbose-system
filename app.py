@@ -123,16 +123,6 @@ with col_compartir:
         height=45,
     )
 
-if st.button("🤖 Asistente CLC en construccion"):
-    st.session_state.show_assistant = not st.session_state.get(
-        "show_assistant",
-        False,
-    )
-
-if st.session_state.get("show_assistant", False):
-    show_assistant()
-    st.stop()
-
 # ── Logos de los equipos ─────────────────────────────────────────────
 # Cargar resultados una sola vez
 df_partidos = get_partidos_clausura_2026()
@@ -141,6 +131,29 @@ st.image(
     str(LOGO_PATH),
     use_container_width=True,
 )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# EL CRONISTA (agente de historia del torneo 2024-2025)
+# ─────────────────────────────────────────────────────────────────────────────
+with st.container(border=True):
+    st.markdown("### 📜 El Cronista")
+    st.caption(
+        "Pregúntale sobre la historia, estadísticas o curiosidades del "
+        "campeonato (cubre 2024-2025)."
+    )
+    if st.button(
+        "💬 Conversar con El Cronista",
+        use_container_width=True,
+        key="abrir_cronista",
+    ):
+        st.session_state.show_assistant = True
+
+if st.session_state.get("show_assistant", False):
+    if st.button("⬅️ Volver a resultados", key="cerrar_cronista"):
+        st.session_state.show_assistant = False
+        st.rerun()
+    show_assistant()
+    st.stop()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FIXTURE PENDIENTE
