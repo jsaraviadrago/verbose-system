@@ -24,6 +24,7 @@ from graph_skills.statistics import (
     historial_entre_equipos,
     enfrentamientos_entre_equipos,
     ficha_equipo,
+    comparar_equipos,
     comparar_jugadores,
     partidos_por_fecha,
     racha_historica,
@@ -36,6 +37,6 @@ __all__ = [
     "historia_equipo", "cambios_nombre", "participaciones_equipo",
     "jugador_perfil_historico", "top_goleadores_historico", "finales_por_equipo",
     "premios_historicos", "historial_entre_equipos", "enfrentamientos_entre_equipos",
-    "ficha_equipo", "comparar_jugadores", "partidos_por_fecha", "racha_historica", "equipo_mas_dominante",
+    "ficha_equipo", "comparar_equipos", "comparar_jugadores", "partidos_por_fecha", "racha_historica", "equipo_mas_dominante",
     "encontrar_conexiones", "explorar_vecinos",
 ]

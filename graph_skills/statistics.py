@@ -123,18 +123,41 @@ def top_goleadores_historico(n: int = 10) -> str:
 
 
 def finales_por_equipo() -> str:
-    """Cuántas finales jugó cada equipo, histórico."""
+    """Cuántas finales jugó cada equipo, histórico, con detalle de en qué
+    edición fue cada una y si ganó o perdió (y contra quién)."""
     filas = q(
         """
         MATCH (t:Team)-[r:REACHED_STAGE]->(s:Stage {id: 'stage_final'})
-        RETURN t.name AS equipo, count(r) AS finales_jugadas
-        ORDER BY finales_jugadas DESC
+        MATCH (e:Edition {id: r.editionId})
+        OPTIONAL MATCH (t)-[:PLAYED_MATCH]->(m:Match)-[:AT_STAGE]->(s)
+        WHERE EXISTS { (m)-[:IN_EDITION]->(e) }
+        OPTIONAL MATCH (rival:Team)-[:PLAYED_MATCH]->(m) WHERE rival <> t
+        RETURN t.name AS equipo, t.id AS team_id, e.name AS edicion,
+               m.winnerTeamId AS winner_id, rival.name AS rival
+        ORDER BY t.name, e.year
         """
     )
     if not filas:
         return "No hay datos de finales en el grafo."
-    df = pd.DataFrame(filas)
-    return f"Finales jugadas por equipo (histórico):\n{df.to_string(index=False)}"
+
+    por_equipo: dict[str, list] = {}
+    for f in filas:
+        por_equipo.setdefault(f["equipo"], []).append(f)
+
+    ranking = sorted(por_equipo.items(), key=lambda x: len(x[1]), reverse=True)
+    lineas = ["Finales jugadas por equipo (histórico), con detalle de cada una:", ""]
+    for equipo, partidos in ranking:
+        lineas.append(f"{equipo} ({len(partidos)} finales):")
+        for f in partidos:
+            if f.get("winner_id") and f["winner_id"] == f["team_id"]:
+                resultado = "ganó"
+            elif f.get("rival"):
+                resultado = f"perdió ante {f['rival']}"
+            else:
+                resultado = "resultado no disponible"
+            lineas.append(f"  - {f['edicion']}: {resultado}")
+        lineas.append("")
+    return "\n".join(lineas)
 
 
 def premios_historicos(award_type: str) -> str:
@@ -198,8 +221,24 @@ def enfrentamientos_entre_equipos(equipo1: str = None, equipo2: str = None) -> s
             objetivo = f"'{equipo1}' contra '{equipo2}'" if equipo2 else f"'{equipo1}'"
             return f"No se encontraron enfrentamientos de {objetivo} en el grafo."
 
+        partidos_detalle = q(
+            f"""
+            MATCH (t1:Team)-[r1:PLAYED_MATCH]->(m:Match)<-[r2:PLAYED_MATCH]-(t2:Team)
+            WHERE toLower(t1.name) CONTAINS toLower($equipo1) AND t1 <> t2
+            {filtro_equipo2}
+            MATCH (m)-[:IN_EDITION]->(e:Edition)
+            MATCH (m)-[:AT_STAGE]->(s:Stage)
+            RETURN t2.name AS rival, e.name AS edicion, s.name AS fase, r1.goals AS goles1, r2.goals AS goles2
+            ORDER BY t2.name, e.year
+            """,
+            {"equipo1": equipo1, "equipo2": equipo2},
+        )
+        partidos_por_rival: dict[str, list] = {}
+        for p in partidos_detalle:
+            partidos_por_rival.setdefault(p["rival"], []).append(p)
+
         nombre1 = filas[0]["equipo1"]
-        lineas = [f"Enfrentamientos históricos de {nombre1} (agregado, no partido por partido):", ""]
+        lineas = [f"Enfrentamientos históricos de {nombre1} (agregado, con detalle de partidos):", ""]
         for f in filas:
             nunca_gano = " — NUNCA le ha ganado" if f["victorias"] == 0 else ""
             nunca_perdio = " — NUNCA ha perdido contra este rival" if f["derrotas"] == 0 else ""
@@ -207,6 +246,8 @@ def enfrentamientos_entre_equipos(equipo1: str = None, equipo2: str = None) -> s
                 f"  vs {f['rival']}: {f['victorias']}V {f['empates']}E {f['derrotas']}D "
                 f"({f['partidos']} partidos){nunca_gano}{nunca_perdio}"
             )
+            for p in partidos_por_rival.get(f["rival"], []):
+                lineas.append(f"      · {p['edicion']}, {p['fase']}: {nombre1} {p['goles1']} - {p['goles2']} {p['rival']}")
         return "\n".join(lineas)
 
     # Ninguno de los dos equipos dado: escaneo global
@@ -227,6 +268,27 @@ def enfrentamientos_entre_equipos(equipo1: str = None, equipo2: str = None) -> s
     if not filas:
         return "No se encontró ningún par de equipos donde uno nunca le haya ganado al otro (con al menos 2 partidos jugados entre ellos)."
 
+    todos_partidos = q(
+        """
+        MATCH (t1:Team)-[r1:PLAYED_MATCH]->(m:Match)<-[r2:PLAYED_MATCH]-(t2:Team)
+        WHERE elementId(t1) < elementId(t2)
+        MATCH (m)-[:IN_EDITION]->(e:Edition)
+        MATCH (m)-[:AT_STAGE]->(s:Stage)
+        RETURN t1.name AS equipo1, t2.name AS equipo2, e.name AS edicion, s.name AS fase,
+               r1.goals AS goles1, r2.goals AS goles2
+        ORDER BY t1.name, t2.name, e.year
+        """
+    )
+    partidos_por_par: dict[tuple, list] = {}
+    for p in todos_partidos:
+        partidos_por_par.setdefault((p["equipo1"], p["equipo2"]), []).append(p)
+
+    def _lineas_partidos(equipo1_nombre, equipo2_nombre):
+        out = []
+        for p in partidos_por_par.get((equipo1_nombre, equipo2_nombre), []):
+            out.append(f"      · {p['edicion']}, {p['fase']}: {equipo1_nombre} {p['goles1']} - {p['goles2']} {equipo2_nombre}")
+        return out
+
     # OJO: "nunca ha ganado" (0 victorias) NO es lo mismo que "el otro SIEMPRE
     # ha ganado" — puede haber empates de por medio. Solo es "siempre ganó"
     # si el otro equipo ganó TODOS los partidos (0 empates, 0 derrotas propias).
@@ -246,6 +308,7 @@ def enfrentamientos_entre_equipos(equipo1: str = None, equipo2: str = None) -> s
         for f in siempre_gano:
             ganador, perdedor = (f["equipo1"], f["equipo2"]) if f["t1_gano"] == f["partidos"] else (f["equipo2"], f["equipo1"])
             lineas.append(f"  - {ganador} siempre le ha ganado a {perdedor}: le ganó los {f['partidos']} partidos que jugaron, sin ningún empate.")
+            lineas += _lineas_partidos(f["equipo1"], f["equipo2"])
         lineas.append("")
     if nunca_gano_con_empates:
         lineas.append(f"Nunca ganó, con empates y/o victorias del rival mezcladas ({len(nunca_gano_con_empates)} casos):")
@@ -261,6 +324,7 @@ def enfrentamientos_entre_equipos(equipo1: str = None, equipo2: str = None) -> s
             lineas.append(
                 f"  - {perdedor} nunca le ha ganado a {ganador} en {f['partidos']} partidos jugados: {detalle}."
             )
+            lineas += _lineas_partidos(f["equipo1"], f["equipo2"])
         lineas.append("")
     if todo_empate:
         lineas.append(f"Solo empates — nunca hubo un ganador entre ellos ({len(todo_empate)} casos):")
@@ -268,6 +332,7 @@ def enfrentamientos_entre_equipos(equipo1: str = None, equipo2: str = None) -> s
             lineas.append(
                 f"  - {f['equipo1']} nunca le ha ganado a {f['equipo2']}, han empatado {_vez_o_veces(f['partidos'])}."
             )
+            lineas += _lineas_partidos(f["equipo1"], f["equipo2"])
     return "\n".join(lineas)
 
 
@@ -328,6 +393,87 @@ def ficha_equipo(equipo: str) -> str:
     if goleador:
         lineas.append("")
         lineas.append(f"Máximo goleador histórico del equipo: {goleador[0]['jugador']} ({goleador[0]['goles']} goles)")
+    return "\n".join(lineas)
+
+
+def comparar_equipos(equipo1: str, equipo2: str) -> str:
+    """
+    Compara dos equipos lado a lado: finales jugadas/ganadas, récord general
+    (victorias-empates-derrotas en TODA su historia, no solo entre sí) y su
+    goleador histórico. NO es head-to-head entre ellos — para eso usa
+    enfrentamientos_entre_equipos o historial_entre_equipos.
+    """
+
+    def _datos(equipo):
+        info = q(
+            "MATCH (t:Team) WHERE toLower(t.name) CONTAINS toLower($equipo) RETURN t.name AS equipo, t.id AS id LIMIT 1",
+            {"equipo": equipo},
+        )
+        if not info:
+            return None
+        equipo_id, nombre_real = info[0]["id"], info[0]["equipo"]
+
+        finales = q(
+            """
+            MATCH (t:Team {id: $id})-[r:REACHED_STAGE]->(s:Stage {id: 'stage_final'})
+            MATCH (e:Edition {id: r.editionId})
+            OPTIONAL MATCH (t)-[:PLAYED_MATCH]->(m:Match)-[:AT_STAGE]->(s)
+            WHERE EXISTS { (m)-[:IN_EDITION]->(e) }
+            RETURN count(*) AS jugadas, sum(CASE WHEN m.winnerTeamId = $id THEN 1 ELSE 0 END) AS ganadas
+            """,
+            {"id": equipo_id},
+        )
+        record = q(
+            """
+            MATCH (t:Team {id: $id})-[r:PLAYED_MATCH]->(:Match)
+            RETURN sum(CASE WHEN r.result = 'G' THEN 1 ELSE 0 END) AS victorias,
+                   sum(CASE WHEN r.result = 'E' THEN 1 ELSE 0 END) AS empates,
+                   sum(CASE WHEN r.result = 'P' THEN 1 ELSE 0 END) AS derrotas
+            """,
+            {"id": equipo_id},
+        )
+        goleador = q(
+            """
+            MATCH (p:Player)-[r:SCORED_IN]->(:Edition) WHERE r.teamId = $id
+            RETURN p.name AS jugador, sum(r.goals) AS goles ORDER BY goles DESC LIMIT 1
+            """,
+            {"id": equipo_id},
+        )
+        return {
+            "nombre": nombre_real,
+            "finales_jugadas": finales[0]["jugadas"] if finales else 0,
+            "finales_ganadas": finales[0]["ganadas"] if finales else 0,
+            "record": record[0] if record else {"victorias": 0, "empates": 0, "derrotas": 0},
+            "goleador": goleador[0] if goleador else None,
+        }
+
+    d1 = _datos(equipo1)
+    d2 = _datos(equipo2)
+    if not d1:
+        return f"No se encontró al equipo '{equipo1}' en el grafo histórico."
+    if not d2:
+        return f"No se encontró al equipo '{equipo2}' en el grafo histórico."
+
+    def _bloque(d):
+        r = d["record"]
+        goleador_txt = f"{d['goleador']['jugador']} ({d['goleador']['goles']} goles)" if d["goleador"] else "sin registros"
+        return [
+            f"{d['nombre']}:",
+            f"  Finales jugadas: {d['finales_jugadas']} (ganadas: {d['finales_ganadas']})",
+            f"  Récord general (todos sus partidos, no solo entre sí): {r['victorias']} victorias, "
+            f"{r['empates']} empates, {r['derrotas']} derrotas",
+            f"  Goleador histórico del equipo: {goleador_txt}",
+        ]
+
+    lineas = ["COMPARACIÓN DE EQUIPOS — presenta ambos bloques exactamente, no combines sus números entre sí:", ""]
+    lineas += _bloque(d1)
+    lineas.append("")
+    lineas += _bloque(d2)
+    lineas.append("")
+    lineas.append(
+        "Nota: esto NO es head-to-head entre ambos equipos — para saber cómo les ha ido "
+        "JUGANDO ENTRE SÍ, usa enfrentamientos_entre_equipos o historial_entre_equipos."
+    )
     return "\n".join(lineas)
 
 

@@ -10,7 +10,7 @@ from graph_skills import (
     historia_equipo, cambios_nombre, participaciones_equipo,
     jugador_perfil_historico, top_goleadores_historico, finales_por_equipo,
     premios_historicos, historial_entre_equipos, enfrentamientos_entre_equipos,
-    ficha_equipo, comparar_jugadores, partidos_por_fecha, racha_historica, equipo_mas_dominante,
+    ficha_equipo, comparar_equipos, comparar_jugadores, partidos_por_fecha, racha_historica, equipo_mas_dominante,
     encontrar_conexiones, explorar_vecinos,
 )
 from wiki import get_wiki
@@ -37,6 +37,7 @@ TOOL_REGISTRY = {
     "historial_entre_equipos": historial_entre_equipos,
     "enfrentamientos_entre_equipos": enfrentamientos_entre_equipos,
     "ficha_equipo": ficha_equipo,
+    "comparar_equipos": comparar_equipos,
     "comparar_jugadores": comparar_jugadores,
     "partidos_por_fecha": partidos_por_fecha,
     "racha_historica": racha_historica,
@@ -171,6 +172,23 @@ TOOL_SCHEMAS = {
                 "type": "object",
                 "properties": {"nombre": {"type": "string"}},
                 "required": ["nombre"],
+            },
+        },
+    },
+    "comparar_equipos": {
+        "type": "function",
+        "function": {
+            "name": "comparar_equipos",
+            "description": (
+                "Compara dos equipos lado a lado: finales jugadas/ganadas, récord general "
+                "(victorias-empates-derrotas en TODA su historia) y su goleador histórico. "
+                "NO es head-to-head entre ellos — para saber cómo les ha ido jugando entre sí, "
+                "usa enfrentamientos_entre_equipos o historial_entre_equipos."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"equipo1": {"type": "string"}, "equipo2": {"type": "string"}},
+                "required": ["equipo1", "equipo2"],
             },
         },
     },
