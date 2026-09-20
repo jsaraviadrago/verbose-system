@@ -420,19 +420,24 @@ def racha_historica(equipo: str = None) -> str:
     Racha ganadora, perdedora Y DE EMPATES más larga, calculado partido a
     partido en orden cronológico. La racha se reinicia al cambiar de edición
     (no se combina el cierre de un torneo con el arranque del siguiente).
+    Incluye el DETALLE de qué partidos componen cada racha máxima (edición,
+    fecha, rival) — no solo el número.
 
-    - equipo dado: rachas de ESE equipo específico.
+    - equipo dado: rachas de ESE equipo específico, con sus partidos.
     - sin equipo (None): recorre TODOS los equipos y devuelve quién tiene la
       racha ganadora más larga, la perdedora más larga y la de empates más
-      larga de TODA la historia — para preguntas abiertas tipo '¿qué equipo
-      tiene la mayor racha de partidos ganados?' sin nombre de equipo.
+      larga de TODA la historia, con los partidos de esa racha — para
+      preguntas abiertas tipo '¿qué equipo tiene la mayor racha de partidos
+      ganados?' sin nombre de equipo.
     """
     filtro = "WHERE toLower(t.name) CONTAINS toLower($equipo)" if equipo else ""
     filas = q(
         f"""
         MATCH (t:Team)-[r:PLAYED_MATCH]->(m:Match)-[:IN_EDITION]->(e:Edition)
         {filtro}
-        RETURN t.name AS equipo, e.name AS edicion, e.year AS anio, m.fecha AS fecha, r.result AS resultado
+        MATCH (rival:Team)-[:PLAYED_MATCH]->(m) WHERE rival <> t
+        RETURN t.name AS equipo, e.name AS edicion, e.year AS anio, m.fecha AS fecha,
+               m.partido AS partido, r.result AS resultado, rival.name AS rival
         ORDER BY t.name, e.year, m.fecha
         """,
         {"equipo": equipo},
@@ -442,54 +447,87 @@ def racha_historica(equipo: str = None) -> str:
             return f"No se encontró al equipo '{equipo}' en el grafo histórico."
         return "No hay datos suficientes en el grafo para calcular rachas."
 
+    def _fmt_partidos(lista):
+        return [f"{p['edicion']}, fecha {p['fecha']}, partido {p['partido']} vs {p['rival']}" for p in lista]
+
     rachas: dict[str, dict] = {}
     equipo_actual = edicion_anterior = None
     racha_v = racha_p = racha_e = 0
+    partidos_v = partidos_p = partidos_e = []
     for f in filas:
         if f["equipo"] != equipo_actual:
             equipo_actual = f["equipo"]
             edicion_anterior = None
             racha_v = racha_p = racha_e = 0
-            rachas[equipo_actual] = {"mejor_v": 0, "mejor_p": 0, "mejor_e": 0}
+            partidos_v, partidos_p, partidos_e = [], [], []
+            rachas[equipo_actual] = {
+                "mejor_v": 0, "mejor_p": 0, "mejor_e": 0,
+                "partidos_v": [], "partidos_p": [], "partidos_e": [],
+            }
         if f["edicion"] != edicion_anterior:
             racha_v = racha_p = racha_e = 0
+            partidos_v, partidos_p, partidos_e = [], [], []
             edicion_anterior = f["edicion"]
+
+        detalle = {"edicion": f["edicion"], "fecha": f["fecha"], "partido": f["partido"], "rival": f["rival"]}
         if f["resultado"] == "G":
             racha_v += 1
             racha_p = racha_e = 0
+            partidos_v = partidos_v + [detalle]
+            partidos_p, partidos_e = [], []
         elif f["resultado"] == "P":
             racha_p += 1
             racha_v = racha_e = 0
+            partidos_p = partidos_p + [detalle]
+            partidos_v, partidos_e = [], []
         else:
             racha_e += 1
             racha_v = racha_p = 0
+            partidos_e = partidos_e + [detalle]
+            partidos_v, partidos_p = [], []
+
         d = rachas[equipo_actual]
-        d["mejor_v"] = max(d["mejor_v"], racha_v)
-        d["mejor_p"] = max(d["mejor_p"], racha_p)
-        d["mejor_e"] = max(d["mejor_e"], racha_e)
+        if racha_v > d["mejor_v"]:
+            d["mejor_v"], d["partidos_v"] = racha_v, list(partidos_v)
+        if racha_p > d["mejor_p"]:
+            d["mejor_p"], d["partidos_p"] = racha_p, list(partidos_p)
+        if racha_e > d["mejor_e"]:
+            d["mejor_e"], d["partidos_e"] = racha_e, list(partidos_e)
+
+    def _bloque_racha(titulo, cantidad, lista_partidos):
+        out = [f"{titulo}: {cantidad} partidos consecutivos"]
+        if lista_partidos:
+            out.append("  Partidos de esa racha:")
+            for linea in _fmt_partidos(lista_partidos):
+                out.append(f"    - {linea}")
+        return out
 
     if equipo:
         nombre_real = filas[0]["equipo"]
         d = rachas[nombre_real]
-        return (
-            f"Rachas históricas de {nombre_real} (2024-2025, calculado partido a partido):\n\n"
-            f"  Racha ganadora más larga: {d['mejor_v']} partidos consecutivos\n"
-            f"  Racha perdedora más larga: {d['mejor_p']} partidos consecutivos\n"
-            f"  Racha de empates más larga: {d['mejor_e']} partidos consecutivos\n\n"
-            "Nota: la racha se reinicia entre ediciones distintas."
-        )
+        lineas = [f"Rachas históricas de {nombre_real} (2024-2025, calculado partido a partido):", ""]
+        lineas += _bloque_racha("Racha ganadora más larga", d["mejor_v"], d["partidos_v"])
+        lineas.append("")
+        lineas += _bloque_racha("Racha perdedora más larga", d["mejor_p"], d["partidos_p"])
+        lineas.append("")
+        lineas += _bloque_racha("Racha de empates más larga", d["mejor_e"], d["partidos_e"])
+        lineas.append("")
+        lineas.append("Nota: la racha se reinicia entre ediciones distintas.")
+        return "\n".join(lineas)
 
     mejor_ganadora = max(rachas.items(), key=lambda x: x[1]["mejor_v"])
     mejor_perdedora = max(rachas.items(), key=lambda x: x[1]["mejor_p"])
     mejor_empatadora = max(rachas.items(), key=lambda x: x[1]["mejor_e"])
 
-    return (
-        "Rachas históricas más largas de toda la CLC (2024-2025, calculado partido a partido):\n\n"
-        f"  Racha ganadora más larga: {mejor_ganadora[0]} con {mejor_ganadora[1]['mejor_v']} partidos consecutivos\n"
-        f"  Racha perdedora más larga: {mejor_perdedora[0]} con {mejor_perdedora[1]['mejor_p']} partidos consecutivos\n"
-        f"  Racha de empates más larga: {mejor_empatadora[0]} con {mejor_empatadora[1]['mejor_e']} partidos consecutivos\n\n"
-        "Nota: la racha se reinicia entre ediciones distintas."
-    )
+    lineas = ["Rachas históricas más largas de toda la CLC (2024-2025, calculado partido a partido):", ""]
+    lineas += _bloque_racha(f"Racha ganadora más larga: {mejor_ganadora[0]}", mejor_ganadora[1]["mejor_v"], mejor_ganadora[1]["partidos_v"])
+    lineas.append("")
+    lineas += _bloque_racha(f"Racha perdedora más larga: {mejor_perdedora[0]}", mejor_perdedora[1]["mejor_p"], mejor_perdedora[1]["partidos_p"])
+    lineas.append("")
+    lineas += _bloque_racha(f"Racha de empates más larga: {mejor_empatadora[0]}", mejor_empatadora[1]["mejor_e"], mejor_empatadora[1]["partidos_e"])
+    lineas.append("")
+    lineas.append("Nota: la racha se reinicia entre ediciones distintas.")
+    return "\n".join(lineas)
 
 
 def equipo_mas_dominante() -> str:
