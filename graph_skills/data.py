@@ -82,3 +82,16 @@ def buscar_torneo() -> str:
         return "No hay torneos cargados en el grafo."
     lineas = [f"{f['edicion']} ({f['torneo']}, {f['anio']})" for f in filas]
     return "\n".join(lineas)
+
+
+def listar_equipos() -> str:
+    """
+    Lista TODOS los equipos que realmente existen en el grafo — sin esto,
+    un agente que no tiene un nombre de equipo en mente puede terminar
+    adivinando nombres de clubes reales que no son de este torneo. Llamar
+    esto primero cuando no hay un equipo específico en la pregunta.
+    """
+    filas = q("MATCH (t:Team) RETURN t.name AS equipo ORDER BY t.name")
+    if not filas:
+        return "No hay equipos cargados en el grafo."
+    return "Equipos de la CLC: " + ", ".join(f["equipo"] for f in filas)
