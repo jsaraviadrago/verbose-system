@@ -3,9 +3,8 @@ skills/data — Capa 1 (histórico 2024-2025)
 
 Búsquedas básicas de "¿existe esto, y qué id tiene?". Estas son las skills
 que usan las demás capas (history, statistics, graph) para resolver nombres
-escritos por el usuario (a veces parciales, con errores de tilde, etc.)
-contra los ids reales del grafo — nunca inventan datos, solo resuelven
-identidad.
+escritos por el usuario contra los ids reales del grafo — nunca inventan
+datos, solo resuelven identidad.
 """
 from graph_skills._client import q
 
@@ -47,7 +46,11 @@ def buscar_equipo(nombre: str) -> str:
 
 
 def buscar_partido(equipo1: str, equipo2: str | None = None, edicion: str | None = None) -> str:
-    """Encuentra partido(s) que involucran a un equipo, opcionalmente cruzado con otro y/o una edición."""
+    """
+    Encuentra CUÁNDO se jugó un partido (fecha, edición) — NO trae marcador.
+    Si necesitas el resultado, usa historial_entre_equipos o
+    enfrentamientos_entre_equipos en vez de esta.
+    """
     cypher = """
         MATCH (t1:Team)-[:PLAYED_MATCH]->(m:Match)-[:IN_EDITION]->(e:Edition)
         WHERE toLower(t1.name) CONTAINS toLower($equipo1)
@@ -66,8 +69,13 @@ def buscar_partido(equipo1: str, equipo2: str | None = None, edicion: str | None
 
     filas = q(cypher, params)
     if not filas:
-        return f"No se encontraron partidos para esa combinación."
+        return "No se encontraron partidos para esa combinación."
     lineas = [f"{f['partido']} — {f['edicion']} (fecha {f['fecha']})" for f in filas]
+    lineas.append("")
+    lineas.append(
+        "REGLA: Esto NO incluye marcador ni resultado — solo cuándo se jugó. "
+        "Si te preguntan quién ganó o el marcador, di que necesitas otra tool, no lo inventes."
+    )
     return "\n".join(lineas)
 
 

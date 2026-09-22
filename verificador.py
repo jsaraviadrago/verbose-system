@@ -21,6 +21,18 @@ import re
 
 _NUM_RE = re.compile(r"\d+(?:\.\d+)?")
 _SCORE_RE = re.compile(r"\b(\d{1,2})\s*[-–a]\s*(\d{1,2})\b")
+_LIST_MARKER_RE = re.compile(r"(?m)^\s*\d+\.\s+")
+
+
+def _quitar_numeracion_de_lista(texto: str) -> str:
+    """
+    Quita marcadores de lista tipo '1. ', '2. ' al inicio de línea antes de
+    buscar números a verificar — son formato de presentación (el modelo
+    enumerando su propia respuesta), no un dato que venga de una tool.
+    Sin esto, un '1.' de lista se marcaba como 'número no verificado' aunque
+    la respuesta fuera perfecta.
+    """
+    return _LIST_MARKER_RE.sub("", texto)
 
 
 def _pares_marcador(texto: str) -> set[tuple[str, str]]:
@@ -34,8 +46,8 @@ def verificar_respuesta(respuesta: str, tool_outputs: list[str]) -> str:
 
     fuente = "\n".join(str(o) for o in tool_outputs)
 
-    # Capa 1: números sueltos
-    numeros_respuesta = set(_NUM_RE.findall(respuesta))
+    # Capa 1: números sueltos (ignorando numeración de lista tipo '1. ')
+    numeros_respuesta = set(_NUM_RE.findall(_quitar_numeracion_de_lista(respuesta)))
     numeros_fuente = set(_NUM_RE.findall(fuente))
     no_verificados = sorted(numeros_respuesta - numeros_fuente)
 

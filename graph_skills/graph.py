@@ -1,13 +1,19 @@
 """
 skills/graph — Capa 1 (histórico 2024-2025)
 
-A diferencia de statistics/history (una pregunta = una consulta fija),
-estas skills exploran el grafo sin una ruta predeterminada — es el tipo
-de skill que un agente "Historiador" o "Scout" usaría para investigar
-antes de decidir qué contar. El HECHO que devuelven sigue siendo exacto
-(viene del grafo), pero QUÉ camino explorar puede variar según lo que el
-agente le pida (max_hops, tipo de nodo, etc.) — ahí es donde entra lo
-no-determinista, no en los datos mismos.
+Exploración libre de conexiones — exclusiva del Narrador. A diferencia de
+statistics/history (una pregunta = una consulta fija), estas skills no
+tienen una ruta predeterminada: es el tipo de skill que un agente
+"explorador" usa para investigar antes de decidir qué contar. El HECHO que
+devuelven sigue siendo exacto (viene del grafo); lo no-determinista es
+QUÉ camino explorar, nunca el dato en sí.
+
+OJO — límite conocido, no cerrado todavía: a diferencia de statistics.py y
+history.py, estas dos funciones siguen resolviendo nombres por CONTAINS
+directo, sin pasar por resolver_jugador/resolver_equipo — porque pueden
+matchear cualquier tipo de nodo (jugador, equipo, edición), no solo uno.
+Si el nombre buscado es ambiguo, hoy devuelve el primer camino que
+encuentre en vez de avisar. Pendiente de blindar con el mismo patrón.
 """
 import pandas as pd
 from graph_skills._client import q
@@ -40,7 +46,11 @@ def encontrar_conexiones(nombre1: str, nombre2: str, max_hops: int = 4) -> str:
     pasos = []
     for i, rel in enumerate(relaciones):
         pasos.append(f"{nodos[i]} -[{rel}]-> {nodos[i+1]}")
-    return "Camino encontrado:\n" + "\n".join(pasos)
+    return (
+        "Camino encontrado:\n" + "\n".join(pasos) +
+        "\n\nREGLA: Este es el ÚNICO camino que devolvió la consulta — no agregues "
+        "pasos intermedios ni inventes otras conexiones."
+    )
 
 
 def explorar_vecinos(nombre: str, tipos_relacion: list[str] | None = None) -> str:
@@ -68,4 +78,7 @@ def explorar_vecinos(nombre: str, tipos_relacion: list[str] | None = None) -> st
     if not filas:
         return f"No se encontraron conexiones para '{nombre}'."
     df = pd.DataFrame(filas)
-    return f"Conexiones directas de '{nombre}':\n{df.to_string(index=False)}"
+    return (
+        f"Conexiones directas de '{nombre}':\n{df.to_string(index=False)}\n\n"
+        "REGLA: No inventes conexiones que no aparezcan en esta lista (limitada a 30)."
+    )

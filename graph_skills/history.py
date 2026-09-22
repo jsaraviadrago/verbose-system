@@ -2,90 +2,101 @@
 skills/history — Capa 1 (histórico 2024-2025)
 
 Reconstruye la "historia institucional" de un equipo: cambios de nombre,
-en qué ediciones participó, y hasta qué fase llegó en cada una. Esto es
-lo que en la conversación original se llamó team_history("X").
+en qué ediciones participó, y hasta qué fase llegó en cada una.
 """
-import pandas as pd
-from graph_skills._client import q
+from graph_skills._client import q, resolver_equipo
 
 
 def cambios_nombre(equipo: str) -> str:
     """Nombres históricos que ha usado un equipo (ej. Holanda -> Liverpool)."""
-    filas = q(
-        """
-        MATCH (t:Team)-[:USED_NAME]->(n:TeamName)
-        WHERE toLower(t.name) CONTAINS toLower($equipo)
-        RETURN t.name AS equipo_actual, n.name AS nombre, n.nameType AS tipo
-        """,
-        {"equipo": equipo},
+    equipo_id, nombre_real, opciones = resolver_equipo(equipo)
+    if equipo_id is None:
+        if not opciones:
+            return f"No se encontró al equipo '{equipo}'."
+        return (
+            f"Hay {len(opciones)} equipos que coinciden con '{equipo}': {', '.join(opciones)}. "
+            "Pregúntale al usuario a cuál se refiere antes de dar un resultado."
+        )
+
+    alias = q(
+        "MATCH (t:Team {id: $id})-[:USED_NAME]->(n:TeamName) WHERE n.nameType <> 'CANONICAL' "
+        "RETURN n.name AS nombre",
+        {"id": equipo_id},
     )
-    if not filas:
-        return f"No se encontró al equipo '{equipo}'."
-    canonico = filas[0]["equipo_actual"]
-    alias = [f["nombre"] for f in filas if f["tipo"] != "CANONICAL"]
     if not alias:
-        return f"{canonico} no registra cambios de nombre en el histórico."
-    return f"{canonico} se llamó anteriormente: {', '.join(alias)}"
+        return f"{nombre_real} no registra cambios de nombre en el histórico."
+    return (
+        f"{nombre_real} se llamó anteriormente: {', '.join(a['nombre'] for a in alias)}\n"
+        "REGLA: No inventes otros nombres anteriores que no aparezcan en esta lista."
+    )
 
 
 def participaciones_equipo(equipo: str) -> str:
     """Ediciones en las que participó un equipo."""
+    equipo_id, nombre_real, opciones = resolver_equipo(equipo)
+    if equipo_id is None:
+        if not opciones:
+            return f"No se encontró al equipo '{equipo}'."
+        return (
+            f"Hay {len(opciones)} equipos que coinciden con '{equipo}': {', '.join(opciones)}. "
+            "Pregúntale al usuario a cuál se refiere antes de dar un resultado."
+        )
+
     filas = q(
-        """
-        MATCH (t:Team)-[:PARTICIPATED_IN]->(e:Edition)
-        WHERE toLower(t.name) CONTAINS toLower($equipo)
-        RETURN t.name AS equipo, e.name AS edicion
-        ORDER BY e.year
-        """,
-        {"equipo": equipo},
+        "MATCH (t:Team {id: $id})-[:PARTICIPATED_IN]->(e:Edition) "
+        "RETURN e.name AS edicion ORDER BY e.year",
+        {"id": equipo_id},
     )
     if not filas:
-        return f"No se encontró participación de '{equipo}' en ninguna edición."
-    df = pd.DataFrame(filas)
-    return f"Participaciones de {filas[0]['equipo']}:\n{df[['edicion']].to_string(index=False)}"
+        return f"No se encontró participación de '{nombre_real}' en ninguna edición."
+    lineas = [f"Participaciones de {nombre_real}:"] + [f"  - {f['edicion']}" for f in filas]
+    lineas.append("")
+    lineas.append("REGLA: No inventes participaciones en ediciones que no aparezcan en esta lista.")
+    return "\n".join(lineas)
 
 
 def historia_equipo(equipo: str) -> str:
     """
     Reconstruye la historia completa de un equipo: nombres, participaciones
-    y fase máxima alcanzada por edición — todo en un solo resultado, como el
-    team_history("X") que se planteó originalmente.
+    y fase máxima alcanzada por edición (con resultado y contra quién) —
+    todo en un solo resultado.
     """
-    nombres = q(
-        """
-        MATCH (t:Team)-[:USED_NAME]->(n:TeamName)
-        WHERE toLower(t.name) CONTAINS toLower($equipo)
-        RETURN t.name AS equipo_actual, n.name AS nombre, n.nameType AS tipo
-        """,
-        {"equipo": equipo},
+    equipo_id, nombre_real, opciones = resolver_equipo(equipo)
+    if equipo_id is None:
+        if not opciones:
+            return f"No se encontró al equipo '{equipo}' en el grafo histórico."
+        return (
+            f"Hay {len(opciones)} equipos que coinciden con '{equipo}': {', '.join(opciones)}. "
+            "Pregúntale al usuario a cuál se refiere antes de dar un resultado."
+        )
+
+    alias = q(
+        "MATCH (t:Team {id: $id})-[:USED_NAME]->(n:TeamName) WHERE n.nameType <> 'CANONICAL' "
+        "RETURN n.name AS nombre",
+        {"id": equipo_id},
     )
     fases = q(
         """
-        MATCH (t:Team)-[r:REACHED_STAGE]->(s:Stage)
-        WHERE toLower(t.name) CONTAINS toLower($equipo)
+        MATCH (t:Team {id: $id})-[r:REACHED_STAGE]->(s:Stage)
         MATCH (e:Edition {id: r.editionId})
         OPTIONAL MATCH (t)-[:PLAYED_MATCH]->(m:Match)-[:AT_STAGE]->(s)
         WHERE EXISTS { (m)-[:IN_EDITION]->(e) }
-        OPTIONAL MATCH (rival:Team)-[:PLAYED_MATCH]->(m)
-        WHERE rival <> t
-        RETURN e.name AS edicion, s.name AS fase_maxima, t.id AS team_id,
-               m.winnerTeamId AS winner_id, rival.name AS rival
+        OPTIONAL MATCH (rival:Team)-[:PLAYED_MATCH]->(m) WHERE rival <> t
+        RETURN e.name AS edicion, s.name AS fase_maxima, m.winnerTeamId AS winner_id, rival.name AS rival
         ORDER BY e.year
         """,
-        {"equipo": equipo},
+        {"id": equipo_id},
     )
 
-    if not nombres and not fases:
-        return f"No se encontró al equipo '{equipo}' en el grafo histórico."
+    if not alias and not fases:
+        return f"No se encontró historia registrada para '{nombre_real}' en el grafo."
 
-    equipo_actual = nombres[0]["equipo_actual"] if nombres else fases[0].get("equipo", equipo)
-    lineas = [f"RESULTADO CALCULADO — presenta esto exactamente:", ""]
-    lineas.append(f"Historia de {equipo_actual} en la CLC:")
+    lineas = ["RESULTADO CALCULADO — presenta esto exactamente:", ""]
+    lineas.append(f"Historia de {nombre_real} en la CLC:")
 
-    alias = [n["nombre"] for n in nombres if n["tipo"] != "CANONICAL"]
     if alias:
         lineas.append("")
-        lineas.append(f"Nombres anteriores: {', '.join(alias)}")
+        lineas.append(f"Nombres anteriores: {', '.join(a['nombre'] for a in alias)}")
 
     if fases:
         lineas.append("")
@@ -93,7 +104,7 @@ def historia_equipo(equipo: str) -> str:
         for f in fases:
             resultado = ""
             if f.get("winner_id"):
-                if f["winner_id"] == f["team_id"]:
+                if f["winner_id"] == equipo_id:
                     resultado = " (ganó ese partido)"
                 elif f.get("rival"):
                     resultado = f" (perdió ante {f['rival']})"

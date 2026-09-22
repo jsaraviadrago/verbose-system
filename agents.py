@@ -7,10 +7,31 @@ MODEL = "openai/gpt-oss-20b"
 MAX_TOKENS = 1000
 MAX_TOOL_ROUNDS = 6
 
-# El ajuar es único y compartido — los 3 agentes ven las mismas 15 skills.
-# Cada agente elige cuáles usar según la pregunta y su propio rol (descrito
-# en su system prompt), no por una lista fija que restrinja de antemano.
+# El ajuar tiene 23 skills en total, pero no todas las ven todos los agentes.
+#
+# Principio: lo probabilístico debe ser QUÉ HISTORIA CONTAR (Narrador), no
+# QUÉ DATO USAR (Estadístico/Historiador). Le dimos el ajuar completo a los
+# 3 agentes hace unos días y confirmamos con evidencia real que eso genera
+# confusión entre tools semánticamente parecidas (ej. buscar_partido en vez
+# de historial_entre_equipos) — menos candidatos entre los que elegir baja
+# directo esa probabilidad, sin tocar el modelo ni el prompt.
 ALL_TOOL_NAMES = list(TOOL_SCHEMAS.keys())
+
+AGENT_TOOLS = {
+    "historiador": [
+        "buscar_equipo", "buscar_torneo", "listar_equipos",
+        "historia_equipo", "cambios_nombre", "participaciones_equipo",
+        "ficha_equipo", "consultar_wiki",
+    ],
+    "estadistico": [
+        "buscar_jugador", "buscar_partido",
+        "jugador_perfil_historico", "comparar_jugadores", "comparar_equipos",
+        "top_goleadores_historico", "finales_por_equipo", "premios_historicos",
+        "historial_entre_equipos", "enfrentamientos_entre_equipos",
+        "partidos_por_fecha", "racha_historica", "equipo_mas_dominante",
+    ],
+    "narrador": ALL_TOOL_NAMES,  # el único que de verdad necesita explorar libremente
+}
 
 AGENT_SYSTEM_PROMPTS = {
     "historiador": """Eres el Agente Historiador de la Copa Cambridge College.
@@ -112,7 +133,7 @@ def _run_agent(client: Groq, agent_key: str, messages: list) -> tuple[str, list[
     Loop de function-calling para un agente. Devuelve (respuesta_final,
     lista_de_resultados_crudos_de_tools) — esto último se usa en verificador.py.
     """
-    tool_names = ALL_TOOL_NAMES
+    tool_names = AGENT_TOOLS[agent_key]
     tools = [TOOL_SCHEMAS[name] for name in tool_names]
     system = AGENT_SYSTEM_PROMPTS[agent_key]
     history = [{"role": "system", "content": system}] + messages
