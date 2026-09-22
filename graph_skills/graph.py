@@ -19,6 +19,96 @@ import pandas as pd
 from graph_skills._client import q
 
 
+def jugador_amplitud_ediciones(n: int = 10) -> str:
+    """
+    Ranking de jugadores por AMPLITUD: en cuántas ediciones DISTINTAS
+    anotó al menos un gol — no por total de goles. Un jugador con 1 gol
+    en 4 ediciones distintas sale antes que uno con 20 goles en una sola.
+    Distinto de top_goleadores_historico (que ordena por total de goles).
+    """
+    filas = q(
+        """
+        MATCH (p:Player)-[r:SCORED_IN]->(e:Edition)
+        WHERE r.goals > 0
+        RETURN p.name AS jugador, count(DISTINCT e.name) AS ediciones,
+               collect(DISTINCT e.name) AS lista_ediciones
+        ORDER BY ediciones DESC
+        LIMIT $n
+        """,
+        {"n": n},
+    )
+    if not filas:
+        return "No hay datos suficientes en el grafo."
+    lineas = [f"Top {n} jugadores por AMPLITUD (ediciones distintas en las que anotaron, no total de goles):", ""]
+    for f in filas:
+        lineas.append(f"  {f['jugador']}: {f['ediciones']} ediciones ({', '.join(sorted(f['lista_ediciones']))})")
+    lineas.append("")
+    lineas.append(
+        "REGLA: Esto mide EN CUÁNTAS EDICIONES DISTINTAS anotó, no el total de goles — "
+        "no lo confundas con top_goleadores_historico, ni inventes jugadores fuera de esta lista."
+    )
+    return "\n".join(lineas)
+
+
+def equipo_mayor_variedad_rivales(n: int = 10) -> str:
+    """
+    Ranking de equipos por VARIEDAD de rivales enfrentados (cuántos
+    oponentes DISTINTOS ha jugado en su historia), no por cantidad total
+    de partidos jugados.
+    """
+    filas = q(
+        """
+        MATCH (t:Team)-[:PLAYED_MATCH]->(m:Match)<-[:PLAYED_MATCH]-(rival:Team)
+        WHERE t <> rival
+        RETURN t.name AS equipo, count(DISTINCT rival) AS rivales_distintos
+        ORDER BY rivales_distintos DESC
+        LIMIT $n
+        """,
+        {"n": n},
+    )
+    if not filas:
+        return "No hay datos suficientes en el grafo."
+    lineas = [f"Top {n} equipos por variedad de rivales distintos enfrentados:", ""]
+    for f in filas:
+        lineas.append(f"  {f['equipo']}: {f['rivales_distintos']} rivales distintos")
+    lineas.append("")
+    lineas.append(
+        "REGLA: Esto mide CUÁNTOS RIVALES DIFERENTES ha enfrentado, no la cantidad total "
+        "de partidos jugados — no inventes equipos fuera de esta lista."
+    )
+    return "\n".join(lineas)
+
+
+def equipo_mayor_variedad_goleadores(n: int = 10) -> str:
+    """
+    Ranking de equipos por VARIEDAD de goleadores (cuántos jugadores
+    DISTINTOS han anotado al menos un gol para ese equipo) — no por el
+    total de goles del equipo, ni por quién es su máximo goleador.
+    """
+    filas = q(
+        """
+        MATCH (p:Player)-[r:SCORED_IN]->(:Edition)
+        WHERE r.goals > 0
+        MATCH (t:Team {id: r.teamId})
+        RETURN t.name AS equipo, count(DISTINCT p) AS goleadores_distintos
+        ORDER BY goleadores_distintos DESC
+        LIMIT $n
+        """,
+        {"n": n},
+    )
+    if not filas:
+        return "No hay datos suficientes en el grafo."
+    lineas = [f"Top {n} equipos por variedad de goleadores distintos (jugadores diferentes que han anotado):", ""]
+    for f in filas:
+        lineas.append(f"  {f['equipo']}: {f['goleadores_distintos']} goleadores distintos")
+    lineas.append("")
+    lineas.append(
+        "REGLA: Esto mide CUÁNTOS JUGADORES DIFERENTES han anotado para ese equipo, no el "
+        "total de goles del equipo — no inventes equipos fuera de esta lista."
+    )
+    return "\n".join(lineas)
+
+
 def encontrar_conexiones(nombre1: str, nombre2: str, max_hops: int = 4) -> str:
     """
     Camino más corto entre dos entidades cualquiera del grafo (jugador,

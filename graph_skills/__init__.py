@@ -30,7 +30,13 @@ from graph_skills.statistics import (
     racha_historica,
     equipo_mas_dominante,
 )
-from graph_skills.graph import encontrar_conexiones, explorar_vecinos
+from graph_skills.graph import (
+    encontrar_conexiones,
+    explorar_vecinos,
+    jugador_amplitud_ediciones,
+    equipo_mayor_variedad_rivales,
+    equipo_mayor_variedad_goleadores,
+)
 
 __all__ = [
     "buscar_jugador", "buscar_equipo", "buscar_partido", "buscar_torneo", "listar_equipos",
@@ -39,4 +45,5 @@ __all__ = [
     "premios_historicos", "historial_entre_equipos", "enfrentamientos_entre_equipos",
     "ficha_equipo", "comparar_equipos", "comparar_jugadores", "partidos_por_fecha", "racha_historica", "equipo_mas_dominante",
     "encontrar_conexiones", "explorar_vecinos",
+    "jugador_amplitud_ediciones", "equipo_mayor_variedad_rivales", "equipo_mayor_variedad_goleadores",
 ]

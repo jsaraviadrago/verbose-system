@@ -29,6 +29,7 @@ AGENT_TOOLS = {
         "top_goleadores_historico", "finales_por_equipo", "premios_historicos",
         "historial_entre_equipos", "enfrentamientos_entre_equipos",
         "partidos_por_fecha", "racha_historica", "equipo_mas_dominante",
+        "jugador_amplitud_ediciones", "equipo_mayor_variedad_rivales", "equipo_mayor_variedad_goleadores",
     ],
     "narrador": ALL_TOOL_NAMES,  # el único que de verdad necesita explorar libremente
 }

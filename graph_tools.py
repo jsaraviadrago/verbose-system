@@ -12,6 +12,7 @@ from graph_skills import (
     premios_historicos, historial_entre_equipos, enfrentamientos_entre_equipos,
     ficha_equipo, comparar_equipos, comparar_jugadores, partidos_por_fecha, racha_historica, equipo_mas_dominante,
     encontrar_conexiones, explorar_vecinos,
+    jugador_amplitud_ediciones, equipo_mayor_variedad_rivales, equipo_mayor_variedad_goleadores,
 )
 from wiki import get_wiki
 
@@ -44,6 +45,9 @@ TOOL_REGISTRY = {
     "equipo_mas_dominante": equipo_mas_dominante,
     "encontrar_conexiones": encontrar_conexiones,
     "explorar_vecinos": explorar_vecinos,
+    "jugador_amplitud_ediciones": jugador_amplitud_ediciones,
+    "equipo_mayor_variedad_rivales": equipo_mayor_variedad_rivales,
+    "equipo_mayor_variedad_goleadores": equipo_mayor_variedad_goleadores,
     "consultar_wiki": consultar_wiki,
 }
 
@@ -353,6 +357,51 @@ TOOL_SCHEMAS = {
                 "type": "object",
                 "properties": {"nombre": {"type": "string"}},
                 "required": ["nombre"],
+            },
+        },
+    },
+    "jugador_amplitud_ediciones": {
+        "type": "function",
+        "function": {
+            "name": "jugador_amplitud_ediciones",
+            "description": (
+                "Ranking de jugadores por AMPLITUD: en cuántas ediciones DISTINTAS anotó al menos "
+                "un gol, no por total de goles. Úsala para preguntas tipo '¿qué jugador ha anotado "
+                "en más ediciones distintas?' — NO confundir con top_goleadores_historico."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"n": {"type": ["integer", "null"], "description": "Cuántos mostrar, default 10"}},
+            },
+        },
+    },
+    "equipo_mayor_variedad_rivales": {
+        "type": "function",
+        "function": {
+            "name": "equipo_mayor_variedad_rivales",
+            "description": (
+                "Ranking de equipos por VARIEDAD de rivales distintos enfrentados, no por cantidad "
+                "total de partidos jugados. Úsala para '¿qué equipo ha enfrentado a más rivales "
+                "distintos?'."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"n": {"type": ["integer", "null"], "description": "Cuántos mostrar, default 10"}},
+            },
+        },
+    },
+    "equipo_mayor_variedad_goleadores": {
+        "type": "function",
+        "function": {
+            "name": "equipo_mayor_variedad_goleadores",
+            "description": (
+                "Ranking de equipos por VARIEDAD de goleadores distintos (cuántos jugadores "
+                "diferentes anotaron para ese equipo), no por el total de goles ni por el máximo "
+                "goleador. Úsala para '¿qué equipo ha tenido más goleadores distintos?'."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"n": {"type": ["integer", "null"], "description": "Cuántos mostrar, default 10"}},
             },
         },
     },
