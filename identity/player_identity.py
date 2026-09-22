@@ -1,16 +1,19 @@
 from __future__ import annotations
 
-
 """
 player_identity.py
 ==================
-
 Capa privada de identidad de jugadores para Cambridge League.
 
 Objetivos
 ---------
 1. Cargar UNA VEZ el padron 2025 desde Excel a Firestore.
-2. Generar un PLAYER_ID estable mediante HMAC-SHA256.
+2. Reusar el PLAYER_ID que YA existe en el grafo (Neo4j), vía el cruce
+   DOCUMENTO_ID <-> PLAYER_ID que ya vive en la hoja Jugadores_Master del
+   mismo Excel. Solo se genera un PLAYER_ID nuevo (HMAC-SHA256) para
+   jugadores genuinamente nuevos que el grafo todavía no conoce — nunca
+   como esquema por defecto, para que todo el sistema (grafo, Firestore
+   público, Firestore privado) hable del mismo jugador con el mismo ID.
 3. Mantener DOCUMENTO_ID exclusivamente en una coleccion privada.
 4. Exponer al agente unicamente datos deportivos/identidad no sensibles.
 5. Evitar sobrescribir el padron 2025 usando Firestore create().
@@ -19,14 +22,12 @@ Uso inicial
 -----------
 export GOOGLE_CLOUD_PROJECT="futbol-ccl"
 export PLAYER_ID_SECRET="un-secreto-largo-y-privado"
-
-python player_identity.py upload --excel "ruta/al/padron_2025.xlsx"
+python player_identity.py upload --excel "ruta/al/padron.xlsx"
 
 Despues de la carga inicial, el agente NO necesita leer el Excel.
 Puede importar, por ejemplo:
 
     from player_identity import resolve_player_for_agent
-
     result = resolve_player_for_agent("Anibal Pacheco")
 
 IMPORTANTE
@@ -51,12 +52,12 @@ from google.api_core.exceptions import AlreadyExists
 from google.cloud import firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 
-
 DEFAULT_PROJECT_ID = "futbol-ccl"
 PRIVATE_COLLECTION = "jugadores_privado_2025"
 META_COLLECTION = "padrones_metadata"
 META_DOCUMENT = "padron_2025"
 PADRON_SHEET = "Padron_2025"
+MASTER_SHEET = "Jugadores_Master"  # trae el cruce DOCUMENTO_ID <-> PLAYER_ID del grafo
 
 REQUIRED_COLUMNS = {
     "AÑO",
@@ -65,6 +66,7 @@ REQUIRED_COLUMNS = {
     "JUGADOR",
     "DOCUMENTO_ID",
 }
+MASTER_REQUIRED_COLUMNS = {"PLAYER_ID", "DOCUMENTO_ID_INTERNO"}
 
 FORBIDDEN_AGENT_FIELDS = {
     "DNI",
@@ -100,17 +102,14 @@ def normalize_document(value: Any) -> str:
     """Normaliza el documento a 8 caracteres con ceros a la izquierda."""
     if pd.isna(value):
         raise ValueError("Documento vacio en el padron.")
-
     text = str(value).strip()
     if text.endswith(".0"):
         text = text[:-2]
-
     digits = re.sub(r"\D", "", text)
     if not digits:
         raise ValueError(f"Documento invalido: {value!r}")
     if len(digits) > 8:
         raise ValueError(f"Documento con mas de 8 digitos: {value!r}")
-
     return digits.zfill(8)
 
 
@@ -140,15 +139,20 @@ def clean_display_name(value: Any) -> str:
     return text.title()
 
 
-def make_player_id(document_id: str) -> str:
-    """Genera un PLAYER_ID estable usando HMAC-SHA256."""
+def make_player_id_nuevo(document_id: str) -> str:
+    """
+    Genera un PLAYER_ID nuevo vía HMAC-SHA256 — SOLO para jugadores que el
+    grafo todavía no conoce (no tienen fila en Jugadores_Master con este
+    DOCUMENTO_ID). Nunca es el camino por defecto: si el jugador ya existe
+    en el grafo, se reusa ESE id (ver cargar_cruce_player_id / read_padron_excel).
+    """
     secret = get_player_secret()
     digest = hmac.new(
         secret.encode("utf-8"),
         document_id.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    return f"pl_{digest[:20]}"
+    return f"pl_new_{digest[:20]}"
 
 
 def file_sha256(path: Path) -> str:
@@ -171,6 +175,31 @@ def participation_document_id(
     return "p_" + hashlib.sha256(raw).hexdigest()[:30]
 
 
+def cargar_cruce_player_id(path: Path) -> dict[str, str]:
+    """
+    Lee Jugadores_Master y devuelve {DOCUMENTO_ID normalizado -> PLAYER_ID
+    del grafo}. Esta es la pieza que evita inventar un ID nuevo para
+    jugadores que el grafo ya conoce — sin esto, cada carga generaría un
+    PLAYER_ID distinto y el sistema quedaría con 2 identidades por persona.
+    """
+    df = pd.read_excel(path, sheet_name=MASTER_SHEET, dtype=str)
+    df.columns = df.columns.astype(str).str.strip().str.upper()
+    missing = MASTER_REQUIRED_COLUMNS.difference(df.columns)
+    if missing:
+        raise ValueError(
+            f"La hoja {MASTER_SHEET} no tiene las columnas requeridas: {sorted(missing)}"
+        )
+
+    cruce: dict[str, str] = {}
+    for _, row in df.iterrows():
+        doc = row.get("DOCUMENTO_ID_INTERNO")
+        player_id = row.get("PLAYER_ID")
+        if pd.isna(doc) or pd.isna(player_id):
+            continue  # sin DNI enlazado en el master -- no se puede cruzar
+        cruce[normalize_document(doc)] = str(player_id).strip()
+    return cruce
+
+
 def read_padron_excel(excel_path: str | Path) -> pd.DataFrame:
     path = Path(excel_path)
     if not path.exists():
@@ -181,8 +210,8 @@ def read_padron_excel(excel_path: str | Path) -> pd.DataFrame:
         sheet_name=PADRON_SHEET,
         dtype={"DOCUMENTO_ID": str},
     )
-
     df.columns = df.columns.astype(str).str.strip().str.upper()
+
     missing = REQUIRED_COLUMNS.difference(df.columns)
     if missing:
         raise ValueError(
@@ -218,7 +247,16 @@ def read_padron_excel(excel_path: str | Path) -> pd.DataFrame:
         df.loc[typo_mask, "JUGADOR"] = "Anibal Pacheco"
         df.loc[typo_mask, "NOMBRE_NORMALIZADO"] = "ANIBAL PACHECO"
 
-    df["PLAYER_ID"] = df["DOCUMENTO_ID"].map(make_player_id)
+    # --- Aquí el cambio central: reusar el PLAYER_ID del grafo cuando exista ---
+    cruce = cargar_cruce_player_id(path)
+    ids_reusados = df["DOCUMENTO_ID"].map(cruce)
+    df["PLAYER_ID"] = ids_reusados
+    df["PLAYER_ID_ES_NUEVO"] = df["PLAYER_ID"].isna()
+    # Solo para los que el grafo NO conoce, se genera uno nuevo (prefijo
+    # distinto pl_new_ para que nunca se confunda con uno del grafo).
+    faltantes = df["PLAYER_ID_ES_NUEVO"]
+    df.loc[faltantes, "PLAYER_ID"] = df.loc[faltantes, "DOCUMENTO_ID"].map(make_player_id_nuevo)
+
     return df
 
 
@@ -228,7 +266,6 @@ def upload_padron_2025(
 ) -> dict[str, Any]:
     """
     Carga el padron 2025 como snapshot write-once.
-
     - Usa create(), nunca set/update.
     - Si metadata ya existe, aborta.
     - Si un documento individual ya existe, aborta.
@@ -243,15 +280,15 @@ def upload_padron_2025(
         "collection": PRIVATE_COLLECTION,
         "records": int(len(df)),
         "players_unique": int(df["PLAYER_ID"].nunique()),
+        "players_reusados_del_grafo": int((~df["PLAYER_ID_ES_NUEVO"]).sum()),
+        "players_nuevos_sin_grafo": int(df["PLAYER_ID_ES_NUEVO"].sum()),
         "file_sha256": file_hash,
     }
-
     if dry_run:
         return result
 
     db = get_db()
     meta_ref = db.collection(META_COLLECTION).document(META_DOCUMENT)
-
     if meta_ref.get().exists:
         raise RuntimeError(
             "El snapshot padron_2025 ya existe en Firestore. No se sobrescribira."
@@ -267,9 +304,9 @@ def upload_padron_2025(
             team=row["EQUIPO"],
             category=row["CATEGORIA"],
         )
-
         payload = {
             "PLAYER_ID": row["PLAYER_ID"],
+            "PLAYER_ID_ES_NUEVO": bool(row["PLAYER_ID_ES_NUEVO"]),
             # PRIVADO. Nunca devolver al agente.
             "DOCUMENTO_ID": row["DOCUMENTO_ID"],
             "NOMBRE_OFICIAL": row["JUGADOR"],
@@ -279,14 +316,12 @@ def upload_padron_2025(
             "CATEGORIA": row["CATEGORIA"],
             "FUENTE": "padron_2025",
         }
-
         ref = collection.document(doc_id)
         if ref.get().exists:
             raise RuntimeError(
                 f"El documento {doc_id} ya existe. "
                 "La carga se cancela para preservar inmutabilidad."
             )
-
         rows_to_create.append((doc_id, payload))
 
     created = 0
@@ -301,12 +336,13 @@ def upload_padron_2025(
                 "SHA256": file_hash,
                 "REGISTROS": int(len(df)),
                 "JUGADORES_UNICOS": int(df["PLAYER_ID"].nunique()),
+                "JUGADORES_REUSADOS_DEL_GRAFO": result["players_reusados_del_grafo"],
+                "JUGADORES_NUEVOS_SIN_GRAFO": result["players_nuevos_sin_grafo"],
                 "COLECCION": PRIVATE_COLLECTION,
                 "ESTADO": "INMUTABLE",
                 "FUENTE_ARCHIVO": path.name,
             }
         )
-
     except AlreadyExists as exc:
         raise RuntimeError(
             "Firestore detecto un documento ya existente. "
@@ -333,13 +369,11 @@ def sanitize_for_agent(value: Any) -> Any:
 def resolve_player_for_agent(player_name: str) -> list[dict[str, Any]]:
     """
     Busca por nombre normalizado y devuelve SOLO datos permitidos.
-
     Puede devolver mas de una persona si existen homonimos.
     En ese caso el agente debe desambiguar y nunca adivinar.
     """
     normalized = normalize_name(player_name)
     db = get_db()
-
     docs = (
         db.collection(PRIVATE_COLLECTION)
         .where(
@@ -353,29 +387,24 @@ def resolve_player_for_agent(player_name: str) -> list[dict[str, Any]]:
     )
 
     players: dict[str, dict[str, Any]] = {}
-
     for snap in docs:
         data = snap.to_dict()
         player_id = data["PLAYER_ID"]
-
         if player_id not in players:
             players[player_id] = {
                 "PLAYER_ID": player_id,
                 "NOMBRE": data["NOMBRE_OFICIAL"],
                 "PARTICIPACIONES": [],
             }
-
         participation = {
             "AÑO": data["AÑO"],
             "EQUIPO": data["EQUIPO"],
             "CATEGORIA": data["CATEGORIA"],
         }
-
         if participation not in players[player_id]["PARTICIPACIONES"]:
             players[player_id]["PARTICIPACIONES"].append(participation)
 
     result = list(players.values())
-
     for player in result:
         player["PARTICIPACIONES"] = sorted(
             player["PARTICIPACIONES"],
@@ -385,14 +414,12 @@ def resolve_player_for_agent(player_name: str) -> list[dict[str, Any]]:
                 item["CATEGORIA"],
             ),
         )
-
     return sanitize_for_agent(result)
 
 
 def get_player_public_profile(player_id: str) -> dict[str, Any] | None:
     """Perfil seguro para el agente; nunca incluye DOCUMENTO_ID."""
     db = get_db()
-
     docs = (
         db.collection(PRIVATE_COLLECTION)
         .where(
@@ -406,23 +433,19 @@ def get_player_public_profile(player_id: str) -> dict[str, Any] | None:
     )
 
     profile: dict[str, Any] | None = None
-
     for snap in docs:
         data = snap.to_dict()
-
         if profile is None:
             profile = {
                 "PLAYER_ID": data["PLAYER_ID"],
                 "NOMBRE": data["NOMBRE_OFICIAL"],
                 "PARTICIPACIONES": [],
             }
-
         participation = {
             "AÑO": data["AÑO"],
             "EQUIPO": data["EQUIPO"],
             "CATEGORIA": data["CATEGORIA"],
         }
-
         if participation not in profile["PARTICIPACIONES"]:
             profile["PARTICIPACIONES"].append(participation)
 
@@ -437,7 +460,6 @@ def get_player_public_profile(player_id: str) -> dict[str, Any] | None:
             item["CATEGORIA"],
         ),
     )
-
     return sanitize_for_agent(profile)
 
 
@@ -448,7 +470,6 @@ def build_parser() -> argparse.ArgumentParser:
             "de identidad de jugadores."
         )
     )
-
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     upload = subparsers.add_parser(
@@ -458,7 +479,7 @@ def build_parser() -> argparse.ArgumentParser:
     upload.add_argument(
         "--excel",
         required=True,
-        help="Ruta al Excel que contiene la pestana Padron_2025.",
+        help="Ruta al Excel que contiene las pestañas Padron_2025 y Jugadores_Master.",
     )
     upload.add_argument(
         "--dry-run",
