@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
 
+ULTIMA_FECHA_GRUPOS = 9  # fechas 1-9 = fase de grupos; 10+ = playoffs (cuartos, semis, final)
+                          # coincide con CurrentTournament/fixture_schedule.csv -- si el formato
+                          # del torneo cambia el numero de fechas de grupo, actualizar aqui tambien.
+
 
 class DataProcessor:
     def __init__(self):
@@ -49,8 +53,14 @@ class DataProcessor:
         return resultados
 
     def process_standings(self, df):
-        """Tabla unica de posiciones para Clausura 2026, sin grupos."""
+        """Tabla unica de posiciones para Clausura 2026, SOLO fase de grupos.
+        Los resultados de playoffs (fecha > ULTIMA_FECHA_GRUPOS) no deben
+        sumar a esta tabla, aunque ya esten publicados en Firestore.
+        La Racha, a proposito, SI incluye todos los partidos (forma
+        reciente real del equipo) -- ver process_match_results(df) mas
+        abajo, que recibe el df completo sin filtrar."""
         data = self._played(df)
+        data = data[data["FECHA"].astype(int) <= ULTIMA_FECHA_GRUPOS].copy()
         if data.empty:
             return pd.DataFrame(columns=["EQUIPO", "G", "E", "P", "PJ", "GF", "GC", "GD", "Puntos", "PythEXP", "Racha"])
 
@@ -78,7 +88,7 @@ class DataProcessor:
 
         stats = stats.sort_values(["Puntos", "GD", "GF", "GC"], ascending=[False, False, False, True]).reset_index(drop=True)
 
-        match_results = self.process_match_results(df)
+        match_results = self.process_match_results(df)  # df completo, sin filtrar -- a propósito (ver docstring)
         stats["Racha"] = stats["EQUIPO"].apply(lambda e: self.calcular_racha(match_results, e))
 
         return stats
