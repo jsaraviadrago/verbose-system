@@ -1,54 +1,54 @@
-FECHA_NUM,FECHA,PARTIDO,HORA,EQUIPO_1,EQUIPO_2
-1,2026-08-02,1,08:50,Manchester City,Celtic
-1,2026-08-02,2,09:50,Juventus,Barcelona
-1,2026-08-02,3,10:50,Milan,Bayern
-1,2026-08-02,4,08:50,Chelsea,Fiorentina
-1,2026-08-02,5,09:50,Liverpool,Real Cambridge
-2,2026-08-09,6,08:50,Juventus,Bayern
-2,2026-08-09,7,09:50,Manchester City,Fiorentina
-2,2026-08-09,8,08:50,Milan,Liverpool
-2,2026-08-09,9,09:50,Chelsea,Real Cambridge
-2,2026-08-09,10,10:50,Barcelona,Celtic
-3,2026-08-23,11,08:50,Juventus,Liverpool
-3,2026-08-23,12,09:50,Chelsea,Milan
-3,2026-08-23,13,10:50,Manchester City,Real Cambridge
-3,2026-08-23,14,08:50,Fiorentina,Celtic
-3,2026-08-23,15,09:50,Barcelona,Bayern
-4,2026-09-06,16,08:50,Barcelona,Liverpool
-4,2026-09-06,17,09:50,Juventus,Chelsea
-4,2026-09-06,18,08:50,Bayern,Celtic
-4,2026-09-06,19,09:50,Fiorentina,Real Cambridge
-4,2026-09-06,20,10:50,Manchester City,Milan
-5,2026-09-13,21,08:50,Fiorentina,Milan
-5,2026-09-13,22,09:50,Manchester City,Juventus
-5,2026-09-13,23,10:50,Real Cambridge,Celtic
-5,2026-09-13,24,08:50,Bayern,Liverpool
-5,2026-09-13,25,09:50,Barcelona,Chelsea
-6,2026-09-27,26,08:50,Liverpool,Celtic
-6,2026-09-27,27,09:50,Fiorentina,Juventus
-6,2026-09-27,28,08:50,Real Cambridge,Milan
-6,2026-09-27,29,09:50,Barcelona,Manchester City
-6,2026-09-27,30,10:50,Bayern,Chelsea
-7,2026-10-04,31,08:50,Milan,Celtic
-7,2026-10-04,32,09:50,Bayern,Manchester City
-7,2026-10-04,33,10:50,Fiorentina,Barcelona
-7,2026-10-04,34,08:50,Real Cambridge,Juventus
-7,2026-10-04,35,09:50,Liverpool,Chelsea
-8,2026-10-18,36,08:50,Liverpool,Manchester City
-8,2026-10-18,37,09:50,Real Cambridge,Barcelona
-8,2026-10-18,38,08:50,Bayern,Fiorentina
-8,2026-10-18,39,09:50,Milan,Juventus
-8,2026-10-18,40,10:50,Chelsea,Celtic
-9,2026-10-25,41,08:50,Milan,Barcelona
-9,2026-10-25,42,09:50,Juventus,Celtic
-9,2026-10-25,43,10:50,Chelsea,Manchester City
-9,2026-10-25,44,08:50,Real Cambridge,Bayern
-9,2026-10-25,45,09:50,Liverpool,Fiorentina
-10,2026-11-08,46,08:50,,
-10,2026-11-08,47,09:50,,
-10,2026-11-08,48,08:50,,
-10,2026-11-08,49,09:50,,
-11,2026-11-15,50,09:50,,
-11,2026-11-15,51,10:50,,
-12,2026-11-22,52,09:50,,
-12,2026-11-22,53,10:50,,
+FECHA_NUM,FECHA,PARTIDO,HORA,FASE,EQUIPO_1,EQUIPO_2
+1,2026-08-02,1,08:50,Fase de Grupos,Manchester City,Celtic
+1,2026-08-02,2,09:50,Fase de Grupos,Juventus,Barcelona
+1,2026-08-02,3,10:50,Fase de Grupos,Milan,Bayern
+1,2026-08-02,4,08:50,Fase de Grupos,Chelsea,Fiorentina
+1,2026-08-02,5,09:50,Fase de Grupos,Liverpool,Real Cambridge
+2,2026-08-09,6,08:50,Fase de Grupos,Juventus,Bayern
+2,2026-08-09,7,09:50,Fase de Grupos,Manchester City,Fiorentina
+2,2026-08-09,8,08:50,Fase de Grupos,Milan,Liverpool
+2,2026-08-09,9,09:50,Fase de Grupos,Chelsea,Real Cambridge
+2,2026-08-09,10,10:50,Fase de Grupos,Barcelona,Celtic
+3,2026-08-23,11,08:50,Fase de Grupos,Juventus,Liverpool
+3,2026-08-23,12,09:50,Fase de Grupos,Chelsea,Milan
+3,2026-08-23,13,10:50,Fase de Grupos,Manchester City,Real Cambridge
+3,2026-08-23,14,08:50,Fase de Grupos,Fiorentina,Celtic
+3,2026-08-23,15,09:50,Fase de Grupos,Barcelona,Bayern
+4,2026-09-06,16,08:50,Fase de Grupos,Barcelona,Liverpool
+4,2026-09-06,17,09:50,Fase de Grupos,Juventus,Chelsea
+4,2026-09-06,18,08:50,Fase de Grupos,Bayern,Celtic
+4,2026-09-06,19,09:50,Fase de Grupos,Fiorentina,Real Cambridge
+4,2026-09-06,20,10:50,Fase de Grupos,Manchester City,Milan
+5,2026-09-13,21,08:50,Fase de Grupos,Fiorentina,Milan
+5,2026-09-13,22,09:50,Fase de Grupos,Manchester City,Juventus
+5,2026-09-13,23,10:50,Fase de Grupos,Real Cambridge,Celtic
+5,2026-09-13,24,08:50,Fase de Grupos,Bayern,Liverpool
+5,2026-09-13,25,09:50,Fase de Grupos,Barcelona,Chelsea
+6,2026-09-27,26,08:50,Fase de Grupos,Liverpool,Celtic
+6,2026-09-27,27,09:50,Fase de Grupos,Fiorentina,Juventus
+6,2026-09-27,28,08:50,Fase de Grupos,Real Cambridge,Milan
+6,2026-09-27,29,09:50,Fase de Grupos,Barcelona,Manchester City
+6,2026-09-27,30,10:50,Fase de Grupos,Bayern,Chelsea
+7,2026-10-04,31,08:50,Fase de Grupos,Milan,Celtic
+7,2026-10-04,32,09:50,Fase de Grupos,Bayern,Manchester City
+7,2026-10-04,33,10:50,Fase de Grupos,Fiorentina,Barcelona
+7,2026-10-04,34,08:50,Fase de Grupos,Real Cambridge,Juventus
+7,2026-10-04,35,09:50,Fase de Grupos,Liverpool,Chelsea
+8,2026-10-18,36,08:50,Fase de Grupos,Liverpool,Manchester City
+8,2026-10-18,37,09:50,Fase de Grupos,Real Cambridge,Barcelona
+8,2026-10-18,38,08:50,Fase de Grupos,Bayern,Fiorentina
+8,2026-10-18,39,09:50,Fase de Grupos,Milan,Juventus
+8,2026-10-18,40,10:50,Fase de Grupos,Chelsea,Celtic
+9,2026-10-25,41,08:50,Fase de Grupos,Milan,Barcelona
+9,2026-10-25,42,09:50,Fase de Grupos,Juventus,Celtic
+9,2026-10-25,43,10:50,Fase de Grupos,Chelsea,Manchester City
+9,2026-10-25,44,08:50,Fase de Grupos,Real Cambridge,Bayern
+9,2026-10-25,45,09:50,Fase de Grupos,Liverpool,Fiorentina
+10,2026-11-08,46,08:50,Cuartos de Final,,
+10,2026-11-08,47,09:50,Cuartos de Final,,
+10,2026-11-08,48,08:50,Cuartos de Final,,
+10,2026-11-08,49,09:50,Cuartos de Final,,
+11,2026-11-15,50,09:50,Semifinal,,
+11,2026-11-15,51,10:50,Semifinal,,
+12,2026-11-22,52,09:50,Tercer y Cuarto Puesto,,
+12,2026-11-22,53,10:50,Final,,

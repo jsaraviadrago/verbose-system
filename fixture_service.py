@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 DEFAULT_FIXTURE_PATH = (
     Path(__file__).resolve().parent
     / "CurrentTournament"
@@ -31,6 +30,7 @@ def get_pending_fixture(
             "FECHA_NUM": "int64",
             "PARTIDO": "int64",
             "HORA": "string",
+            "FASE": "string",
             "EQUIPO_1": "string",
             "EQUIPO_2": "string",
         },
@@ -45,7 +45,6 @@ def get_pending_fixture(
             .str.strip()
             .str.upper()
         )
-
         if {"FECHA", "PARTIDO"}.issubset(played.columns):
             played = played[["FECHA", "PARTIDO"]].copy()
             played["FECHA"] = pd.to_numeric(
@@ -74,17 +73,17 @@ def get_pending_fixture(
         ["FECHA", "HORA", "PARTIDO"]
     ).reset_index(drop=True)
 
-    # Solo las cuatro columnas que debe ver el usuario.
+    # Las cinco columnas que debe ver el usuario (FASE incluida).
     output = fixture[
-        ["FECHA", "HORA", "EQUIPO_1", "EQUIPO_2"]
+        ["FECHA", "HORA", "FASE", "EQUIPO_1", "EQUIPO_2"]
     ].copy()
-
     output["FECHA"] = output["FECHA"].dt.strftime("%d/%m/%Y")
 
     return output.rename(
         columns={
             "FECHA": "Fecha",
             "HORA": "Hora",
+            "FASE": "Fase",
             "EQUIPO_1": "Equipo 1",
             "EQUIPO_2": "Equipo 2",
         }
