@@ -16,7 +16,7 @@ from zoneinfo import ZoneInfo
 import streamlit as st
 import streamlit.components.v1 as components
 
-RESTABLECER_EN = datetime(2026, 9, 27, 3, 0, 0, tzinfo=ZoneInfo("America/Lima"))
+RESTABLECER_EN = datetime(2026, 9, 25, 20, 0, 0, tzinfo=ZoneInfo("America/Lima"))
 
 
 def mostrar_comunicado_si_corresponde():
