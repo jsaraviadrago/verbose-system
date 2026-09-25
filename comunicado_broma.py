@@ -17,7 +17,7 @@ from zoneinfo import ZoneInfo
 import streamlit as st
 import streamlit.components.v1 as components
 
-RESTABLECER_EN = datetime(2026, 9, 25, 20, 0, 0, tzinfo=ZoneInfo("America/Lima"))
+RESTABLECER_EN = datetime(2026, 9, 25, 15, 0, 0, tzinfo=ZoneInfo("America/Lima"))
 
 
 def mostrar_comunicado_si_corresponde():
@@ -71,7 +71,7 @@ def mostrar_comunicado_si_corresponde():
             <span id="cuenta">--</span>
         </div>
         <script>
-            const objetivo = new Date("2026-09-25T20:00:00-05:00").getTime();
+            const objetivo = new Date("2026-09-25T15:00:00-05:00").getTime();
             function actualizar() {
                 const restante = objetivo - new Date().getTime();
                 const el = document.getElementById("cuenta");
