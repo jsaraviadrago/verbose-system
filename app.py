@@ -1,3 +1,6 @@
+from comunicado_broma import mostrar_comunicado_si_corresponde
+mostrar_comunicado_si_corresponde()
+
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
