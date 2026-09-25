@@ -1,3 +1,4 @@
+
 """
 Modulo aislado para el comunicado-broma temporal.
 
