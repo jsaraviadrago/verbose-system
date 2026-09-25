@@ -70,7 +70,7 @@ def mostrar_comunicado_si_corresponde():
             <span id="cuenta">--</span>
         </div>
         <script>
-            const objetivo = new Date("2026-09-27T03:00:00-05:00").getTime();
+            const objetivo = new Date("2026-09-25T20:00:00-05:00").getTime();
             function actualizar() {
                 const restante = objetivo - new Date().getTime();
                 const el = document.getElementById("cuenta");
