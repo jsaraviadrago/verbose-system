@@ -1,3 +1,6 @@
+from comunicado_broma import mostrar_comunicado_si_corresponde
+mostrar_comunicado_si_corresponde()
+
 import inspect
 import json
 from groq import Groq
