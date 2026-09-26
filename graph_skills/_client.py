@@ -71,3 +71,33 @@ def resolver_equipo(nombre: str) -> tuple[str | None, str | None, list[str]]:
         return filas[0]["id"], filas[0]["nombre"], []
     opciones = sorted({f["nombre"] for f in filas})
     return None, None, opciones
+
+
+def resolver_entidad(nombre: str) -> tuple[str | None, str | None, list[str]]:
+    """
+    Igual que resolver_jugador/resolver_equipo, pero para CUALQUIER tipo de
+    nodo del grafo (Player, Team, Edition, Stage, Match, Award...) — usado
+    por encontrar_conexiones y explorar_vecinos, que a propósito no están
+    limitadas a un solo tipo de entidad.
+
+    Compara por elementId (identidad real del nodo), no por texto — mismo
+    principio que los otros resolvers: dos entidades distintas nunca deben
+    tratarse como una sola solo porque comparten nombre visible.
+
+    Devuelve (element_id, nombre, []) si hay exactamente una entidad.
+    Devuelve (None, None, opciones) si hay 0 o 2+ — cada opción incluye el
+    tipo de nodo, para poder distinguir (ej. un jugador y un equipo con
+    nombres parecidos).
+    """
+    filas = q(
+        """
+        MATCH (a)
+        WHERE toLower(coalesce(a.name, a.id)) CONTAINS toLower($nombre)
+        RETURN DISTINCT elementId(a) AS eid, coalesce(a.name, a.id) AS nombre, labels(a)[0] AS tipo
+        """,
+        {"nombre": nombre},
+    )
+    if len(filas) == 1:
+        return filas[0]["eid"], filas[0]["nombre"], []
+    opciones = sorted({f"{f['nombre']} ({f['tipo']})" for f in filas})
+    return None, None, opciones
