@@ -239,6 +239,38 @@ class DataProcessor:
             return 0.0, 0.0
         return standings_df["GF"].median(), standings_df["GC"].median()
 
+    def resultados_reales_por_fecha(self, df, fecha_num, partido_num=None):
+        """
+        Resultados REALES ya jugados para una fecha (y opcionalmente un
+        partido) especifico de playoff -- 10=cuartos, 11=semifinal,
+        12=final Y tercer puesto (comparten fecha, por eso partido_num
+        permite separarlos: partido 53=Final, 52=Tercer y Cuarto Puesto,
+        segun fixture_schedule.csv).
+
+        Autocontenido -- no reusa process_match_results a proposito, para
+        no arriesgar que le aparezca una columna nueva a la tabla de
+        'Resultados' que ya funciona bien.
+
+        Si todavia no hay resultado real, devuelve un DataFrame vacio --
+        quien llama decide si mostrar la proyeccion en su lugar.
+        """
+        columnas = ["Equipo A", "Goles A", "Equipo B", "Goles B"]
+        data = self._played(df)
+        if data.empty:
+            return pd.DataFrame(columns=columnas)
+
+        data = data[data["FECHA"].astype(int) == int(fecha_num)]
+        if partido_num is not None:
+            data = data[data["PARTIDO"].astype(int) == int(partido_num)]
+        if data.empty:
+            return pd.DataFrame(columns=columnas)
+
+        teams = data.pivot(index="PARTIDO", columns="EQUIPO_NUMERO", values="EQUIPO").rename(columns={1: "Equipo A", 2: "Equipo B"}).reset_index()
+        goals = data.pivot(index="PARTIDO", columns="EQUIPO_NUMERO", values="GOLES").rename(columns={1: "Goles A", 2: "Goles B"}).reset_index()
+        out = teams.merge(goals, on="PARTIDO", validate="one_to_one")
+        out.columns.name = None
+        return out[columnas]
+
     def process_match_results(self, df):
         """Todos los resultados de Clausura 2026, sin grupos."""
         data = self._played(df)
