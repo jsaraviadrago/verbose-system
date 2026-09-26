@@ -1,7 +1,7 @@
 """
-Servidor MCP para el grafo histórico de la Copa Lima de Clubes (2024-2025).
+Servidor MCP para el grafo histórico de la Copa Cambridge League (2024-2025).
 
-Expone las mismas funciones de graph_skills que ya usan los agentes
+Expone las mismas 26 skills de graph_skills que ya usan los agentes
 Historiador/Estadístico/Narrador en la app de Streamlit — mismo ajuar,
 distinto protocolo de exposición. Cada tool ejecuta un Cypher fijo y
 parametrizado; el cliente MCP (Claude Desktop, u otro) decide cuándo
@@ -13,7 +13,7 @@ claude_desktop_config.json:
 {
   "mcpServers": {
     "clc-grafo": {
-      "command": "python3",
+      "command": "/ruta/a/tu/venv/bin/python3",
       "args": ["/ruta/completa/a/mcp_server.py"],
       "env": {
         "NEO4J_URI": "neo4j+s://TU_INSTANCIA.databases.neo4j.io",
@@ -24,8 +24,7 @@ claude_desktop_config.json:
   }
 }
 
-Reinicia Claude Desktop después de guardar — debería aparecer "clc-grafo"
-en el ícono de herramientas (🔨) del chat.
+Reinicia Claude Desktop después de guardar.
 """
 from mcp.server.mcpserver import MCPServer
 
@@ -34,14 +33,25 @@ from graph_skills import (
     buscar_equipo,
     buscar_partido,
     buscar_torneo,
+    listar_equipos,
     historia_equipo,
     cambios_nombre,
     participaciones_equipo,
+    ficha_equipo,
     jugador_perfil_historico,
+    comparar_equipos,
+    comparar_jugadores,
     top_goleadores_historico,
     finales_por_equipo,
     premios_historicos,
     historial_entre_equipos,
+    enfrentamientos_entre_equipos,
+    partidos_por_fecha,
+    racha_historica,
+    equipo_mas_dominante,
+    jugador_amplitud_ediciones,
+    equipo_mayor_variedad_rivales,
+    equipo_mayor_variedad_goleadores,
     encontrar_conexiones,
     explorar_vecinos,
 )
@@ -64,7 +74,7 @@ def buscar_equipo_tool(nombre: str) -> str:
 
 @mcp.tool()
 def buscar_partido_tool(equipo1: str, equipo2: str | None = None, edicion: str | None = None) -> str:
-    """Encuentra partidos de un equipo, opcionalmente cruzado con otro equipo y/o edición."""
+    """Encuentra CUÁNDO se jugó un partido (fecha, edición) de un equipo — NO trae marcador. Para el resultado, usa historial_entre_equipos_tool."""
     return buscar_partido(equipo1, equipo2, edicion)
 
 
@@ -75,8 +85,14 @@ def buscar_torneo_tool() -> str:
 
 
 @mcp.tool()
+def listar_equipos_tool() -> str:
+    """Lista TODOS los equipos que existen en el grafo histórico, de un tiro — úsala siempre que necesites saber qué equipos hay, en vez de reconstruirlo explorando partido por partido."""
+    return listar_equipos()
+
+
+@mcp.tool()
 def historia_equipo_tool(equipo: str) -> str:
-    """Historia institucional completa de un equipo: nombres anteriores, participaciones y fase máxima por edición."""
+    """Historia institucional de un equipo: nombres anteriores, participaciones y fase máxima por edición (con resultado y contra quién)."""
     return historia_equipo(equipo)
 
 
@@ -93,9 +109,27 @@ def participaciones_equipo_tool(equipo: str) -> str:
 
 
 @mcp.tool()
+def ficha_equipo_tool(equipo: str) -> str:
+    """Ficha CONSOLIDADA de un equipo: nombres anteriores, fase máxima por edición, finales jugadas, y su goleador histórico — todo en una sola llamada."""
+    return ficha_equipo(equipo)
+
+
+@mcp.tool()
 def jugador_perfil_historico_tool(nombre: str) -> str:
-    """Perfil histórico completo de un jugador: goles por equipo/edición, tarjetas y premios."""
+    """Perfil histórico completo de un jugador: goles por equipo/edición, tarjetas y premios. Si el nombre es ambiguo (varias personas), pide que se aclare en vez de adivinar."""
     return jugador_perfil_historico(nombre)
+
+
+@mcp.tool()
+def comparar_equipos_tool(equipo1: str, equipo2: str) -> str:
+    """Compara dos equipos lado a lado: finales jugadas/ganadas, récord general y goleador histórico. NO es head-to-head — para eso usa historial_entre_equipos_tool."""
+    return comparar_equipos(equipo1, equipo2)
+
+
+@mcp.tool()
+def comparar_jugadores_tool(nombre1: str, nombre2: str) -> str:
+    """Compara dos jugadores lado a lado: goles por equipo, tarjetas y premios."""
+    return comparar_jugadores(nombre1, nombre2)
 
 
 @mcp.tool()
@@ -106,7 +140,7 @@ def top_goleadores_historico_tool(n: int = 10) -> str:
 
 @mcp.tool()
 def finales_por_equipo_tool() -> str:
-    """Cuántas finales jugó cada equipo, histórico (2024-2025)."""
+    """Cuántas finales jugó cada equipo, histórico, con detalle de en qué edición fue cada una y si ganó o perdió."""
     return finales_por_equipo()
 
 
@@ -118,8 +152,50 @@ def premios_historicos_tool(award_type: str) -> str:
 
 @mcp.tool()
 def historial_entre_equipos_tool(equipo1: str, equipo2: str) -> str:
-    """Head-to-head: todos los partidos jugados entre dos equipos específicos."""
+    """Lista PARTIDO POR PARTIDO todos los enfrentamientos entre dos equipos, con fase y marcador exacto (incluye quién ganó, incluso si fue por penales)."""
     return historial_entre_equipos(equipo1, equipo2)
+
+
+@mcp.tool()
+def enfrentamientos_entre_equipos_tool(equipo1: str | None = None, equipo2: str | None = None) -> str:
+    """Estadística AGREGADA de enfrentamientos (victorias-empates-derrotas). Sin ningún equipo, escanea TODO el grafo para '¿qué equipo siempre/nunca le ha ganado a otro?'."""
+    return enfrentamientos_entre_equipos(equipo1, equipo2)
+
+
+@mcp.tool()
+def partidos_por_fecha_tool(numero_fecha: int, edicion: str | None = None) -> str:
+    """Lista los partidos jugados en una fecha/jornada específica, opcionalmente filtrado por edición."""
+    return partidos_por_fecha(numero_fecha, edicion)
+
+
+@mcp.tool()
+def racha_historica_tool(equipo: str | None = None) -> str:
+    """Racha ganadora, perdedora y de empates más larga. Sin equipo, busca en TODA la historia quién tiene la más larga de todos (incluye empates entre varios equipos si los hay)."""
+    return racha_historica(equipo)
+
+
+@mcp.tool()
+def equipo_mas_dominante_tool() -> str:
+    """Ranking histórico de 'dominancia' (métrica compuesta, NO es un título oficial del torneo)."""
+    return equipo_mas_dominante()
+
+
+@mcp.tool()
+def jugador_amplitud_ediciones_tool(n: int = 10) -> str:
+    """Ranking de jugadores por AMPLITUD: en cuántas ediciones distintas anotó, no por total de goles."""
+    return jugador_amplitud_ediciones(n)
+
+
+@mcp.tool()
+def equipo_mayor_variedad_rivales_tool(n: int = 10) -> str:
+    """Ranking de equipos por VARIEDAD de rivales distintos enfrentados, no por cantidad total de partidos."""
+    return equipo_mayor_variedad_rivales(n)
+
+
+@mcp.tool()
+def equipo_mayor_variedad_goleadores_tool(n: int = 10) -> str:
+    """Ranking de equipos por VARIEDAD de goleadores distintos, no por total de goles del equipo."""
+    return equipo_mayor_variedad_goleadores(n)
 
 
 @mcp.tool()
@@ -130,7 +206,7 @@ def encontrar_conexiones_tool(nombre1: str, nombre2: str) -> str:
 
 @mcp.tool()
 def explorar_vecinos_tool(nombre: str) -> str:
-    """Todo lo directamente conectado a una entidad en el grafo — punto de partida para explorar antes de decidir qué contar."""
+    """Todo lo directamente conectado a una entidad en el grafo (limitado a 30 resultados) — punto de partida para explorar antes de decidir qué contar."""
     return explorar_vecinos(nombre)
 
 
