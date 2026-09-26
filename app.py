@@ -238,7 +238,8 @@ st.dataframe(
     hide_index=True,
 )
 st.caption(
-    "Nota: la Racha muestra los últimos 3 partidos de cada equipo, "
+    "Nota: la tabla solo cuenta fase de grupos. La Racha muestra los "
+    "últimos 3 partidos de cada equipo (incluye playoffs una vez jugados), "
     "de izquierda a derecha del más antiguo al más reciente "
     "(🟢 ganó · 🟡 empató · 🔴 perdió)."
 )
@@ -256,55 +257,66 @@ st.dataframe(
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PLAYOFFS (PROYECCIÓN)
+# PLAYOFFS
 # ─────────────────────────────────────────────────────────────────────────────
 st.divider()
-st.subheader("🏆 Playoffs — Proyección según tabla actual")
-st.caption(
-    "⚠️ Cruces estimados asumiendo que el mejor sembrado avanza en cada ronda. "
-    "No son oficiales hasta que se jueguen los partidos reales."
-)
+st.subheader("🏆 Playoffs")
 
 POR_DEFINIR = ("Por definir", "Por definir")
 
-if len(standings) >= 8:
-    cuartos = dp.calcular_cuartos_proyectados(standings)
-else:
-    cuartos = [POR_DEFINIR] * 4
 
-semifinal = [POR_DEFINIR] * 2
-final = [POR_DEFINIR]
-tercer_puesto = [POR_DEFINIR]
+def _resultados_ronda_completa(fecha_num, partidos_num):
+    """Resultados reales de una ronda -- solo se consideran 'listos' si
+    TODOS los partidos de esa ronda ya tienen resultado, para no mostrar
+    una mezcla a medio llenar. Si falta alguno, devuelve DataFrame vacío
+    y quien llama debe mostrar la proyección en su lugar."""
+    filas = []
+    for p in partidos_num:
+        r = dp.resultados_reales_por_fecha(df_partidos, fecha_num, p)
+        if r.empty:
+            return pd.DataFrame()
+        filas.append(r)
+    return pd.concat(filas, ignore_index=True)
+
+
+if len(standings) >= 8:
+    cuartos_proyectados = dp.calcular_cuartos_proyectados(standings)
+else:
+    cuartos_proyectados = [POR_DEFINIR] * 4
 
 st.markdown("#### Cuartos de Final")
-st.dataframe(
-    tabla_cruce(cuartos),
-    use_container_width=True,
-    hide_index=True,
-)
+reales_cuartos = _resultados_ronda_completa(10, [46, 47, 48, 49])
+if not reales_cuartos.empty:
+    st.dataframe(reales_cuartos, use_container_width=True, hide_index=True)
+else:
+    st.caption("⚠️ Proyección estimada — no oficial hasta que se jueguen los partidos reales.")
+    st.dataframe(tabla_cruce(cuartos_proyectados), use_container_width=True, hide_index=True)
 
 st.markdown("#### Semifinal")
-st.dataframe(
-    tabla_cruce(semifinal),
-    use_container_width=True,
-    hide_index=True,
-)
+reales_semis = _resultados_ronda_completa(11, [50, 51])
+if not reales_semis.empty:
+    st.dataframe(reales_semis, use_container_width=True, hide_index=True)
+else:
+    st.caption("⚠️ Proyección estimada — no oficial hasta que se juegue el partido real.")
+    st.dataframe(tabla_cruce([POR_DEFINIR] * 2), use_container_width=True, hide_index=True)
 
 col_final, col_tercer = st.columns(2)
 with col_final:
     st.markdown("#### Final")
-    st.dataframe(
-        tabla_cruce(final),
-        use_container_width=True,
-        hide_index=True,
-    )
+    reales_final = _resultados_ronda_completa(12, [53])
+    if not reales_final.empty:
+        st.dataframe(reales_final, use_container_width=True, hide_index=True)
+    else:
+        st.caption("⚠️ Proyección — no oficial.")
+        st.dataframe(tabla_cruce([POR_DEFINIR]), use_container_width=True, hide_index=True)
 with col_tercer:
     st.markdown("#### Tercer y Cuarto Puesto")
-    st.dataframe(
-        tabla_cruce(tercer_puesto),
-        use_container_width=True,
-        hide_index=True,
-    )
+    reales_tercer = _resultados_ronda_completa(12, [52])
+    if not reales_tercer.empty:
+        st.dataframe(reales_tercer, use_container_width=True, hide_index=True)
+    else:
+        st.caption("⚠️ Proyección — no oficial.")
+        st.dataframe(tabla_cruce([POR_DEFINIR]), use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ESTADÍSTICAS POR EQUIPO
