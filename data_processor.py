@@ -5,6 +5,16 @@ ULTIMA_FECHA_GRUPOS = 9  # fechas 1-9 = fase de grupos; 10+ = playoffs (cuartos,
                           # coincide con CurrentTournament/fixture_schedule.csv -- si el formato
                           # del torneo cambia el numero de fechas de grupo, actualizar aqui tambien.
 
+SANCIONES_PUNTOS = {
+    # Resolución de la Comisión de Justicia (24-sep-2026): refuerzos no
+    # autorizados en Milan, Bayern de Munich y Real Cambridge -- deducción
+    # de 1 punto a cada uno. Actualiza este diccionario si hay una sanción
+    # nueva; déjalo vacío ({}) el día que ya no aplique ninguna.
+    "Milan": 1,
+    "Bayern de Munich": 1,
+    "Real Cambridge": 1,
+}
+
 
 class DataProcessor:
     def __init__(self):
@@ -62,7 +72,7 @@ class DataProcessor:
         data = self._played(df)
         data = data[data["FECHA"].astype(int) <= ULTIMA_FECHA_GRUPOS].copy()
         if data.empty:
-            return pd.DataFrame(columns=["EQUIPO", "G", "E", "P", "PJ", "GF", "GC", "GD", "Puntos", "PythEXP", "Racha"])
+            return pd.DataFrame(columns=["EQUIPO", "G", "E", "P", "PJ", "GF", "GC", "GD", "Puntos", "PythEXP", "Sancionado", "Racha"])
 
         data["g_count"] = data["RESULTADO"].eq("G").astype(int)
         data["e_count"] = data["RESULTADO"].eq("E").astype(int)
@@ -83,6 +93,8 @@ class DataProcessor:
         stats = stats.merge(gf, on="EQUIPO", how="left").merge(gc, on="EQUIPO", how="left").fillna(0)
         stats["GD"] = stats["GF"] - stats["GC"]
         stats["Puntos"] = stats["G"] * 3 + stats["E"]
+        stats["Puntos"] = stats["Puntos"] - stats["EQUIPO"].map(SANCIONES_PUNTOS).fillna(0).astype(int)
+        stats["Sancionado"] = stats["EQUIPO"].isin(SANCIONES_PUNTOS)
         gf_p, gc_p = stats["GF"] ** 1.2, stats["GC"] ** 1.2
         stats["PythEXP"] = (gf_p / (gf_p + gc_p)).fillna(0).round(2)
 
