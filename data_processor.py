@@ -11,7 +11,7 @@ SANCIONES_PUNTOS = {
     # de 1 punto a cada uno. Actualiza este diccionario si hay una sanción
     # nueva; déjalo vacío ({}) el día que ya no aplique ninguna.
     "Milan": 1,
-    "Bayern de Munich": 1,
+    "Bayern": 1,
     "Real Cambridge": 1,
 }
 
