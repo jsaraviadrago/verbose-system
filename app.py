@@ -229,11 +229,18 @@ st.subheader("Tabla de Posiciones")
 standings = dp.process_standings(df_partidos)
 standings_display = standings.copy()
 standings_display["Racha"] = standings_display["Racha"].apply(formatear_racha)
+<<<<<<< HEAD
 if "Sancionado" in standings_display.columns:
     standings_display["EQUIPO"] = standings_display.apply(
         lambda fila: fila["EQUIPO"] + "*" if fila["Sancionado"] else fila["EQUIPO"],
         axis=1,
     )
+=======
+standings_display["EQUIPO"] = standings_display.apply(
+    lambda fila: fila["EQUIPO"] + "*" if fila["Sancionado"] else fila["EQUIPO"],
+    axis=1,
+)
+>>>>>>> 82ed56fd4d70056e4f6b6029ee42ddc384dbbf7b
 
 columnas_orden = ["EQUIPO", "Puntos", "Racha", "PJ", "G", "E", "P", "GF", "GC", "GD"]
 
@@ -242,7 +249,11 @@ st.dataframe(
     use_container_width=True,
     hide_index=True,
 )
+<<<<<<< HEAD
 if "Sancionado" in standings.columns and not standings.empty and standings["Sancionado"].any():
+=======
+if not standings.empty and standings["Sancionado"].any():
+>>>>>>> 82ed56fd4d70056e4f6b6029ee42ddc384dbbf7b
     st.caption(
         "*Milan, Bayern de Munich y Real Cambridge tienen -1 punto por resolución "
         "de la Comisión de Justicia (24-sep-2026, refuerzos no autorizados)."
