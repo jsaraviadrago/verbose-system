@@ -229,6 +229,11 @@ st.subheader("Tabla de Posiciones")
 standings = dp.process_standings(df_partidos)
 standings_display = standings.copy()
 standings_display["Racha"] = standings_display["Racha"].apply(formatear_racha)
+if "Sancionado" in standings_display.columns:
+    standings_display["EQUIPO"] = standings_display.apply(
+        lambda fila: fila["EQUIPO"] + "*" if fila["Sancionado"] else fila["EQUIPO"],
+        axis=1,
+    )
 
 columnas_orden = ["EQUIPO", "Puntos", "Racha", "PJ", "G", "E", "P", "GF", "GC", "GD"]
 
@@ -237,6 +242,11 @@ st.dataframe(
     use_container_width=True,
     hide_index=True,
 )
+if "Sancionado" in standings.columns and not standings.empty and standings["Sancionado"].any():
+    st.caption(
+        "*Milan, Bayern de Munich y Real Cambridge tienen -1 punto por resolución "
+        "de la Comisión de Justicia (24-sep-2026, refuerzos no autorizados)."
+    )
 st.caption(
     "Nota: la tabla solo cuenta fase de grupos. La Racha muestra los "
     "últimos 3 partidos de cada equipo (incluye playoffs una vez jugados), "
