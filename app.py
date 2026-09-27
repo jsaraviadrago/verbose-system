@@ -244,7 +244,7 @@ st.dataframe(
 )
 if "Sancionado" in standings.columns and not standings.empty and standings["Sancionado"].any():
     st.caption(
-        "*Milan, Bayern de Munich y Real Cambridge tienen -1 punto por resolución "
+        "*Milan, Bayern y Real Cambridge tienen -1 punto por resolución "
         "de la Comisión de Justicia (24-sep-2026, refuerzos no autorizados)."
     )
 st.caption(
