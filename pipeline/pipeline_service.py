@@ -205,6 +205,14 @@ def read_fixture(
         df["Equipo"]
     )
 
+    # Partidos de playoffs aun sin equipos definidos: se ignoran hasta que
+    # AMBOS equipos esten escritos en el fixture.
+    _vacio = df["Equipo_norm"].isna() | df["Equipo_norm"].eq("")
+    _sin_definir = df.loc[_vacio, ["Fecha", "Partido"]].drop_duplicates()
+    if not _sin_definir.empty:
+        _k = df[["Fecha", "Partido"]].apply(tuple, axis=1)
+        df = df.loc[~_k.isin(set(map(tuple, _sin_definir.to_numpy())))].copy()
+
     if (
         df["Equipo_norm"].isna().any()
         or df["Equipo_norm"].eq("").any()
@@ -412,6 +420,14 @@ def validate_and_transform(
         raise ValueError(
             "La Google Sheet no contiene partidos."
         )
+
+    s = s.loc[
+        s["Equipo_1"].astype("string").str.strip().fillna("").ne("")
+        & s["Equipo_2"].astype("string").str.strip().fillna("").ne("")
+    ].copy()
+
+    if s.empty:
+        raise ValueError("La Google Sheet no contiene partidos con ambos equipos.")
 
     s["Fecha"] = pd.to_numeric(
         s["Fecha"],
