@@ -34,3 +34,548 @@ def formatear_racha(resultados):
         return ""
     return " ".join(ICONOS_RACHA.get(r, "⚪") for r in resultados)
 
+
+def formatear_racha_goles(anoto_lista):
+    """Igual que formatear_racha, pero para la racha de gol de un jugador:
+    🟢 si anotó ese partido, 🔴 si no."""
+    if not anoto_lista:
+        return ""
+    return " ".join("🟢" if anoto else "🔴" for anoto in anoto_lista)
+
+
+def tabla_cruce(cruces, columnas=("Local", "Visitante")):
+    """Convierte una lista de tuplas (equipo_a, equipo_b) en un DataFrame,
+    con el orden: Equipo, Resultado, Equipo, Resultado."""
+    local_col, visitante_col = columnas
+    tabla = pd.DataFrame(cruces, columns=[local_col, visitante_col])
+    tabla["Goles " + local_col] = ""
+    tabla["Goles " + visitante_col] = ""
+    return tabla[[local_col, "Goles " + local_col, visitante_col, "Goles " + visitante_col]]
+
+
+st.set_page_config(
+    page_title="Cambridge College Lima",
+    layout="wide",
+)
+
+st.markdown(
+    "<h1 style='text-align: center;'>"
+    "Campeonato Cambridge College Lima - Clausura 2026"
+    "</h1>",
+    unsafe_allow_html=True,
+)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BOTONES: DONAR POR YAPE / COMPARTIR (arriba a la derecha)
+# ─────────────────────────────────────────────────────────────────────────────
+if "YAPE_NUMERO" not in st.secrets:
+    st.error(f"Secret 'YAPE_NUMERO' no encontrado. Claves disponibles en st.secrets: {list(st.secrets.keys())}")
+    st.stop()
+NUMERO_YAPE = st.secrets["YAPE_NUMERO"]
+LINK_APP = "https://futbol-ccl-apafa.streamlit.app/"
+
+YAPE_LOGO_SVG_PATH = Path(__file__).parent / "assets" / "yape_logo.svg"
+YAPE_LOGO_PNG_PATH = Path(__file__).parent / "assets" / "yape_logo.png"
+YAPE_LOGO_WEBP_PATH = Path(__file__).parent / "assets" / "yape_logo.webp"
+
+_, col_yape, col_compartir = st.columns([8, 1.3, 1.3])
+
+with col_yape:
+    with st.popover("📲 Yape", use_container_width=True):
+        if YAPE_LOGO_WEBP_PATH.exists():
+            st.image(str(YAPE_LOGO_WEBP_PATH), width=60)
+        elif YAPE_LOGO_PNG_PATH.exists():
+            st.image(str(YAPE_LOGO_PNG_PATH), width=60)
+        st.caption("CELULAR")
+        st.markdown(f"### {NUMERO_YAPE}")
+        st.code(NUMERO_YAPE, language=None)
+        st.caption("Toca el número para copiarlo. Cuenta exclusiva para donaciones de la liga.")
+
+with col_compartir:
+    components.html(
+        f"""
+        <div style="text-align:center; font-family:sans-serif;">
+            <button id="btn-compartir" style="
+                background-color:#1a73e8; color:#ffffff; border:none;
+                padding:7px 12px; border-radius:8px; font-size:13px;
+                font-weight:600; cursor:pointer; width:100%;
+            ">🔗 Compartir</button>
+        </div>
+        <script>
+            const btnShare = document.getElementById("btn-compartir");
+            btnShare.addEventListener("click", async () => {{
+                const shareData = {{
+                    title: "Cambridge College Lima - Clausura 2026",
+                    text: "Mira los resultados y la tabla de posiciones del campeonato:",
+                    url: "{LINK_APP}"
+                }};
+                try {{
+                    if (navigator.share) {{
+                        await navigator.share(shareData);
+                    }} else {{
+                        await navigator.clipboard.writeText(shareData.url);
+                        btnShare.innerText = "¡Copiado! ✅";
+                        setTimeout(() => {{ btnShare.innerText = "🔗 Compartir"; }}, 2000);
+                    }}
+                }} catch (err) {{
+                    // el usuario cerro el menu de compartir, no hacer nada
+                }}
+            }});
+        </script>
+        """,
+        height=45,
+    )
+
+# ── Logos de los equipos ─────────────────────────────────────────────
+# Cargar resultados una sola vez
+df_partidos = get_partidos_clausura_2026()
+
+st.image(
+    str(LOGO_PATH),
+    use_container_width=True,
+)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# EL CRONISTA (agente de historia del torneo 2024-2025)
+# ─────────────────────────────────────────────────────────────────────────────
+with st.container(border=True):
+    st.markdown("### 📜 El Cronista")
+    st.caption(
+        "Pregúntale sobre la historia, estadísticas o curiosidades del "
+        "campeonato (cubre 2024-2025)."
+    )
+    if st.button(
+        "💬 Conversar con El Cronista",
+        use_container_width=True,
+        key="abrir_cronista",
+    ):
+        st.session_state.show_assistant = True
+
+if st.session_state.get("show_assistant", False):
+    if st.button("⬅️ Volver a resultados", key="cerrar_cronista"):
+        st.session_state.show_assistant = False
+        st.rerun()
+    show_assistant()
+    st.stop()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FIXTURE PENDIENTE
+# ─────────────────────────────────────────────────────────────────────────────
+if df_partidos.empty:
+    st.info(
+        "Todavia no hay resultados publicados para Clausura 2026."
+    )
+    st.stop()
+
+st.subheader("📅 Próximos Partidos")
+
+fixture_pendiente = get_pending_fixture(df_partidos)
+
+if fixture_pendiente.empty:
+    st.success("🏆 No quedan partidos pendientes.")
+else:
+    # Playoffs aun sin cruce definido: celdas de equipo vacias -> "Por definir"
+    for _col in ("Equipo 1", "Equipo 2"):
+        if _col in fixture_pendiente.columns:
+            fixture_pendiente[_col] = (
+                fixture_pendiente[_col]
+                .astype("object")
+                .where(fixture_pendiente[_col].notna(), "")
+                .astype(str)
+                .str.strip()
+                .replace("", "Por definir")
+            )
+    st.dataframe(
+        fixture_pendiente,
+        use_container_width=True,
+        hide_index=True,
+    )
+
+st.divider()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RESULTADOS
+# ─────────────────────────────────────────────────────────────────────────────
+promedio, total_goles, stats_fecha = dp.get_general_stats(
+    df_partidos
+)
+
+col_m1, col_m2 = st.columns(2)
+with col_m1:
+    st.metric(
+        "⚽ Promedio goles por partido",
+        f"{promedio:.2f}",
+    )
+with col_m2:
+    st.metric(
+        "🔢 Total goles",
+        int(total_goles),
+    )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ESTADÍSTICAS POR FECHA
+# ─────────────────────────────────────────────────────────────────────────────
+if not stats_fecha.empty:
+    st.subheader("Estadísticas por Fecha")
+    st.write("**Goles Totales**")
+    st.line_chart(
+        stats_fecha
+        .set_index("FECHA")["Total_Goles"]
+    )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TABLA DE POSICIONES
+# ─────────────────────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("Tabla de Posiciones")
+
+standings = dp.process_standings(df_partidos)
+standings_display = standings.copy()
+standings_display["Racha"] = standings_display["Racha"].apply(formatear_racha)
+if "Sancionado" in standings_display.columns:
+    standings_display["EQUIPO"] = standings_display.apply(
+        lambda fila: fila["EQUIPO"] + "*" if fila["Sancionado"] else fila["EQUIPO"],
+        axis=1,
+    )
+
+columnas_orden = ["EQUIPO", "Puntos", "Racha", "PJ", "G", "E", "P", "GF", "GC", "GD"]
+
+st.dataframe(
+    standings_display[columnas_orden],
+    use_container_width=True,
+    hide_index=True,
+)
+if "Sancionado" in standings.columns and not standings.empty and standings["Sancionado"].any():
+    st.caption(
+        "*Milan, Bayern y Real Cambridge tienen -1 punto por resolución "
+        "de la Comisión de Justicia (24-sep-2026, refuerzos no autorizados)."
+    )
+st.caption(
+    "Nota: la tabla solo cuenta fase de grupos. La Racha muestra los "
+    "últimos 3 partidos de cada equipo (incluye playoffs una vez jugados), "
+    "de izquierda a derecha del más antiguo al más reciente "
+    "(🟢 ganó · 🟡 empató · 🔴 perdió)."
+)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RESULTADOS
+# ─────────────────────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("Resultados")
+
+st.dataframe(
+    dp.process_match_results(df_partidos),
+    use_container_width=True,
+    hide_index=True,
+)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PLAYOFFS
+# ─────────────────────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("🏆 Playoffs")
+
+POR_DEFINIR = ("Por definir", "Por definir")
+
+
+def _resultados_ronda_completa(fecha_num, partidos_num):
+    """Resultados reales de una ronda -- solo se consideran 'listos' si
+    TODOS los partidos de esa ronda ya tienen resultado, para no mostrar
+    una mezcla a medio llenar. Si falta alguno, devuelve DataFrame vacío
+    y quien llama debe mostrar la proyección en su lugar."""
+    filas = []
+    for p in partidos_num:
+        r = dp.resultados_reales_por_fecha(df_partidos, fecha_num, p)
+        if r.empty:
+            return pd.DataFrame()
+        filas.append(r)
+    return pd.concat(filas, ignore_index=True)
+
+
+if len(standings) >= 8:
+    cuartos_proyectados = dp.calcular_cuartos_proyectados(standings)
+else:
+    cuartos_proyectados = [POR_DEFINIR] * 4
+
+st.markdown("#### Cuartos de Final")
+reales_cuartos = _resultados_ronda_completa(10, [46, 47, 48, 49])
+if not reales_cuartos.empty:
+    st.dataframe(reales_cuartos, use_container_width=True, hide_index=True)
+else:
+    st.caption("⚠️ Proyección estimada — no oficial hasta que se jueguen los partidos reales.")
+    st.dataframe(tabla_cruce(cuartos_proyectados), use_container_width=True, hide_index=True)
+
+st.markdown("#### Semifinal")
+reales_semis = _resultados_ronda_completa(11, [50, 51])
+if not reales_semis.empty:
+    st.dataframe(reales_semis, use_container_width=True, hide_index=True)
+else:
+    st.caption("⚠️ Proyección estimada — no oficial hasta que se juegue el partido real.")
+    st.dataframe(tabla_cruce([POR_DEFINIR] * 2), use_container_width=True, hide_index=True)
+
+col_final, col_tercer = st.columns(2)
+with col_final:
+    st.markdown("#### Final")
+    reales_final = _resultados_ronda_completa(12, [53])
+    if not reales_final.empty:
+        st.dataframe(reales_final, use_container_width=True, hide_index=True)
+    else:
+        st.caption("⚠️ Proyección — no oficial.")
+        st.dataframe(tabla_cruce([POR_DEFINIR]), use_container_width=True, hide_index=True)
+with col_tercer:
+    st.markdown("#### Tercer y Cuarto Puesto")
+    reales_tercer = _resultados_ronda_completa(12, [52])
+    if not reales_tercer.empty:
+        st.dataframe(reales_tercer, use_container_width=True, hide_index=True)
+    else:
+        st.caption("⚠️ Proyección — no oficial.")
+        st.dataframe(tabla_cruce([POR_DEFINIR]), use_container_width=True, hide_index=True)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ESTADÍSTICAS POR EQUIPO
+# ─────────────────────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("Estadísticas por Equipo")
+
+# ── 🎯 Scatter Ataque vs Defensa (cuadrantes por mediana) ──────────────────
+if standings.empty:
+    st.info("Todavía no hay suficientes partidos jugados para este gráfico.")
+else:
+    med_gf, med_gc = dp.calcular_medianas_ataque_defensa(standings)
+
+    base = alt.Chart(standings)
+
+    puntos = base.mark_circle(size=220, color="#1f77b4").encode(
+        x=alt.X(
+            "GC:Q",
+            title="Goles recibidos (menos → mejor defensa)",
+            scale=alt.Scale(reverse=True),
+        ),
+        y=alt.Y("GF:Q", title="Goles anotados"),
+        tooltip=[
+            alt.Tooltip("EQUIPO:N", title="Equipo"),
+            alt.Tooltip("GF:Q", title="Goles a favor"),
+            alt.Tooltip("GC:Q", title="Goles en contra"),
+            alt.Tooltip("GD:Q", title="Diferencia"),
+        ],
+    )
+
+    etiquetas = base.mark_text(
+        align="left", dx=9, dy=-9, fontSize=11, color="#1f77b4", fontWeight="bold"
+    ).encode(
+        x="GC:Q",
+        y="GF:Q",
+        text="EQUIPO:N",
+    )
+
+    linea_h = (
+        alt.Chart(pd.DataFrame({"y": [med_gf]}))
+        .mark_rule(strokeDash=[4, 4], color="gray")
+        .encode(y="y:Q")
+    )
+    linea_v = (
+        alt.Chart(pd.DataFrame({"x": [med_gc]}))
+        .mark_rule(strokeDash=[4, 4], color="gray")
+        .encode(x="x:Q")
+    )
+
+    cuadrantes = (linea_h + linea_v + puntos + etiquetas).properties(height=420)
+
+    st.altair_chart(cuadrantes, use_container_width=True)
+    st.caption(
+        "Cuanto más arriba y a la derecha, mejor: ataca y defiende bien. "
+        "Abajo a la izquierda, el que más necesita mejorar en ambos frentes."
+    )
+
+# ── 📊 Detalle en barras (goleadores, defensas, amarillas) ─────────────────
+with st.expander("📊 Ver más estadísticas por equipo (goleadores, defensas y amarillas)"):
+    graf_col1, graf_col2, graf_col3 = st.columns(3)
+
+    goles_equipos = dp.ordenar_para_grafico_goleadores(standings)
+
+    with graf_col1:
+        st.markdown("### ⚽ Equipos más goleadores")
+        chart_goles = (
+            alt.Chart(goles_equipos)
+            .mark_bar()
+            .encode(
+                x=alt.X(
+                    "EQUIPO:N",
+                    sort="-y",
+                    title="",
+                ),
+                y=alt.Y(
+                    "GF:Q",
+                    title="Goles",
+                ),
+                tooltip=[
+                    alt.Tooltip(
+                        "EQUIPO:N",
+                        title="Equipo",
+                    ),
+                    alt.Tooltip(
+                        "GF:Q",
+                        title="Goles",
+                    ),
+                ],
+            )
+        )
+        st.altair_chart(
+            chart_goles,
+            use_container_width=True,
+        )
+
+    with graf_col2:
+        st.markdown("### 🛡️ Mejores defensas")
+        defensas = dp.ordenar_para_grafico_defensas(standings)
+        chart_defensas = (
+            alt.Chart(defensas)
+            .mark_bar()
+            .encode(
+                x=alt.X("EQUIPO:N", sort="y", title=""),
+                y=alt.Y("GC:Q", title="Goles en contra"),
+                tooltip=[
+                    alt.Tooltip("EQUIPO:N", title="Equipo"),
+                    alt.Tooltip("GC:Q", title="Goles en contra"),
+                ],
+            )
+        )
+        st.altair_chart(chart_defensas, use_container_width=True)
+
+    df_tarjetas_grafico = get_tarjetas_clausura_2026()
+    amarillas_equipos = dp.agrupar_amarillas_por_equipo(df_tarjetas_grafico)
+
+    with graf_col3:
+        st.markdown("### 🟨 Equipos con más amarillas")
+        if amarillas_equipos.empty:
+            st.info(
+                "Todavía no hay tarjetas registradas."
+            )
+        else:
+            chart_amarillas = (
+                alt.Chart(amarillas_equipos)
+                .mark_bar()
+                .encode(
+                    x=alt.X(
+                        "EQUIPO:N",
+                        sort="-y",
+                        title="",
+                    ),
+                    y=alt.Y(
+                        "AMARILLAS:Q",
+                        title="Amarillas",
+                    ),
+                    tooltip=[
+                        alt.Tooltip(
+                            "EQUIPO:N",
+                            title="Equipo",
+                        ),
+                        alt.Tooltip(
+                            "AMARILLAS:Q",
+                            title="Amarillas",
+                        ),
+                    ],
+                )
+            )
+            st.altair_chart(
+                chart_amarillas,
+                use_container_width=True,
+            )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GOLEADORES
+# ─────────────────────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("⚽ Máximos Goleadores")
+
+df_goleadores = get_goleadores_clausura_2026()
+top_8 = dp.procesar_top_goleadores(df_goleadores)
+
+if top_8.empty:
+    st.info(
+        "Todavía no hay goleadores publicados."
+    )
+else:
+    st.dataframe(
+        top_8,
+        use_container_width=True,
+        hide_index=True,
+    )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JUGADORES EN RACHA
+# ─────────────────────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("🔥 Jugadores en Racha")
+st.caption(
+    "Los 8 jugadores con más goles en sus últimos 3 partidos jugados. "
+    "🟢 anotó ese partido · 🔴 no anotó."
+)
+
+df_goleadores_detalle = get_goleadores_detalle_clausura_2026()
+en_racha = dp.calcular_jugadores_en_racha(df_goleadores_detalle)
+
+if en_racha.empty:
+    st.info(
+        "Todavía no hay suficientes datos por partido para calcular rachas."
+    )
+else:
+    en_racha_display = en_racha.copy()
+    en_racha_display["Racha"] = en_racha_display["Racha"].apply(formatear_racha_goles)
+    st.dataframe(
+        en_racha_display[["Pos.", "Jugador", "Racha", "Equipo", "Goles"]],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DISCIPLINA
+# ─────────────────────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("Disciplina")
+
+df_tarjetas = get_tarjetas_clausura_2026()
+amarillas, rojas = dp.procesar_disciplina_jugadores(df_tarjetas)
+
+left, right = st.columns(2)
+
+with left:
+    st.markdown("### 🟨 Amarillas")
+    st.dataframe(
+        amarillas,
+        use_container_width=True,
+        hide_index=True,
+    )
+with right:
+    st.markdown("### 🟥 Rojas")
+    st.dataframe(
+        rojas,
+        use_container_width=True,
+        hide_index=True,
+    )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ANALÍTICA
+# ─────────────────────────────────────────────────────────────────────────────
+st.divider()
+st.subheader("📊 Analítica")
+
+with st.expander("Expectativa pitagórica (puntos reales vs. esperados)"):
+    st.dataframe(
+        dp.calcular_puntos_esperados(standings),
+        use_container_width=True,
+        hide_index=True,
+    )
+    st.caption(
+        "**Pyth**: expectativa pitagórica. Compara los goles a favor y en contra de un equipo "
+        "para estimar qué proporción de sus partidos SIN CONTAR empates 'debería' haber ganado, "
+        "más allá del resultado real de cada partido puntual.\n\n"
+        "**Puntos Esperados**: toma en cuenta la proporción real de empates de cada equipo "
+        "(esos ya valen 1 punto fijo) y reparte el resto de partidos entre victoria y derrota "
+        "según Pyth. Son los puntos que le tocarían al equipo si esa proyección se hubiera "
+        "cumplido exactamente, en vez de los resultados reales.\n\n"
+        "**Diferencia**: Puntos Reales menos Puntos Esperados. "
+        "Si es positiva, el equipo está sacando más puntos de los que su rendimiento en goles sugiere "
+        "(le está yendo mejor en el marcador final de lo que 'merece' por juego). "
+        "Si es negativa, es al revés: rinde bien en goles pero no lo está traduciendo en puntos."
+    )
