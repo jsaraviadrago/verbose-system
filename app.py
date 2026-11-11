@@ -513,7 +513,10 @@ st.caption(
 )
 
 df_goleadores_detalle = get_goleadores_detalle_clausura_2026()
-en_racha = dp.calcular_jugadores_en_racha(df_goleadores_detalle)
+en_racha = dp.calcular_jugadores_en_racha(
+    df_goleadores_detalle,
+    df_partidos=df_partidos,
+)
 
 if en_racha.empty:
     st.info(
