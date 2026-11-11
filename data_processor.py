@@ -161,7 +161,7 @@ class DataProcessor:
 
         return _top("AMARILLAS", "Amarillas"), _top("ROJAS", "Rojas")
 
-    def calcular_jugadores_en_racha(self, df_detalle, ultimos_n=3, n_top=8):
+    def calcular_jugadores_en_racha(self, df_detalle, ultimos_n=3, n_top=8, df_partidos=None):
         """
         Los n_top jugadores con mas goles en las ultimas_n FECHAS jugadas del
         torneo (no las ultimas ultimas_n filas de cada jugador -- si un
@@ -170,6 +170,17 @@ class DataProcessor:
         (goleadores_clausura_2026_partidos). 'Racha' es la secuencia
         anoto/no-anoto en esas fechas, de mas antigua a mas reciente -- la
         visualizacion (circulos de color) se hace en app.py.
+
+        Orden (regla de negocio): 1) mas goles en las ultimas_n fechas;
+        2) en empate, mas fechas con gol dentro de esas ultimas_n (premia la
+        constancia: 1+1+1 va antes que 3+0+0); 3) si persiste, mayor racha
+        consecutiva de fechas anotando hasta hoy (puede superar ultimas_n);
+        4) por ultimo, orden alfabetico.
+
+        La racha consecutiva (3) solo cuenta las fechas en que el EQUIPO del
+        jugador jugo: si su equipo no jugo una fecha, esa fecha no suma ni
+        corta la racha. Para saberlo se necesita df_partidos (resultados de
+        Firestore); si no se pasa, se usan todas las fechas del torneo.
         """
         columnas = ["Pos.", "Jugador", "Racha", "Equipo", "Goles"]
         if df_detalle.empty:
@@ -183,7 +194,17 @@ class DataProcessor:
         data["FECHA"] = data["FECHA"].astype(int)
         data["NOMBRE Y APELLIDO"] = data["NOMBRE Y APELLIDO"].astype(str).str.strip().str.title()
 
-        fechas_recientes = sorted(data["FECHA"].unique())[-ultimos_n:]
+        fechas_todas = sorted(data["FECHA"].unique())
+
+        # Fechas jugadas por cada equipo (para la racha consecutiva)
+        fechas_por_equipo = {}
+        if df_partidos is not None and not df_partidos.empty:
+            jugados = self._played(df_partidos)
+            jugados["FECHA"] = pd.to_numeric(jugados["FECHA"], errors="coerce")
+            jugados = jugados.dropna(subset=["FECHA"])
+            for eq, g in jugados.groupby("EQUIPO"):
+                fechas_por_equipo[eq] = sorted(g["FECHA"].astype(int).unique())
+        fechas_recientes = fechas_todas[-ultimos_n:]
         if not fechas_recientes:
             return pd.DataFrame(columns=columnas)
 
@@ -192,11 +213,23 @@ class DataProcessor:
             goles_por_fecha = grupo.groupby("FECHA")["GOLES"].sum()
             racha = [goles_por_fecha.get(f, 0) > 0 for f in fechas_recientes]
             goles = int(sum(goles_por_fecha.get(f, 0) for f in fechas_recientes))
+
+            # Desempates (constancia): ver docstring.
+            fechas_con_gol = sum(racha)
+            racha_consecutiva = 0
+            for f in reversed(fechas_por_equipo.get(equipo, fechas_todas)):
+                if goles_por_fecha.get(f, 0) > 0:
+                    racha_consecutiva += 1
+                else:
+                    break
+
             filas.append({
                 "Jugador": jugador,
                 "Equipo": equipo,
                 "Racha": racha,
                 "Goles": goles,
+                "_fechas_con_gol": fechas_con_gol,
+                "_racha_consecutiva": racha_consecutiva,
             })
 
         if not filas:
@@ -204,7 +237,10 @@ class DataProcessor:
 
         tabla = (
             pd.DataFrame(filas)
-            .sort_values(["Goles", "Jugador"], ascending=[False, True])
+            .sort_values(
+                ["Goles", "_fechas_con_gol", "_racha_consecutiva", "Jugador"],
+                ascending=[False, False, False, True],
+            )
             .head(n_top)
             .reset_index(drop=True)
         )
