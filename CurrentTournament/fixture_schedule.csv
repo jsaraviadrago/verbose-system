@@ -44,10 +44,10 @@ FECHA_NUM,FECHA,PARTIDO,HORA,FASE,EQUIPO_1,EQUIPO_2
 9,2026-11-15,43,10:50,Fase de Grupos,Chelsea,Manchester City
 9,2026-11-15,44,08:50,Fase de Grupos,Real Cambridge,Bayern
 9,2026-11-15,45,09:50,Fase de Grupos,Liverpool,Fiorentina
-10,2026-11-22,46,08:50,Cuartos de Final,,
-10,2026-11-22,47,09:50,Cuartos de Final,,
-10,2026-11-22,48,08:50,Cuartos de Final,,
-10,2026-11-22,49,09:50,Cuartos de Final,,
+10,2026-11-22,46,08:50,Cuartos de Final,Fiorentina,Real Cambridge
+10,2026-11-22,47,09:50,Cuartos de Final,Barcelona,Liverpool
+10,2026-11-22,48,08:50,Cuartos de Final,Juventus,Manchester City
+10,2026-11-22,49,09:50,Cuartos de Final,Milan,Chelsea
 11,2026-11-29,50,09:50,Semifinal,,
 11,2026-11-29,51,10:50,Semifinal,,
 12,2026-12-06,52,09:50,Tercer y Cuarto Puesto,,
