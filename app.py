@@ -302,7 +302,7 @@ reales_cuartos = _resultados_ronda_completa(10, [46, 47, 48, 49])
 if not reales_cuartos.empty:
     st.dataframe(reales_cuartos, use_container_width=True, hide_index=True)
 else:
-    st.caption("⚠️ Proyección estimada — no oficial hasta que se jueguen los partidos reales.")
+    st.caption("✅ Cruces definidos según la tabla final de la fase de grupos (1v8, 2v7, 3v6, 4v5).")
     st.dataframe(tabla_cruce(cuartos_proyectados), use_container_width=True, hide_index=True)
 
 st.markdown("#### Semifinal")
