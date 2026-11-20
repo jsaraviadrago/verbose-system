@@ -319,6 +319,90 @@ class DataProcessor:
         out.columns.name = None
         return out[columnas]
 
+    def resultado_playoff(self, df, fecha_num, partido_num):
+        """
+        Resultado de UN partido de playoff ya jugado (fecha_num, partido_num).
+        Devuelve un diccionario con ganador/perdedor, o None si el partido
+        todavia no se jugo o no se puede decidir.
+
+        Regla: gana quien tiene mas goles; si hay empate, gana quien tiene
+        mas penales (columna PENALES de Firestore, solo existe cuando hubo
+        tanda). Un empate sin penales no tiene ganador (devuelve None).
+
+        'equipo_a' es el EQUIPO_NUMERO 1 y 'equipo_b' el EQUIPO_NUMERO 2.
+        'penales_a'/'penales_b' son None si el partido no se definio en
+        penales.
+        """
+        data = self._played(df)
+        if data.empty:
+            return None
+
+        data = data[
+            (data["FECHA"].astype(int) == int(fecha_num))
+            & (data["PARTIDO"].astype(int) == int(partido_num))
+        ].copy()
+        if len(data) != 2:
+            return None
+
+        if "PENALES" not in data.columns:
+            data["PENALES"] = np.nan
+        data["PENALES"] = pd.to_numeric(data["PENALES"], errors="coerce")
+
+        data = data.sort_values("EQUIPO_NUMERO")
+        a, b = data.iloc[0], data.iloc[1]
+        goles_a, goles_b = int(a["GOLES"]), int(b["GOLES"])
+
+        pen_a = int(a["PENALES"]) if pd.notna(a["PENALES"]) else None
+        pen_b = int(b["PENALES"]) if pd.notna(b["PENALES"]) else None
+
+        if goles_a != goles_b:
+            a_gana = goles_a > goles_b
+            por_penales = False
+        elif pen_a is not None and pen_b is not None and pen_a != pen_b:
+            a_gana = pen_a > pen_b
+            por_penales = True
+        else:
+            return None
+
+        return {
+            "equipo_a": a["EQUIPO"],
+            "equipo_b": b["EQUIPO"],
+            "goles_a": goles_a,
+            "goles_b": goles_b,
+            "penales_a": pen_a if por_penales else None,
+            "penales_b": pen_b if por_penales else None,
+            "por_penales": por_penales,
+            "ganador": a["EQUIPO"] if a_gana else b["EQUIPO"],
+            "perdedor": b["EQUIPO"] if a_gana else a["EQUIPO"],
+        }
+
+    def notas_penales(self, df, fecha_num, partidos_num):
+        """
+        Una nota de texto por cada partido de la lista que se definio por
+        penales. Lista vacia si ninguno. Texto fijo:
+
+        El partido de {A} vs {B} termino empatado {g} a {g} pero {Ganador}
+        gano por penales {p} a {p} a {Perdedor}.
+        """
+        notas = []
+        for partido in partidos_num:
+            r = self.resultado_playoff(df, fecha_num, partido)
+            if r is None or not r["por_penales"]:
+                continue
+
+            if r["ganador"] == r["equipo_a"]:
+                pen_ganador, pen_perdedor = r["penales_a"], r["penales_b"]
+            else:
+                pen_ganador, pen_perdedor = r["penales_b"], r["penales_a"]
+
+            notas.append(
+                f"El partido de {r['equipo_a']} vs {r['equipo_b']} terminó "
+                f"empatado {r['goles_a']} a {r['goles_b']} pero "
+                f"{r['ganador']} ganó por penales "
+                f"{pen_ganador} a {pen_perdedor} a {r['perdedor']}."
+            )
+        return notas
+
     def process_match_results(self, df):
         """Todos los resultados de Clausura 2026, sin grupos."""
         data = self._played(df)
