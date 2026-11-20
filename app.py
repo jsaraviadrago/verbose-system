@@ -53,6 +53,59 @@ def tabla_cruce(cruces, columnas=("Local", "Visitante")):
     return tabla[[local_col, "Goles " + local_col, visitante_col, "Goles " + visitante_col]]
 
 
+def _equipo_playoff(fecha_num, partido_num, rol):
+    """Ganador o perdedor ('ganador' / 'perdedor') de un partido de playoff
+    ya jugado (con desempate por penales); 'Por definir' si aun no se sabe."""
+    r = dp.resultado_playoff(df_partidos, fecha_num, partido_num)
+    return r[rol] if r else "Por definir"
+
+
+# Cuadro de eliminacion para "Proximos Partidos": de donde sale cada equipo.
+# (rol, fecha del partido de origen, partido de origen). Deben coincidir con
+# PLAYOFF_BRACKET de pipeline/pipeline_service.py.
+CUADRO_PLAYOFFS = {
+    "Semifinal": [
+        (("ganador", 10, 46), ("ganador", 10, 49)),
+        (("ganador", 10, 47), ("ganador", 10, 48)),
+    ],
+    "Tercer y Cuarto Puesto": [
+        (("perdedor", 11, 50), ("perdedor", 11, 51)),
+    ],
+    "Final": [
+        (("ganador", 11, 50), ("ganador", 11, 51)),
+    ],
+}
+
+
+def completar_playoffs_pendientes(fixture):
+    """Llena los equipos vacios de semifinales, tercer puesto y final con los
+    ganadores/perdedores de la ronda anterior (segun los resultados reales).
+    Los partidos de cada fase se toman en el orden en que aparecen (por
+    fecha y hora). Si la tabla no tiene columna 'Fase', no toca nada."""
+    if "Fase" not in fixture.columns:
+        return fixture
+
+    out = fixture.copy()
+    columnas = ("Equipo 1", "Equipo 2")
+
+    for col in columnas:
+        if col in out.columns:
+            out[col] = out[col].astype("object")
+
+    for fase, cruces in CUADRO_PLAYOFFS.items():
+        filas = out.index[out["Fase"] == fase]
+        for fila, cruce in zip(filas, cruces):
+            for col, (rol, fecha_origen, partido_origen) in zip(columnas, cruce):
+                if col not in out.columns:
+                    continue
+                actual = out.at[fila, col]
+                if pd.isna(actual) or str(actual).strip() == "":
+                    out.at[fila, col] = _equipo_playoff(
+                        fecha_origen, partido_origen, rol
+                    )
+    return out
+
+
 st.set_page_config(
     page_title="Cambridge College Lima",
     layout="wide",
@@ -174,7 +227,11 @@ fixture_pendiente = get_pending_fixture(df_partidos)
 if fixture_pendiente.empty:
     st.success("🏆 No quedan partidos pendientes.")
 else:
-    # Playoffs aun sin cruce definido: celdas de equipo vacias -> "Por definir"
+    # Semifinales / tercer puesto / final: equipos segun los ganadores de la
+    # ronda anterior (se llenan solos a medida que hay resultados).
+    fixture_pendiente = completar_playoffs_pendientes(fixture_pendiente)
+
+    # Lo que siga sin definirse: celdas de equipo vacias -> "Por definir"
     for _col in ("Equipo 1", "Equipo 2"):
         if _col in fixture_pendiente.columns:
             fixture_pendiente[_col] = (
@@ -297,10 +354,22 @@ if len(standings) >= 8:
 else:
     cuartos_proyectados = [POR_DEFINIR] * 4
 
+
+def _mostrar_notas_penales(fecha_num, partidos_num):
+    """Una nota debajo de la tabla por cada partido definido en penales."""
+    for nota in dp.notas_penales(df_partidos, fecha_num, partidos_num):
+        st.caption(f"**Nota:** {nota}")
+
+
+def _hay_equipos_definidos(cruces):
+    return any(e != "Por definir" for cruce in cruces for e in cruce)
+
+
 st.markdown("#### Cuartos de Final")
 reales_cuartos = _resultados_ronda_completa(10, [46, 47, 48, 49])
 if not reales_cuartos.empty:
     st.dataframe(reales_cuartos, use_container_width=True, hide_index=True)
+    _mostrar_notas_penales(10, [46, 47, 48, 49])
 else:
     st.caption("✅ Cruces definidos según la tabla final de la fase de grupos (1v8, 2v7, 3v6, 4v5).")
     st.dataframe(tabla_cruce(cuartos_proyectados), use_container_width=True, hide_index=True)
@@ -309,9 +378,18 @@ st.markdown("#### Semifinal")
 reales_semis = _resultados_ronda_completa(11, [50, 51])
 if not reales_semis.empty:
     st.dataframe(reales_semis, use_container_width=True, hide_index=True)
+    _mostrar_notas_penales(11, [50, 51])
 else:
-    st.caption("⚠️ Proyección estimada — no oficial hasta que se juegue el partido real.")
-    st.dataframe(tabla_cruce([POR_DEFINIR] * 2), use_container_width=True, hide_index=True)
+    # Cruces segun los ganadores de cuartos: 46 vs 49 y 47 vs 48
+    cruces_semis = [
+        (_equipo_playoff(10, 46, "ganador"), _equipo_playoff(10, 49, "ganador")),
+        (_equipo_playoff(10, 47, "ganador"), _equipo_playoff(10, 48, "ganador")),
+    ]
+    if _hay_equipos_definidos(cruces_semis):
+        st.caption("✅ Equipos según los ganadores de cuartos de final.")
+    else:
+        st.caption("⚠️ Proyección estimada — no oficial hasta que se juegue el partido real.")
+    st.dataframe(tabla_cruce(cruces_semis), use_container_width=True, hide_index=True)
 
 col_final, col_tercer = st.columns(2)
 with col_final:
@@ -319,17 +397,27 @@ with col_final:
     reales_final = _resultados_ronda_completa(12, [53])
     if not reales_final.empty:
         st.dataframe(reales_final, use_container_width=True, hide_index=True)
+        _mostrar_notas_penales(12, [53])
     else:
-        st.caption("⚠️ Proyección — no oficial.")
-        st.dataframe(tabla_cruce([POR_DEFINIR]), use_container_width=True, hide_index=True)
+        cruces_final = [(_equipo_playoff(11, 50, "ganador"), _equipo_playoff(11, 51, "ganador"))]
+        if _hay_equipos_definidos(cruces_final):
+            st.caption("✅ Equipos según los ganadores de semifinales.")
+        else:
+            st.caption("⚠️ Proyección — no oficial.")
+        st.dataframe(tabla_cruce(cruces_final), use_container_width=True, hide_index=True)
 with col_tercer:
     st.markdown("#### Tercer y Cuarto Puesto")
     reales_tercer = _resultados_ronda_completa(12, [52])
     if not reales_tercer.empty:
         st.dataframe(reales_tercer, use_container_width=True, hide_index=True)
+        _mostrar_notas_penales(12, [52])
     else:
-        st.caption("⚠️ Proyección — no oficial.")
-        st.dataframe(tabla_cruce([POR_DEFINIR]), use_container_width=True, hide_index=True)
+        cruces_tercer = [(_equipo_playoff(11, 50, "perdedor"), _equipo_playoff(11, 51, "perdedor"))]
+        if _hay_equipos_definidos(cruces_tercer):
+            st.caption("✅ Equipos según los perdedores de semifinales.")
+        else:
+            st.caption("⚠️ Proyección — no oficial.")
+        st.dataframe(tabla_cruce(cruces_tercer), use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ESTADÍSTICAS POR EQUIPO
