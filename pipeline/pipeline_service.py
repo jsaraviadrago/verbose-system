@@ -2,6 +2,7 @@ from __future__ import annotations
 from urllib.parse import quote
 
 import os
+import re
 
 import numpy as np
 import pandas as pd
@@ -20,6 +21,22 @@ REQUIRED_SHEET_COLUMNS = [
     "Goles_2",
 ]
 
+# Columnas OPCIONALES de penales (solo playoffs). Si la Sheet no las tiene,
+# el pipeline funciona exactamente igual que antes.
+#   EquipoA_penales / EquipoB_penales   -> nombre del equipo (verificacion)
+#   Resultado_penalesA / ..B            -> penales convertidos por cada equipo
+# A = Equipo_1 de la Sheet, B = Equipo_2 de la Sheet.
+OPTIONAL_SHEET_COLUMNS = [
+    "EquipoA_penales",
+    "Resultado_penalesA",
+    "EquipoB_penales",
+    "Resultado_penalesB",
+]
+
+# Fechas 1-9 = fase de grupos. Los penales solo aplican de la fecha 10 en
+# adelante (playoffs). Mantener igual a ULTIMA_FECHA_GRUPOS de data_processor.py
+ULTIMA_FECHA_GRUPOS = 9
+
 FIXTURE_COLUMNS = [
     "Fecha",
     "Partido",
@@ -28,6 +45,18 @@ FIXTURE_COLUMNS = [
     "Equipo_numero",
     "Equipo",
 ]
+
+# Cuadro de eliminacion: de donde sale cada equipo de las fases siguientes.
+#   partido -> ((rol_1, partido_origen_1), (rol_2, partido_origen_2))
+# Cuando el fixture deja vacios los equipos de estos partidos, el pipeline los
+# completa solo, una vez jugados los partidos de origen
+# (ganador = mas goles; si empatan, mas penales).
+PLAYOFF_BRACKET = {
+    50: (("ganador", 46), ("ganador", 49)),    # Semifinal 1
+    51: (("ganador", 47), ("ganador", 48)),    # Semifinal 2
+    52: (("perdedor", 50), ("perdedor", 51)),  # Tercer y cuarto puesto
+    53: (("ganador", 50), ("ganador", 51)),    # Final
+}
 
 FIXTURE_KEYS = [
     "Fecha",
@@ -98,6 +127,7 @@ def add_pair_key(
 
 def read_fixture(
     path: str,
+    keep_undefined: bool = False,
 ) -> pd.DataFrame:
 
     df = pd.read_csv(
@@ -204,6 +234,19 @@ def read_fixture(
     df["Equipo_norm"] = normalize_name(
         df["Equipo"]
     )
+
+    # keep_undefined=True conserva los partidos de playoffs sin equipos (el
+    # pipeline los completa con los ganadores). Por defecto se descartan.
+    if keep_undefined:
+        df["Equipo"] = df["Equipo"].astype("object")
+        return df
+
+    return drop_undefined_matches(df)
+
+
+def drop_undefined_matches(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
 
     # Partidos de playoffs aun sin equipos definidos: se ignoran hasta que
     # AMBOS equipos esten escritos en el fixture.
@@ -376,9 +419,312 @@ def read_google_sheet(
             f"La Sheet no tiene estas columnas: {missing}"
         )
 
-    return df[
+    # Columnas opcionales de penales. Se aceptan con espacios o mayusculas
+    # distintas en el encabezado (por ejemplo "Equipo B_penales").
+    compact = {
+        re.sub(r"\s+", "", str(column)).lower(): column
+        for column in df.columns
+    }
+
+    out = df[
         REQUIRED_SHEET_COLUMNS
     ].copy()
+
+    for optional in OPTIONAL_SHEET_COLUMNS:
+
+        source = compact.get(
+            optional.lower()
+        )
+
+        out[optional] = (
+            df[source]
+            if source is not None
+            else pd.NA
+        )
+
+    return out
+
+
+def _playoff_outcomes(
+    sheet: pd.DataFrame,
+    defined_fixture: pd.DataFrame,
+) -> dict:
+    """
+    Ganador y perdedor de cada partido YA jugado, segun la Sheet y el fixture
+    con equipos definidos. Lenient a proposito: no valida nada (eso lo hace
+    validate_and_transform despues); solo lee goles y penales.
+
+    Devuelve {partido: {"ganador": (nombre, norm), "perdedor": (nombre, norm)}}
+    """
+
+    if defined_fixture.empty:
+        return {}
+
+    s = sheet.copy()
+
+    for column in (
+        "Resultado_penalesA",
+        "Resultado_penalesB",
+    ):
+        if column not in s.columns:
+            s[column] = pd.NA
+
+    s = s.loc[
+        s["Equipo_1"].astype("string").str.strip().fillna("").ne("")
+        & s["Equipo_2"].astype("string").str.strip().fillna("").ne("")
+    ].copy()
+
+    if s.empty:
+        return {}
+
+    s["Fecha"] = pd.to_numeric(
+        s["Fecha"],
+        errors="coerce",
+    )
+
+    s = s.loc[
+        s["Fecha"].notna()
+    ].copy()
+
+    s["Fecha"] = s["Fecha"].astype(int)
+
+    for column, source in (
+        ("Goles_1", "Goles_1"),
+        ("Goles_2", "Goles_2"),
+        ("Pen_1", "Resultado_penalesA"),
+        ("Pen_2", "Resultado_penalesB"),
+    ):
+        s[column] = pd.to_numeric(
+            s[source].astype("string").str.strip().replace("", pd.NA).astype(object),
+            errors="coerce",
+        ).astype("float64")
+
+    s["Equipo_1_norm"] = normalize_name(s["Equipo_1"])
+    s["Equipo_2_norm"] = normalize_name(s["Equipo_2"])
+
+    s = add_pair_key(
+        s,
+        "Equipo_1_norm",
+        "Equipo_2_norm",
+    )
+
+    matches = fixture_as_matches(
+        defined_fixture
+    )
+
+    merged = s.merge(
+        matches,
+        on=[
+            "Fecha",
+            "_PAIR_A",
+            "_PAIR_B",
+        ],
+        how="inner",
+    ).drop_duplicates(
+        ["Fecha", "Partido"]
+    )
+
+    outcomes = {}
+
+    for row in merged.itertuples(index=False):
+
+        if (
+            pd.isna(row.Goles_1)
+            or pd.isna(row.Goles_2)
+        ):
+            continue
+
+        same_side = (
+            row.Equipo_1_norm
+            == row.Fixture_Equipo_1_norm
+        )
+
+        g1, g2 = (
+            (row.Goles_1, row.Goles_2)
+            if same_side
+            else (row.Goles_2, row.Goles_1)
+        )
+
+        p1, p2 = (
+            (row.Pen_1, row.Pen_2)
+            if same_side
+            else (row.Pen_2, row.Pen_1)
+        )
+
+        if g1 > g2:
+            winner = 1
+        elif g2 > g1:
+            winner = 2
+        elif (
+            pd.notna(p1)
+            and pd.notna(p2)
+            and p1 != p2
+        ):
+            winner = 1 if p1 > p2 else 2
+        else:
+            continue  # empate sin penales: todavia no hay ganador
+
+        team_1 = (
+            row.Fixture_Equipo_1,
+            row.Fixture_Equipo_1_norm,
+        )
+
+        team_2 = (
+            row.Fixture_Equipo_2,
+            row.Fixture_Equipo_2_norm,
+        )
+
+        outcomes[int(row.Partido)] = {
+            "ganador": team_1 if winner == 1 else team_2,
+            "perdedor": team_2 if winner == 1 else team_1,
+        }
+
+    return outcomes
+
+
+def _sheet_pairs(
+    sheet: pd.DataFrame,
+) -> set:
+    """Conjunto de (fecha, equipo_a, equipo_b) de las filas de la Sheet que
+    tienen ambos equipos escritos (parejas sin orden)."""
+
+    s = sheet.copy()
+
+    s = s.loc[
+        s["Equipo_1"].astype("string").str.strip().fillna("").ne("")
+        & s["Equipo_2"].astype("string").str.strip().fillna("").ne("")
+    ].copy()
+
+    if s.empty:
+        return set()
+
+    s["Fecha"] = pd.to_numeric(
+        s["Fecha"],
+        errors="coerce",
+    )
+
+    s = s.loc[
+        s["Fecha"].notna()
+    ].copy()
+
+    pairs = set()
+
+    for fecha, team_1, team_2 in zip(
+        s["Fecha"].astype(int),
+        normalize_name(s["Equipo_1"]),
+        normalize_name(s["Equipo_2"]),
+    ):
+        first, second = sorted(
+            (str(team_1), str(team_2))
+        )
+        pairs.add(
+            (int(fecha), first, second)
+        )
+
+    return pairs
+
+
+def complete_playoff_fixture(
+    fixture_all: pd.DataFrame,
+    sheet: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Completa en el fixture los equipos de los partidos de eliminacion
+    (PLAYOFF_BRACKET) que aun estan vacios, usando los ganadores / perdedores
+    de los partidos de origen segun los resultados de la Sheet.
+
+    Un partido solo se completa cuando:
+      - YA se jugaron sus dos partidos de origen, y
+      - la Sheet ya tiene una fila con esa pareja de equipos (si la Sheet
+        todavia no la tiene, el partido sigue sin definir y se ignora; si la
+        Sheet trae otra pareja distinta a la del cuadro, el partido tampoco
+        se completa y la validacion avisa que no existe en el fixture).
+    Si el fixture ya trae equipos escritos a mano, se respetan.
+    """
+
+    fixture = fixture_all.copy()
+
+    sheet_pairs = _sheet_pairs(
+        sheet
+    )
+
+    def is_undefined(frame: pd.DataFrame) -> bool:
+        return bool(
+            (
+                frame["Equipo_norm"].isna()
+                | frame["Equipo_norm"].eq("")
+            ).any()
+        )
+
+    for _ in range(len(PLAYOFF_BRACKET) + 1):
+
+        defined = drop_undefined_matches(
+            fixture
+        )
+
+        outcomes = _playoff_outcomes(
+            sheet,
+            defined,
+        )
+
+        changed = False
+
+        for partido, sources in PLAYOFF_BRACKET.items():
+
+            slot = fixture["Partido"].eq(partido)
+
+            if not slot.any():
+                continue
+
+            if not is_undefined(fixture.loc[slot]):
+                continue
+
+            teams = []
+
+            for role, origin in sources:
+
+                outcome = outcomes.get(origin)
+
+                if outcome is None:
+                    break
+
+                teams.append(
+                    outcome[role]
+                )
+
+            if len(teams) != 2:
+                continue
+
+            slot_date = int(
+                fixture.loc[slot, "Fecha"].iloc[0]
+            )
+
+            first, second = sorted(
+                (str(teams[0][1]), str(teams[1][1]))
+            )
+
+            if (slot_date, first, second) not in sheet_pairs:
+                continue
+
+            for number, (name, norm) in zip(
+                (1, 2),
+                teams,
+            ):
+
+                row_mask = (
+                    slot
+                    & fixture["Equipo_numero"].eq(number)
+                )
+
+                fixture.loc[row_mask, "Equipo"] = name
+                fixture.loc[row_mask, "Equipo_norm"] = norm
+
+            changed = True
+
+        if not changed:
+            break
+
+    return fixture
 
 
 def validate_and_transform(
@@ -552,6 +898,160 @@ def validate_and_transform(
                 index=False
             )
         )
+
+    # ------------------------------------------------------------------
+    # Penales (solo playoffs, columnas opcionales)
+    # ------------------------------------------------------------------
+    for column in OPTIONAL_SHEET_COLUMNS:
+        if column not in s.columns:
+            s[column] = pd.NA
+
+    def _penalty_numbers(column: str) -> pd.Series:
+
+        raw = (
+            s[column]
+            .astype("string")
+            .str.strip()
+        )
+
+        numbers = pd.to_numeric(
+            raw.replace("", pd.NA).astype(object),
+            errors="coerce",
+        ).astype("float64")
+
+        not_numeric = (
+            raw.notna()
+            & raw.ne("")
+            & numbers.isna()
+        ).fillna(False).astype(bool)
+
+        if not_numeric.any():
+
+            bad = s.loc[
+                not_numeric,
+                [
+                    "Fecha",
+                    "Equipo_1",
+                    "Equipo_2",
+                    column,
+                ],
+            ]
+
+            raise ValueError(
+                f"{column} debe ser un numero entero:\n"
+                + bad.to_string(
+                    index=False
+                )
+            )
+
+        return numbers
+
+    s["Pen_1"] = _penalty_numbers(
+        "Resultado_penalesA"
+    )
+
+    s["Pen_2"] = _penalty_numbers(
+        "Resultado_penalesB"
+    )
+
+    has_pen_1 = s["Pen_1"].notna()
+    has_pen_2 = s["Pen_2"].notna()
+    any_pen = has_pen_1 | has_pen_2
+
+    if any_pen.any():
+
+        def _fail(mask, message: str) -> None:
+
+            mask = (
+                pd.Series(mask, index=s.index)
+                .fillna(False)
+                .astype(bool)
+            )
+
+            if mask.any():
+
+                bad = s.loc[
+                    mask,
+                    [
+                        "Fecha",
+                        "Equipo_1",
+                        "Equipo_2",
+                    ],
+                ]
+
+                raise ValueError(
+                    message
+                    + "\n"
+                    + bad.to_string(
+                        index=False
+                    )
+                )
+
+        pen_values = pd.concat(
+            [
+                s.loc[has_pen_1, "Pen_1"],
+                s.loc[has_pen_2, "Pen_2"],
+            ]
+        )
+
+        if (
+            (pen_values < 0)
+            | pen_values.mod(1).ne(0)
+        ).any():
+
+            raise ValueError(
+                "Los penales deben ser enteros mayores o iguales a 0."
+            )
+
+        _fail(
+            any_pen & ~(has_pen_1 & has_pen_2),
+            "Falta el resultado de penales de uno de los equipos:",
+        )
+
+        _fail(
+            any_pen & s["Fecha"].le(ULTIMA_FECHA_GRUPOS),
+            "Los penales solo aplican en playoffs "
+            f"(fecha mayor a {ULTIMA_FECHA_GRUPOS}):",
+        )
+
+        _fail(
+            any_pen
+            & ~(
+                s["Goles_1"].notna()
+                & s["Goles_2"].notna()
+                & s["Goles_1"].eq(s["Goles_2"])
+            ),
+            "Hay penales en un partido que no termino empatado en goles:",
+        )
+
+        _fail(
+            any_pen & s["Pen_1"].eq(s["Pen_2"]),
+            "Los penales no pueden terminar empatados:",
+        )
+
+        # Si se escribio el nombre del equipo en las columnas de penales,
+        # debe coincidir con el equipo de esa fila (evita cargar los
+        # penales al reves).
+        for pen_team_col, team_col, norm_col in (
+            ("EquipoA_penales", "Equipo_1", "Equipo_1_norm"),
+            ("EquipoB_penales", "Equipo_2", "Equipo_2_norm"),
+        ):
+
+            declared = normalize_name(
+                s[pen_team_col]
+            )
+
+            has_declared = (
+                declared.notna()
+                & declared.ne("")
+            ).fillna(False).astype(bool)
+
+            _fail(
+                any_pen
+                & has_declared
+                & declared.ne(s[norm_col]),
+                f"{pen_team_col} no coincide con {team_col}:",
+            )
 
     s = add_pair_key(
         s,
@@ -798,6 +1298,30 @@ def validate_and_transform(
         ],
     )
 
+    resolved[
+        "Pen_fixture_1"
+    ] = np.where(
+        sheet_team_1_is_fixture_1,
+        resolved[
+            "Pen_1"
+        ],
+        resolved[
+            "Pen_2"
+        ],
+    )
+
+    resolved[
+        "Pen_fixture_2"
+    ] = np.where(
+        sheet_team_1_is_fixture_1,
+        resolved[
+            "Pen_2"
+        ],
+        resolved[
+            "Pen_1"
+        ],
+    )
+
     both = (
         resolved[
             "Goles_fixture_1"
@@ -994,6 +1518,18 @@ def validate_and_transform(
         "Resultado"
     ] = result_2
 
+    team_1_scores[
+        "Penales"
+    ] = resolved[
+        "Pen_fixture_1"
+    ].to_numpy()
+
+    team_2_scores[
+        "Penales"
+    ] = resolved[
+        "Pen_fixture_2"
+    ].to_numpy()
+
     scores = pd.concat(
         [
             team_1_scores,
@@ -1053,6 +1589,17 @@ def validate_and_transform(
         )
     )
 
+    final[
+        "Penales"
+    ] = pd.to_numeric(
+        final[
+            "Penales"
+        ],
+        errors="coerce",
+    ).astype(
+        "Int64"
+    )
+
     return (
         final,
         ready_dates,
@@ -1073,7 +1620,7 @@ def firestore_payload(
             "Se intento publicar un partido sin goles."
         )
 
-    return {
+    payload = {
         "FECHA":
         int(
             row.Fecha
@@ -1120,6 +1667,25 @@ def firestore_payload(
             row.Resultado
         ),
     }
+
+    # Penales: solo se guardan cuando hubo tanda (playoffs empatados). Si no
+    # hubo, el campo no existe, asi los documentos de los demas partidos no
+    # cambian y no se reescriben en Firestore.
+    penales = getattr(
+        row,
+        "Penales",
+        None,
+    )
+
+    if (
+        penales is not None
+        and pd.notna(penales)
+    ):
+        payload["PENALES"] = int(
+            penales
+        )
+
+    return payload
 
 
 def publish_changed_rows(
@@ -1311,7 +1877,8 @@ def run_pipeline(
         env(
             "FIXTURE_PATH",
             "/app/CurrentTournament/fixture.csv",
-        )
+        ),
+        keep_undefined=True,
     )
 
     sheet = read_google_sheet(
@@ -1322,6 +1889,15 @@ def run_pipeline(
             "GOOGLE_SHEET_RANGE",
             "Resultados!A1:F",
         ),
+    )
+
+    # Semifinales, tercer puesto y final: los equipos se completan solos con
+    # los ganadores (ver PLAYOFF_BRACKET). Lo que siga sin definirse se ignora.
+    fixture = drop_undefined_matches(
+        complete_playoff_fixture(
+            fixture,
+            sheet,
+        )
     )
 
     (
