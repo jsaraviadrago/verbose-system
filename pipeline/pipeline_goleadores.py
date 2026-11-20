@@ -42,6 +42,28 @@ def _strip_accents(value: str) -> str:
     )
 
 
+def parse_fecha(value: object) -> int:
+    """
+    Convierte lo que venga en la columna Fecha del Form a numero de fecha.
+    Acepta: 7, "7", "7.0", "Fecha 7", "Cuartos de Final" (10),
+    "Semifinal" (11), "Tercer Puesto" / "Final" / "Final / Tercer Puesto" (12).
+    """
+    text = _strip_accents(str(value or "")).strip().lower()
+    text = re.sub(r"\s+", " ", text)
+    if re.fullmatch(r"\d+(\.0+)?", text):
+        return int(float(text))
+    match = re.fullmatch(r"fecha (\d+)", text)
+    if match:
+        return int(match.group(1))
+    if "cuartos" in text:
+        return 10
+    if "semi" in text:
+        return 11
+    if "tercer" in text or "final" in text:
+        return 12
+    raise ValueError(f"No se reconoce la Fecha del Form: {value!r}")
+
+
 def normalize_team(value: object) -> str:
     text = str(value or "").strip().upper()
     text = re.sub(r"\s+", " ", text)
@@ -159,7 +181,7 @@ def sheet_to_long(sheet: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
             ),
         )
 
-    data["Fecha"] = pd.to_numeric(data["Fecha"], errors="raise").astype(int)
+    data["Fecha"] = data["Fecha"].map(parse_fecha).astype(int)
     data["Equipo"] = data["Equipo"].astype(str).str.strip()
     data["EQUIPO_NORM"] = data["Equipo"].map(normalize_team)
 
