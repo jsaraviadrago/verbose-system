@@ -48,7 +48,7 @@ FECHA_NUM,FECHA,PARTIDO,HORA,FASE,EQUIPO_1,EQUIPO_2
 10,2026-11-22,47,08:50,Cuartos de Final,Barcelona,Liverpool
 10,2026-11-22,48,08:50,Cuartos de Final,Juventus,Manchester City
 10,2026-11-22,49,09:50,Cuartos de Final,Milan,Chelsea
-11,2026-11-29,50,09:50,Semifinal,,
-11,2026-11-29,51,10:50,Semifinal,,
+11,2026-11-29,50,08:50,Semifinal,,
+11,2026-11-29,51,09:50,Semifinal,,
 12,2026-12-06,52,09:50,Tercer y Cuarto Puesto,,
-12,2026-12-06,53,10:50,Final,,
+12,2026-12-06,53,09:50,Final,,
