@@ -284,10 +284,13 @@ with col_m2:
 if not stats_fecha.empty:
     st.subheader("Estadísticas por Fecha")
     st.write("**Goles Totales**")
-    st.line_chart(
-        stats_fecha
-        .set_index("FECHA")["Total_Goles"]
-    )
+    # FECHA llega como texto: se ordena y grafica como numero para que la
+    # fecha 10 quede despues de la 9 y no entre la 1 y la 2.
+    _goles_fecha = stats_fecha.copy()
+    _goles_fecha["FECHA"] = pd.to_numeric(_goles_fecha["FECHA"], errors="coerce")
+    _goles_fecha = _goles_fecha.dropna(subset=["FECHA"]).sort_values("FECHA")
+    _goles_fecha["FECHA"] = _goles_fecha["FECHA"].astype(int)
+    st.line_chart(_goles_fecha.set_index("FECHA")["Total_Goles"])
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TABLA DE POSICIONES
