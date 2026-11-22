@@ -218,6 +218,18 @@ def sheet_to_long(
         "CANTIDAD",
     ]
 
+    # Filas sin Fecha: si tampoco traen Equipo son filas vacias (se ignoran);
+    # si traen Equipo, se avisa en que fila de la hoja estan.
+    fecha_vacia = data["Fecha"].isna() | data["Fecha"].astype(str).str.strip().eq("")
+    equipo_vacio = data["Equipo"].isna() | data["Equipo"].astype(str).str.strip().eq("")
+    parcial = fecha_vacia & ~equipo_vacio
+    if parcial.any():
+        filas = ", ".join(str(i + 2) for i in data.index[parcial])
+        raise ValueError(
+            "Hay filas con Equipo pero sin Fecha en la hoja (fila/s: "
+            + filas + "). Complétalas o bórralas."
+        )
+    data = data.loc[~(fecha_vacia & equipo_vacio)].copy()
     if data.empty:
         return pd.DataFrame(columns=columns)
 
