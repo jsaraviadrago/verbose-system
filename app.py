@@ -53,9 +53,18 @@ def tabla_cruce(cruces, columnas=("Local", "Visitante")):
     return tabla[[local_col, "Goles " + local_col, visitante_col, "Goles " + visitante_col]]
 
 
+# Interruptor del cuadro de semifinales. En False, la app NO arma sola las
+# llaves de semifinal con los ganadores de cuartos: muestra "Por definir" hasta
+# que las escribas a mano en CurrentTournament/fixture_schedule.csv. Cuando se
+# confirme el cuadro, ponlo en True y vuelve a llenarse solo.
+LLAVES_SEMIFINAL_AUTOMATICAS = False
+
+
 def _equipo_playoff(fecha_num, partido_num, rol):
     """Ganador o perdedor ('ganador' / 'perdedor') de un partido de playoff
     ya jugado (con desempate por penales); 'Por definir' si aun no se sabe."""
+    if fecha_num == 10 and not LLAVES_SEMIFINAL_AUTOMATICAS:
+        return "Por definir"
     r = dp.resultado_playoff(df_partidos, fecha_num, partido_num)
     return r[rol] if r else "Por definir"
 
@@ -387,6 +396,8 @@ else:
     ]
     if _hay_equipos_definidos(cruces_semis):
         st.caption("✅ Equipos según los ganadores de cuartos de final.")
+    elif not LLAVES_SEMIFINAL_AUTOMATICAS:
+        st.caption("⏳ Llaves de semifinal por confirmar.")
     else:
         st.caption("⚠️ Proyección estimada — no oficial hasta que se juegue el partido real.")
     st.dataframe(tabla_cruce(cruces_semis), use_container_width=True, hide_index=True)
