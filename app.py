@@ -373,6 +373,17 @@ def _mostrar_notas_penales(fecha_num, partidos_num):
         st.caption(f"**Nota:** {nota}")
 
 
+def _cruces_fixture(fase):
+    """Parejas (Equipo 1, Equipo 2) de una fase segun el fixture, en orden."""
+    if "Fase" not in fixture_pendiente.columns:
+        return []
+    filas = fixture_pendiente[fixture_pendiente["Fase"] == fase]
+    return [
+        (str(f["Equipo 1"]).strip(), str(f["Equipo 2"]).strip())
+        for _, f in filas.iterrows()
+    ]
+
+
 def _hay_equipos_definidos(cruces):
     return any(e != "Por definir" for cruce in cruces for e in cruce)
 
@@ -397,7 +408,16 @@ else:
         (_equipo_playoff(10, 46, "ganador"), _equipo_playoff(10, 49, "ganador")),
         (_equipo_playoff(10, 47, "ganador"), _equipo_playoff(10, 48, "ganador")),
     ]
-    if _hay_equipos_definidos(cruces_semis):
+    # Cruces escritos a mano en fixture_schedule.csv: tienen prioridad
+    cruces_manuales = _cruces_fixture("Semifinal")
+    definidos_a_mano = False
+    for i, par in enumerate(cruces_manuales[:2]):
+        if all(e not in ("", "Por definir") for e in par):
+            cruces_semis[i] = par
+            definidos_a_mano = True
+    if definidos_a_mano:
+        st.caption("✅ Cruces de semifinal definidos.")
+    elif _hay_equipos_definidos(cruces_semis):
         st.caption("✅ Equipos según los ganadores de cuartos de final.")
     elif not LLAVES_SEMIFINAL_AUTOMATICAS:
         st.caption("⏳ Llaves de semifinal por confirmar.")
